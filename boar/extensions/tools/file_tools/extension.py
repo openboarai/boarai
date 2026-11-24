@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 _MANIFEST = ExtensionManifest(
     name="file_tools",
-    version="1.4.0",
+    version="1.0.0",
     extension_type="tool",
     description="File system operations — read, write, edit, move, copy, delete, "
                 "glob, grep, search, trash list/restore",

@@ -333,7 +333,7 @@ function isChinese() {
  */
 async function loadLanguageFile(lang) {
   try {
-    const response = await fetch(`/static/js/i18n/${lang}.json?v=2026112401`);
+    const response = await fetch(`/static/js/i18n/${lang}.json`);
     if (response.ok) {
       messages[lang] = await response.json();
       console.log(`Loaded language file: ${lang}.json`);

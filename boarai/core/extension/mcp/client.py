@@ -23,8 +23,14 @@ _JSONRPC = "2.0"
 
 # The initialize params BoarAi advertises. protocolVersion "2024-11-05" is the
 # MCP stdio baseline; servers negotiate within it.
-_CLIENT_INFO = {"name": "boarai", "version": "1.6.1"}
 _PROTOCOL_VERSION = "2024-11-05"
+
+
+def _client_info() -> Dict[str, str]:
+    """Advertised clientInfo, versioned from the single version source."""
+    from boarai.core import __version__
+
+    return {"name": "boarai", "version": str(__version__)}
 
 
 class MCPClientError(Exception):
@@ -85,7 +91,7 @@ class StdioMCPClient:
         result = await self._rpc("initialize", {
             "protocolVersion": _PROTOCOL_VERSION,
             "capabilities": {},
-            "clientInfo": _CLIENT_INFO,
+            "clientInfo": _client_info(),
         })
         if not isinstance(result, dict):
             raise MCPClientError("MCP initialize returned a non-object result")

@@ -46,7 +46,7 @@ class WebUIChannelAdapter(ExtensionBase):
             return self._manifest
         return ExtensionManifest(
             name="webui",
-            version="0.1.0",
+            version="1.0.0",
             extension_type="channel",
             description="WebUI channel adapter with HTTP interface",
             author="BoarAi Team",
@@ -136,9 +136,8 @@ class WebUIChannelAdapter(ExtensionBase):
                 text=content,
                 content_type='text/html',
                 charset='utf-8',
-                # The asset URLs in this file carry the ?v= cache buster, so a
-                # browser holding a stale copy of the HTML keeps requesting the
-                # old JS and CSS no matter how the versions are bumped.
+                # Asset URLs carry no version query; the HTML itself must
+                # always be revalidated so an updated tree is picked up.
                 headers={'Cache-Control': 'no-cache'},
             )
         except Exception as e:
@@ -181,7 +180,6 @@ class WebUIChannelAdapter(ExtensionBase):
             return web.Response(status=400)
 
         # Check if file exists
-        is_extension_asset = False
         if not full_path.exists() or not full_path.is_file():
             # Another extension's asset ("/static/<ext_id>/...") can land on
             # this catch-all when it was registered before that extension's
@@ -190,14 +188,12 @@ class WebUIChannelAdapter(ExtensionBase):
             if alt is None:
                 return web.Response(status=404)
             full_path = alt
-            is_extension_asset = True
 
         # Determine content type
         content_type = self._get_content_type(full_path)
-        # Extension assets carry no ?v= cache buster (the iframe URL is the
-        # manifest's custom_url verbatim) — always revalidate them. The WebUI's
-        # own assets keep their ?v= busting and stay cacheable.
-        headers = {'Cache-Control': 'no-cache'} if is_extension_asset else None
+        # No version query on any asset URL, so nothing here may be cached
+        # without revalidation (a stale JS/CSS copy would survive an update).
+        headers = {'Cache-Control': 'no-cache'}
 
         try:
             # Read and serve file (V8: async to_thread I/O, no event-loop block)

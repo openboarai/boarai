@@ -1,5 +1,5 @@
 name: "webui"
-version: "0.2.0"
+version: "1.0.0"
 extension_type: "channel"
 description: "Modern WebUI with Vue 3, responsive design, and component architecture"
 author: "BoarAi Team"

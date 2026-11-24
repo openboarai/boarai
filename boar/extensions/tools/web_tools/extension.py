@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 _MANIFEST = ExtensionManifest(
     name="web_tools",
-    version="1.3.0",
+    version="1.0.0",
     extension_type="tool",
     description="Web access — key-free web_search (configurable engines: baidu/so360/sogou/bing/google, tried in priority order; the first three are China-reachable) and web_fetch (anti-bot tiered chain: direct / curl_cffi impersonation / reader relay)",
 )
