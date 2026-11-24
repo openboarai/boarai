@@ -50,15 +50,30 @@ If dependencies are missing on a fresh checkout, run `python main.py --ensure-de
 
 Three images mirror the three install/update channels — an install only ever updates through its own channel:
 
-| Variant | Build & run | In-container self-update |
-|---------|-------------|--------------------------|
-| Source (default) | `docker compose up -d --build` | source channel (release-archive swap) |
-| PyPI | `docker compose -f docker-compose.yml -f docker-compose.pypi.yml up -d --build` | pip channel (`pip install -U boarai`) |
-| GitHub | `BOARAI_GIT_REPO=<repo-url> docker compose -f docker-compose.yml -f docker-compose.github.yml up -d --build` | git channel (`git fetch --tags` + checkout) |
+| Variant | Build & run | Needs the source tree? | In-container self-update |
+|---------|-------------|------------------------|--------------------------|
+| Source (default) | `docker compose up -d --build` | yes (`Dockerfile` copies it) | source channel (release-archive swap) |
+| PyPI | `docker compose -f docker-compose.pypi.yml up -d --build` | no | pip channel (`pip install -U boarai`) |
+| GitHub | `docker compose -f docker-compose.github.yml up -d --build` | no (clones the repo) | git channel (`git fetch --tags` + checkout) |
 
-Pin releases with `BOARAI_VERSION=1.2.3` (PyPI variant) or `BOARAI_GIT_REF=v1.2.0` (GitHub variant).
+`docker-compose.pypi.yml` and `docker-compose.github.yml` are **self-contained**: the Dockerfile is inlined, so you can copy that single file to any machine (or paste it into a NAS compose UI) and build — nothing else is read from the build context. Requires Docker Compose >= 2.17. The source variant builds from the tree next to it; an unpacked PyPI sdist works as that tree.
 
-Sessions, memory and config live in the named volume `boarai-data` (mounted at `/data`). The browser setup page trusts loopback peers only, which a bridged container never sees, so create the access key once:
+Pin releases with `BOARAI_VERSION=0.1.1` (PyPI variant), `BOARAI_GIT_REF=v0.1.1` (GitHub variant), or `BOARAI_GIT_REPO=<your-fork>`; map a different host port with `BOARAI_HOST_PORT=8080`.
+
+**Data persistence.** Sessions, memory, logs, config and user extensions all live under `BOARAI_DATA_DIR=/data`, backed by the named volume `boarai-data` (shared by the three variants, so switching channel keeps your data). `docker compose down` keeps it, `docker compose down -v` deletes it. Backup and restore:
+
+```bash
+docker run --rm -v boarai-data:/data -v "$PWD":/backup alpine tar czf /backup/boarai-data.tgz -C /data .
+docker run --rm -v boarai-data:/data -v "$PWD":/backup alpine tar xzf /backup/boarai-data.tgz -C /data
+```
+
+To use a host directory instead (common on a NAS), replace `- boarai-data:/data` with `- /volume1/docker/boarai:/data` and chown it to the runtime user first — the container is **not** root, it runs as uid/gid `10001` (override with `BOARAI_UID` / `BOARAI_GID`):
+
+```bash
+mkdir -p /volume1/docker/boarai && chown -R 10001:10001 /volume1/docker/boarai
+```
+
+**First-run access key.** The browser setup page trusts loopback peers only, which a bridged container never sees, so create the key once:
 
 ```bash
 docker compose run --rm boarai python main.py key init       # source / github images

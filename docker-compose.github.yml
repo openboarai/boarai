@@ -1,20 +1,153 @@
-# GitHub (git-channel) override. Usage:
-#   BOARAI_GIT_REPO=https://github.com/<org>/boarai.git \
-#     docker compose -f docker-compose.yml -f docker-compose.github.yml up -d --build
-# Optional ref:  BOARAI_GIT_REF=v1.2.0   (default: main)
+# BoarAI — GitHub channel (runs from a git checkout).
 #
-# BOARAI_GIT_REPO is mandatory: the file fails fast when it is unset. Until
-# the public repository exists, build the source or pypi variant instead.
+# SELF-CONTAINED: the Dockerfile is inlined below, so this one file is the
+# whole deployment — no repo checkout needed, the image clones the source
+# itself:
+#   docker compose -f docker-compose.github.yml up -d --build
+# Requires Docker Compose >= 2.17 (build.dockerfile_inline).
 #
-# The container self-updates through the git channel (git fetch --tags +
-# checkout on the embedded clean checkout), matching a host git install.
+#   pin a ref   : BOARAI_GIT_REF=v0.1.1 docker compose -f docker-compose.github.yml up -d --build
+#   other fork  : BOARAI_GIT_REPO=https://github.com/<you>/boarai.git docker compose ...
+#   host port   : BOARAI_HOST_PORT=8080 docker compose -f docker-compose.github.yml up -d --build
+#
+# CHANNEL SEMANTICS (not taste): the tree keeps `.git` and its `origin`
+# remote, and git is on PATH, so update/steward detects the git channel and an
+# in-container self-update runs `git fetch --tags` + `git checkout <tag>` on a
+# clean, writable tree. Those four preconditions are exactly what this image
+# provisions — do not strip them. An install never updates across channels.
+#
+# DATA PERSISTENCE — everything the kernel writes (config / sessions / logs /
+# memory / cache / agents / user extensions) lands under BOARAI_DATA_DIR=/data.
+# The volume is SHARED with the other two variants on purpose: switching
+# channel keeps your sessions.
+#   docker compose -f docker-compose.github.yml down      -> data SURVIVES
+#   docker compose -f docker-compose.github.yml down -v   -> data is DELETED
+#   inspect : docker volume inspect boarai-data
+#   backup  : docker run --rm -v boarai-data:/data -v "$PWD":/backup \
+#               alpine tar czf /backup/boarai-data.tgz -C /data .
+# Prefer a host directory (typical on a NAS)? Replace the volume line with
+#   - /volume1/docker/boarai:/data
+# and chown it to the runtime uid/gid first (the image is NOT root):
+#   mkdir -p /volume1/docker/boarai && chown -R 10001:10001 /volume1/docker/boarai
+
+name: boarai
 
 services:
   boarai:
     build:
+      # The context only has to exist; the inline Dockerfile copies nothing
+      # from it (the source arrives via git clone).
       context: .
-      dockerfile: docker/Dockerfile.github
       args:
-        BOARAI_GIT_REPO: "${BOARAI_GIT_REPO:?BOARAI_GIT_REPO must be set to the repository URL}"
+        BOARAI_GIT_REPO: "${BOARAI_GIT_REPO:-https://github.com/openboarai/boarai.git}"
         BOARAI_GIT_REF: "${BOARAI_GIT_REF:-main}"
+        BOARAI_UID: "${BOARAI_UID:-10001}"
+        BOARAI_GID: "${BOARAI_GID:-10001}"
+      dockerfile_inline: |
+        # syntax=docker/dockerfile:1
+        #
+        # NOTE: every dollar sign below is DOUBLED on purpose. Compose
+        # interpolates the whole YAML document — dockerfile_inline included —
+        # before the builder ever sees it, so an unescaped variable reference
+        # is replaced by the HOST's value (usually empty). The shell-level ":-"
+        # defaults are a second layer of the same defence, so even an
+        # explicitly empty --build-arg still produces a working image.
+
+        # ------------------------------------------------------------ clone --
+        FROM python:3.12-slim AS clone
+
+        ARG BOARAI_GIT_REPO=https://github.com/openboarai/boarai.git
+        ARG BOARAI_GIT_REF=main
+
+        RUN apt-get update \
+         && apt-get install -y --no-install-recommends git ca-certificates \
+         && rm -rf /var/lib/apt/lists/*
+
+        RUN set -eu; \
+            repo="$${BOARAI_GIT_REPO:-https://github.com/openboarai/boarai.git}"; \
+            ref="$${BOARAI_GIT_REF:-main}"; \
+            git clone --origin origin "$$repo" /opt/boarai; \
+            git -C /opt/boarai checkout "$$ref"
+
+        # ------------------------------------------------------------ final --
+        FROM python:3.12-slim
+
+        ARG BOARAI_UID=10001
+        ARG BOARAI_GID=10001
+
+        ENV PYTHONUNBUFFERED=1 \
+            PYTHONDONTWRITEBYTECODE=1 \
+            BOARAI_DATA_DIR=/data \
+            TIKTOKEN_CACHE_DIR=/opt/boarai-tiktoken
+
+        # git is part of this channel's runtime: the update worker shells out
+        # to it. Fixed uid/gid so host bind mounts have a predictable owner.
+        RUN set -eu; \
+            uid="$${BOARAI_UID:-10001}"; \
+            gid="$${BOARAI_GID:-10001}"; \
+            apt-get update; \
+            apt-get install -y --no-install-recommends git ca-certificates; \
+            rm -rf /var/lib/apt/lists/*; \
+            groupadd --system --gid "$$gid" boarai; \
+            useradd --system --uid "$$uid" --gid "$$gid" \
+                    --create-home --shell /usr/sbin/nologin boarai; \
+            mkdir -p /data /opt/boarai-tiktoken; \
+            chown -R boarai:boarai /data /opt/boarai-tiktoken
+
+        COPY --from=clone --chown=boarai:boarai /opt/boarai /opt/boarai
+        WORKDIR /opt/boarai
+
+        RUN pip install --no-cache-dir -r requirements.txt
+
+        USER boarai
+
+        # Bake the cl100k_base encoding into the image; a failed warm-up is
+        # not fatal (the kernel falls back to a char-based estimate).
+        RUN python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')" || true
+
+        EXPOSE 26620
+
+        # Public endpoint, needs no credential: proves the HTTP edge is serving.
+        HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+          CMD python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:26620/api/auth/status', timeout=4)"
+
+        # git-channel launch shape (update/steward.server_launch_prefix).
+        CMD ["python", "main.py"]
     image: boarai-github:local
+    container_name: boarai
+    # tini as PID 1: the kernel spawns subprocesses (shell tools AND git), so
+    # signals must be forwarded and orphans reaped.
+    init: true
+    ports:
+      # host:container — the kernel listens on 26620 inside
+      - "${BOARAI_HOST_PORT:-26620}:26620"
+    environment:
+      BOARAI_DATA_DIR: /data
+      # First-run access key. The browser setup page trusts loopback peers
+      # only, which a bridged container never sees, so seed the key one of two
+      # ways:
+      #   1. one-off command (prints the key once):
+      #        docker compose -f docker-compose.github.yml run --rm boarai python main.py key init
+      #   2. pre-seed a token here (>=32 base64url chars; adopted on first run
+      #      only, never overrides an existing key):
+      # BOARAI_API_TOKEN: "replace-with-32-plus-base64url-chars"
+    volumes:
+      - boarai-data:/data
+    restart: unless-stopped
+    # The kernel writes through atomic temp+rename, so a hard stop cannot
+    # corrupt state; the grace period still lets in-flight requests finish.
+    # A git-channel self-update also needs room to finish its checkout.
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  boarai-data:
+    # Explicit name: the backup/inspect commands above stay valid no matter
+    # which directory compose was invoked from.
+    name: boarai-data

@@ -17,7 +17,6 @@ include .gitignore .gitattributes
 recursive-include boar *
 recursive-include boarai *
 recursive-include docs *
-recursive-include docker *
 
 global-exclude *.pyc *.pyo
 prune **/__pycache__

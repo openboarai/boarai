@@ -15,7 +15,7 @@ import json
 import logging
 from datetime import datetime
 from collections import Counter
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 from dataclasses import dataclass, field
 
 from ..event import Event, get_event_bus, publish_event

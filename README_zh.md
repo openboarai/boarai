@@ -50,15 +50,30 @@ pip install -r requirements.txt     # 或：pip install -e .
 
 三个镜像对应三种安装/更新渠道——安装只经自己的渠道自更新：
 
-| 变体 | 构建并运行 | 容器内自更新 |
-|------|-----------|--------------|
-| 源码（默认） | `docker compose up -d --build` | source 渠道（发行包归档替换） |
-| PyPI | `docker compose -f docker-compose.yml -f docker-compose.pypi.yml up -d --build` | pip 渠道（`pip install -U boarai`） |
-| GitHub | `BOARAI_GIT_REPO=<仓库地址> docker compose -f docker-compose.yml -f docker-compose.github.yml up -d --build` | git 渠道（`git fetch --tags` + checkout） |
+| 变体 | 构建并运行 | 需要源码树？ | 容器内自更新 |
+|------|-----------|--------------|--------------|
+| 源码（默认） | `docker compose up -d --build` | 需要（`Dockerfile` 要 COPY） | source 渠道（发行包归档替换） |
+| PyPI | `docker compose -f docker-compose.pypi.yml up -d --build` | 不需要 | pip 渠道（`pip install -U boarai`） |
+| GitHub | `docker compose -f docker-compose.github.yml up -d --build` | 不需要（镜像内 clone） | git 渠道（`git fetch --tags` + checkout） |
 
-锁定版本：`BOARAI_VERSION=1.2.3`（PyPI 变体）或 `BOARAI_GIT_REF=v1.2.0`（GitHub 变体）。
+`docker-compose.pypi.yml` 与 `docker-compose.github.yml` 是**自带全部内容的单文件**：Dockerfile 已内联，把这一个文件拷到任何机器（或直接粘进 NAS 的 compose 界面）就能构建，构建上下文里不需要任何东西。要求 Docker Compose >= 2.17。源码变体则必须在其旁边的源码树里构建——解包 PyPI 的 sdist 即可当作那棵树。
 
-会话、记忆与配置落在命名卷 `boarai-data`（挂载到容器内 `/data`）。浏览器引导页只信任回环来源，桥接网络下的容器永远不满足，因此首次钥匙用一次性命令创建：
+锁定版本：`BOARAI_VERSION=0.1.1`（PyPI 变体）、`BOARAI_GIT_REF=v0.1.1`（GitHub 变体）、`BOARAI_GIT_REPO=<你的 fork>`；换宿主端口用 `BOARAI_HOST_PORT=8080`。
+
+**数据持久化**：会话、记忆、日志、配置与用户扩展全部落在 `BOARAI_DATA_DIR=/data`，由命名卷 `boarai-data` 承载（三个变体共用同一个卷，换渠道不丢数据）。`docker compose down` 保留数据，`docker compose down -v` 会删除。备份与恢复：
+
+```bash
+docker run --rm -v boarai-data:/data -v "$PWD":/backup alpine tar czf /backup/boarai-data.tgz -C /data .
+docker run --rm -v boarai-data:/data -v "$PWD":/backup alpine tar xzf /backup/boarai-data.tgz -C /data
+```
+
+想直接用宿主目录（NAS 常见做法），把 `- boarai-data:/data` 换成 `- /volume1/docker/boarai:/data`，并先把目录属主改成运行时用户——容器**不是 root**，跑在 uid/gid `10001`（可用 `BOARAI_UID` / `BOARAI_GID` 覆盖）：
+
+```bash
+mkdir -p /volume1/docker/boarai && chown -R 10001:10001 /volume1/docker/boarai
+```
+
+**首次访问钥匙**：浏览器引导页只信任回环来源，桥接网络下的容器永远不满足，因此钥匙用一次性命令创建：
 
 ```bash
 docker compose run --rm boarai python main.py key init       # 源码 / github 镜像

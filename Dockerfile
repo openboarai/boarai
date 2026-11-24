@@ -37,10 +37,19 @@ COPY boarai ./boarai
 COPY boar ./boar
 
 # Non-root runtime user. The tree stays user-writable: the source channel
-# swaps release archives in place and must be able to write here.
-RUN useradd --system --create-home --shell /usr/sbin/nologin boarai \
- && mkdir -p /data /opt/boarai-tiktoken \
- && chown -R boarai:boarai /data /opt/boarai-tiktoken /opt/boarai
+# swaps release archives in place and must be able to write here. The uid/gid
+# are fixed (and overridable) so a host bind mount for /data can be chowned to
+# a predictable owner — the container is NOT root.
+ARG BOARAI_UID=10001
+ARG BOARAI_GID=10001
+RUN set -eu; \
+    uid="${BOARAI_UID:-10001}"; \
+    gid="${BOARAI_GID:-10001}"; \
+    groupadd --system --gid "$gid" boarai; \
+    useradd --system --uid "$uid" --gid "$gid" \
+            --create-home --shell /usr/sbin/nologin boarai; \
+    mkdir -p /data /opt/boarai-tiktoken; \
+    chown -R boarai:boarai /data /opt/boarai-tiktoken /opt/boarai
 
 USER boarai
 
