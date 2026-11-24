@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{Name}} settings</title>
+<script src="/static/js/boar-sdk.js"></script>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 16px; font: 13px/1.5 system-ui, sans-serif; background: transparent; }
+  label { display: block; margin-bottom: 6px; font-weight: 600; }
+  input { width: 100%; box-sizing: border-box; padding: 8px 10px;
+          border: 1px solid #d1d5db; border-radius: 8px; font: inherit; }
+  .row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+  button { padding: 8px 14px; border: 0; border-radius: 8px; font: inherit;
+           background: #2563eb; color: #fff; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  #msg { min-height: 18px; }
+  .ok { color: #059669; } .err { color: #dc2626; }
+  @media (prefers-color-scheme: dark) {
+    input { background: #1f2937; border-color: #4b5563; color: #e5e7eb; }
+  }
+</style>
+</head>
+<body>
+  <label for="greeting" id="greetingLabel">Greeting</label>
+  <input id="greeting" placeholder="hello">
+  <div class="row">
+    <!-- Disabled until load() finishes: a click before the config arrives
+         would save over values the async fetch has not applied yet. -->
+    <button id="save" disabled>Save</button>
+    <span id="msg"></span>
+  </div>
+
+<script>
+(function () {
+  // The settings dialog passes the active WebUI language; this page owns its
+  // strings in i18n/<lang>.json (see boar/prompts/extension/plugins.md).
+  const lang = (new URLSearchParams(location.search).get('lang') || 'en')
+    .split('-')[0];
+  let T = {};
+  let ready = false;   // false until load() has applied the server config
+  const t = (k, fb) => T[k] || fb;
+  const input = document.getElementById('greeting');
+  const msg = document.getElementById('msg');
+  const setMsg = (txt, c) => { msg.textContent = txt; msg.className = c || ''; };
+
+  async function load() {
+    try {
+      const resp = await fetch('i18n/' + lang + '.json');
+      if (resp.ok) T = await resp.json();
+    } catch (e) { /* English literals below are the fallback */ }
+    document.getElementById('greetingLabel').textContent = t('greeting', 'Greeting');
+    document.getElementById('save').textContent = t('save', 'Save');
+    try {
+      const cfg = await boar.getConfig();
+      input.value = cfg.greeting || '';
+    } catch (e) { setMsg(t('loadFailed', 'Load failed: ') + e.message, 'err'); }
+    ready = true;
+    btn.disabled = false;
+  }
+
+  const btn = document.getElementById('save');
+  document.getElementById('save').onclick = async () => {
+    if (!ready) return;
+    btn.disabled = true; setMsg('');
+    try {
+      await boar.saveConfig({ greeting: input.value.trim() });
+      setMsg(t('saved', 'Saved — applied immediately.'), 'ok');
+    } catch (e) { setMsg(e.message, 'err'); }
+    btn.disabled = false;
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>

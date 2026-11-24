@@ -1,0 +1,20 @@
+# GitHub (git-channel) override. Usage:
+#   BOARAI_GIT_REPO=https://github.com/<org>/boarai.git \
+#     docker compose -f docker-compose.yml -f docker-compose.github.yml up -d --build
+# Optional ref:  BOARAI_GIT_REF=v1.2.0   (default: main)
+#
+# BOARAI_GIT_REPO is mandatory: the file fails fast when it is unset. Until
+# the public repository exists, build the source or pypi variant instead.
+#
+# The container self-updates through the git channel (git fetch --tags +
+# checkout on the embedded clean checkout), matching a host git install.
+
+services:
+  boarai:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.github
+      args:
+        BOARAI_GIT_REPO: "${BOARAI_GIT_REPO:?BOARAI_GIT_REPO must be set to the repository URL}"
+        BOARAI_GIT_REF: "${BOARAI_GIT_REF:-main}"
+    image: boarai-github:local

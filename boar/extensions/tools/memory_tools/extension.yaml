@@ -1,0 +1,5 @@
+name: memory_tools
+version: 1.0.0
+extension_type: tool
+description: Memory tools — recall, remember, list and forget long-term memory entries
+author: BoarAi

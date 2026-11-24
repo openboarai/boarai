@@ -1,0 +1,5 @@
+name: task_tools
+version: 1.0.0
+extension_type: tool
+description: Task management tools — create, update, list tasks
+author: BoarAi

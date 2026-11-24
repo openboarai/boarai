@@ -1,0 +1,52 @@
+name: "{{name}}"
+version: "0.1.0"
+extension_type: "{{type}}"
+description: "Kitchen-sink extension exercising every contributes kind."
+author: "you"
+{{channel_identity}}
+# config_defaults seeds _config on first load (caller config and the persisted
+# config.json override it). There is NO config_schema — the settings panel is
+# your own page (contributes.ui below).
+config_defaults:
+  greeting: "hello"
+contributes:
+  tools:
+    - id: "{{name}}_echo"
+      handler: code.py#echo_tool
+      description: "Echo a message back."
+      schema:
+        message: {type: string, description: "text to echo", required: true}
+  routes:
+    - method: GET
+      path: "/echo"
+      handler: code.py#echo_route
+      description: "Echo via HTTP (GET /api/ext/{{name}}/echo?message=hi)"
+    - method: GET
+      path: "/status"
+      handler: code.py#status_route
+      description: "Runtime status"
+  hooks:
+    - event: core.tool.post_execute
+      handler: code.py#on_tool_executed
+      order: 0
+  hook_points:
+    - name: processed
+      semantics: observe
+      description: "Fired after this extension processes something."
+      visibility: public
+  services:
+    - methods: [code.py#get_status]
+  ui:
+    panel:
+      title: "{{Name}}"
+      icon: settings
+      kind: custom
+      custom_url: "/static/{{name}}/settings.html"
+      custom_height: 240
+    actions:
+      - id: show_state
+        label: "Show state"
+        icon: activity
+        style: default
+        timeout: 15
+        handler: code.py#show_state

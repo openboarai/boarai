@@ -1,0 +1,712 @@
+/* Main CSS for BoarAi WebUI */
+/* This file supplements TailwindCSS with CSS variables and custom styles */
+
+/* Import CSS Variables */
+@import url('./variables.css');
+
+/*
+ * Ensure <i data-lucide> always respects width/height BEFORE Lucide replaces
+ * them with <svg>. Default <i> is display:inline, which ignores width/height
+ * on non-replaced inline elements. This causes a layout shift when Lucide
+ * asynchronously replaces <i> with <svg> (a replaced element that DOES
+ * respect width/height). inline-block fixes this universally.
+ */
+i[data-lucide] {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Reset and Base Styles (minimal, TailwindCSS handles most) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family-primary);
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom Utility Classes for CSS Variables */
+.h-navbar {
+  height: var(--navbar-height);
+}
+
+.h-statusbar {
+  height: var(--statusbar-height);
+}
+
+.pt-navbar {
+  padding-top: var(--navbar-height);
+}
+
+.pb-statusbar {
+  padding-bottom: var(--statusbar-height);
+}
+
+.bottom-statusbar {
+  bottom: var(--statusbar-height);
+}
+
+/* Status Dot with Pulse Animation */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-hint);
+}
+
+.status-dot.connected {
+  background: var(--success-color);
+  animation: pulse-dot 2s infinite;
+}
+
+.status-dot.disconnected {
+  background: var(--error-color);
+}
+
+.status-dot.connecting {
+  background: var(--warning-color);
+  animation: pulse-dot 1s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Scrollbar Styles - Hidden but functional */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: transparent;
+}
+
+/* Dark mode scrollbar - Hidden */
+.dark ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: transparent;
+}
+
+/* Firefox scrollbar - Hidden */
+* {
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+
+/* Tooltip */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: var(--text-primary);
+  color: var(--background-color);
+  font-size: var(--font-size-sm);
+  border-radius: var(--border-radius-md);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-fast);
+  z-index: var(--z-index-tooltip);
+}
+
+[data-tooltip]:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Loading Shimmer Animation */
+.loading-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Selection Color (follows active primary via rgb var) */
+::selection {
+  background: rgb(var(--primary-rgb) / 0.3);
+  color: inherit;
+}
+
+/* Focus Styles */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Default smooth interaction transitions (no global 0ms hack). */
+* {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Slightly longer during theme/color switches for a smooth crossfade. */
+.theme-transitioning *,
+.color-transition * {
+  transition-duration: 250ms !important;
+}
+
+/* Color theme specific styles */
+[data-color="purple"] .loading-screen {
+  background: linear-gradient(135deg, #5b21b6 0%, #8b5cf6 50%, #a78bfa 100%);
+}
+
+[data-color="purple"] .status-dot.connected {
+  background: var(--primary-color);
+}
+
+/* Print Styles */
+@media print {
+  .navbar,
+  .statusbar,
+  .bottom-nav {
+    display: none !important;
+  }
+  
+}
+
+/* Markdown Body Styles — typography scale + IDE-style code blocks.
+   Token spans (.tok-*) and the .md-codeblock wrapper are injected by
+   sessions.js after sanitization; code keeps a dark canvas in both themes
+   with GitHub-Dark token colours. */
+.markdown-body {
+  --md-border: #e5e7eb;
+  --md-border-strong: #d1d5db;
+  --md-head: #111827;
+  --md-muted: #57606a;
+  --md-surface: #f6f8fa;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  word-wrap: break-word;
+}
+
+.dark .markdown-body {
+  --md-border: #30363d;
+  --md-border-strong: #3d444d;
+  --md-head: #f0f6fc;
+  --md-muted: #9ca3af;
+  --md-surface: #161b22;
+}
+
+.markdown-body > :first-child {
+  margin-top: 0;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  margin-top: 1.4em;
+  margin-bottom: 0.6em;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--md-head);
+}
+
+.markdown-body h1 {
+  font-size: 1.6em;
+  font-weight: 700;
+  padding-bottom: 0.45em;
+  border-bottom: 1px solid var(--md-border);
+}
+
+.markdown-body h2 {
+  font-size: 1.35em;
+  font-weight: 700;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid var(--md-border);
+}
+
+.markdown-body h3 {
+  font-size: 1.18em;
+}
+
+.markdown-body h4 {
+  font-size: 1.05em;
+}
+
+.markdown-body h5 {
+  font-size: 0.95em;
+  color: var(--md-muted);
+}
+
+.markdown-body h6 {
+  font-size: 0.82em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-muted);
+}
+
+.markdown-body p {
+  margin-top: 0;
+  margin-bottom: 0.8em;
+}
+
+/* Session replies sit directly above the round footer (time + copy), so the
+   trailing paragraph/list/code margin must not add a second gap. The reply
+   HTML nests two wrappers (.assistant-message-content > div) before the
+   markdown elements, so the rule must reach the deepest child. */
+.session-assistant-message.markdown-body > :last-child,
+.session-assistant-message.markdown-body .assistant-message-content > div > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body a {
+  color: var(--primary-color);
+  text-decoration: underline;
+  text-decoration-color: rgb(var(--primary-rgb) / 0.35);
+  text-underline-offset: 3px;
+}
+
+.markdown-body a:hover {
+  text-decoration-color: var(--primary-color);
+}
+
+.markdown-body strong {
+  font-weight: 700;
+}
+
+.markdown-body em {
+  font-style: italic;
+}
+
+.markdown-body del {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.markdown-body kbd {
+  padding: 0.15em 0.45em;
+  font-size: 80%;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  color: var(--md-head);
+  background-color: var(--md-surface);
+  border: 1px solid var(--md-border-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+}
+
+/* Tailwind's preflight sets list-style:none on every ul/ol, so markdown lists
+   render as bare indented lines unless the marker is restored here. */
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.6em;
+  margin-top: 0.25em;
+  margin-bottom: 0.8em;
+  list-style-position: outside;
+}
+
+.markdown-body ul {
+  list-style-type: disc;
+}
+
+.markdown-body ol {
+  list-style-type: decimal;
+}
+
+.markdown-body ul ul {
+  list-style-type: circle;
+}
+
+.markdown-body ul ul ul {
+  list-style-type: square;
+}
+
+.markdown-body li {
+  margin-bottom: 0.35em;
+  padding-left: 0.15em;
+}
+
+.markdown-body li::marker {
+  color: rgb(var(--primary-rgb) / 0.75);
+}
+
+.markdown-body li > ul,
+.markdown-body li > ol {
+  margin-top: 0.25em;
+  margin-bottom: 0;
+}
+
+.markdown-body li > p {
+  margin-bottom: 0.35em;
+}
+
+/* GFM task lists: the sanitizer keeps the disabled checkbox; the vendored
+   marked emits no task-list classes, so match structurally (:has, with the
+   class selector kept for future marked versions). */
+.markdown-body li.task-list-item,
+.markdown-body li:has(> input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.5em;
+}
+
+.markdown-body li > input[type="checkbox"]:first-child {
+  margin-right: 0.5em;
+  accent-color: var(--primary-color);
+  vertical-align: -0.1em;
+}
+
+.markdown-body code {
+  padding: 0.15em 0.45em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgb(var(--primary-rgb) / 0.08);
+  border: 1px solid rgb(var(--primary-rgb) / 0.2);
+  border-radius: 5px;
+  color: #4338ca;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.dark .markdown-body code {
+  background-color: rgb(var(--primary-rgb) / 0.16);
+  border-color: rgb(var(--primary-rgb) / 0.32);
+  color: #c4b5fd;
+}
+
+/* Inline-code tint must not leak into code blocks: this reset needs one more
+   class than the rule above to out-specify it in dark mode. */
+.dark .markdown-body pre code {
+  background-color: transparent;
+  border-color: transparent;
+  color: #e6edf3;
+}
+
+/* Fallback frame for any <pre> that escapes the wrapper pass. */
+.markdown-body pre {
+  padding: 1em;
+  margin-top: 0;
+  margin-bottom: 1em;
+  overflow-x: auto;
+  /* Same dark canvas as the diff viewers in both themes — a light-mode
+   * pastel-on-black clash is avoided by keeping code blocks always dark. */
+  background-color: #0d1117;
+  border: 1px solid #2d333b;
+  border-radius: 8px;
+  font-size: 85%;
+  line-height: 1.65;
+}
+
+.markdown-body pre code {
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: 100%;
+  color: #e6edf3;
+}
+
+/* IDE-style code block: header bar (language tab + copy button) over a dark
+   canvas; injected by sessions.js mdEnhanceCodeBlocks(). */
+.markdown-body .md-codeblock {
+  margin: 0 0 1em;
+  background-color: #0d1117;
+  border: 1px solid #2d333b;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+}
+
+.markdown-body .md-codeblock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.9rem;
+  background-color: #161b22;
+  border-bottom: 1px solid #2d333b;
+}
+
+.markdown-body .md-codeblock-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8b949e;
+  user-select: none;
+}
+
+.markdown-body .md-codeblock-lang::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  box-shadow: 0 0 6px rgb(var(--primary-rgb) / 0.7);
+}
+
+.markdown-body .md-codeblock-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.3rem 0.5rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #8b949e;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+}
+
+.markdown-body .md-codeblock-copy:hover {
+  color: #e6edf3;
+  background-color: rgb(255 255 255 / 0.06);
+  border-color: #2d333b;
+}
+
+.markdown-body .md-codeblock-copy .md-ic {
+  width: 13px;
+  height: 13px;
+}
+
+.markdown-body .md-codeblock-copy .md-ic-check {
+  display: none;
+}
+
+.markdown-body .md-codeblock-copy.is-copied {
+  color: #3fb950;
+}
+
+.markdown-body .md-codeblock-copy.is-copied .md-ic-check {
+  display: block;
+}
+
+.markdown-body .md-codeblock-copy.is-copied .md-ic-copy {
+  display: none;
+}
+
+.markdown-body .md-codeblock pre {
+  margin: 0;
+  padding: 0.9em 1em;
+  max-height: 480px;
+  overflow: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: 82.5%;
+  line-height: 1.65;
+  tab-size: 4;
+}
+
+.markdown-body pre::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.markdown-body pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.markdown-body pre::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 8px;
+}
+
+.markdown-body pre::-webkit-scrollbar-thumb:hover {
+  background: #3d444d;
+}
+
+/* Syntax tokens (GitHub Dark palette). */
+.markdown-body .tok-kw {
+  color: #ff7b72;
+}
+
+.markdown-body .tok-str {
+  color: #a5d6ff;
+}
+
+.markdown-body .tok-num,
+.markdown-body .tok-lit,
+.markdown-body .tok-attr {
+  color: #79c0fd;
+}
+
+.markdown-body .tok-fn,
+.markdown-body .tok-dec {
+  color: #d2a8ff;
+}
+
+.markdown-body .tok-type,
+.markdown-body .tok-var {
+  color: #ffa657;
+}
+
+.markdown-body .tok-tag,
+.markdown-body .tok-key {
+  color: #7ee787;
+}
+
+.markdown-body .tok-comment {
+  color: #8b949e;
+  font-style: italic;
+}
+
+.markdown-body blockquote {
+  padding: 0.6em 1em;
+  margin: 0 0 1em 0;
+  border-left: 3px solid var(--primary-color);
+  background-color: rgb(var(--primary-rgb) / 0.06);
+  border-radius: 0 8px 8px 0;
+  color: var(--md-muted);
+}
+
+.markdown-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body blockquote blockquote {
+  margin: 0.5em 0;
+  background-color: rgb(var(--primary-rgb) / 0.05);
+}
+
+.dark .markdown-body blockquote {
+  background-color: rgb(var(--primary-rgb) / 0.1);
+}
+
+.markdown-body table {
+  display: block;
+  overflow-x: auto;
+  width: auto;
+  margin-top: 0;
+  margin-bottom: 1em;
+  border: 1px solid var(--md-border);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 8px;
+  font-size: 0.92em;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 0.55em 1em;
+  border-bottom: 1px solid var(--md-border);
+  text-align: left;
+}
+
+.markdown-body table th {
+  font-weight: 600;
+  color: var(--md-head);
+  background-color: var(--md-surface);
+}
+
+/* GFM column alignment survives the sanitizer as align attrs; mirror them. */
+.markdown-body table th[align="center"],
+.markdown-body table td[align="center"] {
+  text-align: center;
+}
+
+.markdown-body table th[align="right"],
+.markdown-body table td[align="right"] {
+  text-align: right;
+}
+
+.markdown-body table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.markdown-body table tbody tr:nth-child(even) {
+  background-color: rgb(0 0 0 / 0.02);
+}
+
+.dark .markdown-body table tbody tr:nth-child(even) {
+  background-color: rgb(255 255 255 / 0.03);
+}
+
+.markdown-body hr {
+  height: 1px;
+  margin: 1.8em 0;
+  background: linear-gradient(to right, rgb(0 0 0 / 0), var(--md-border-strong), rgb(0 0 0 / 0));
+  border: 0;
+}
+
+.markdown-body img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--md-border);
+  border-radius: 6px;
+}
+
+/* Run Indicator Capsule Animation */
+.animate-in-float {
+  animation: float-in 0.3s ease-out forwards;
+}
+
+@keyframes float-in {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Mobile chrome geometry lives in polish.css (single source of truth:
+   --mobile-statusbar-h / --mobile-nav-h). The old compensation block that
+   lived here hardcoded 100vh - 60 - 40 - 57 and was overridden by polish.css,
+   which is exactly how the 26px composer overlap slipped in — do not add a
+   second copy. */

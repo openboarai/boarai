@@ -1,0 +1,14 @@
+name: file_tools
+version: 1.4.0
+extension_type: tool
+description: File system operations — read, write, edit, move, copy, delete, glob, grep, search, trash list/restore
+author: BoarAi
+pip_dependencies: []
+contributes:
+  hook_points:
+    - name: pre_write
+      semantics: blockable
+      description: "Called before a file write; return {'blocked': true} to veto"
+    - name: post_write
+      semantics: observe
+      description: "Called after a file write"

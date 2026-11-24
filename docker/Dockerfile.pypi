@@ -1,0 +1,52 @@
+# syntax=docker/dockerfile:1
+
+# BoarAI — PYPI channel image.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.pypi.yml up -d --build
+#   pin a release:  --build-arg BOARAI_VERSION=1.2.3   (empty = latest)
+#
+# The package is installed from PyPI into a dedicated venv owned by the
+# runtime user. Both choices are channel semantics, not taste:
+#   - the steward detects "package under this interpreter's site-packages"
+#     as the pip channel, whose in-place update runs
+#     `sys.executable -m pip install -U boarai`;
+#   - that command needs a writable target, and system site-packages under a
+#     non-root user is not one — hence the user-owned venv.
+
+FROM python:3.12-slim
+
+# Empty = latest published release.
+ARG BOARAI_VERSION=
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    BOARAI_DATA_DIR=/data \
+    TIKTOKEN_CACHE_DIR=/opt/boarai-tiktoken \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
+
+RUN python -m venv /opt/venv \
+ && useradd --system --create-home --shell /usr/sbin/nologin boarai \
+ && mkdir -p /data /opt/boarai-tiktoken \
+ && chown -R boarai:boarai /data /opt/boarai-tiktoken /opt/venv
+
+USER boarai
+
+RUN if [ -n "$BOARAI_VERSION" ]; then \
+      pip install --no-cache-dir "boarai==$BOARAI_VERSION"; \
+    else \
+      pip install --no-cache-dir boarai; \
+    fi
+
+# Bake the cl100k_base encoding into the image; a failed warm-up is not fatal
+# (the kernel falls back to a char-based estimate).
+RUN python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')" || true
+
+EXPOSE 26620
+
+# Public endpoint, needs no credential: proves the HTTP edge is serving.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:26620/api/auth/status', timeout=4)"
+
+# pip-channel launch shape (update/steward.server_launch_prefix).
+CMD ["python", "-m", "boarai"]

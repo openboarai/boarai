@@ -1,0 +1,719 @@
+# BoarAi 模型目录 —— 只读事实层
+#
+# 这里存的是核心无法从请求里推断出来的厂商事实：上下文长度、思考档位与请求体
+# 形态、采样参数约束、是否需要回传 reasoning_content、输入模态。
+#
+# 本文件不在 boar/defaults/ 下，因此 bootstrap 不会把它复制进用户数据目录
+# （copy_defaults 只复制 boar/defaults/），升级即对所有安装生效。
+#
+# 与某一次安装有关的修正写在 .boarai/config/llm.yaml：上下文长度用
+# context_windows，思考形态用该 provider 的 options.thinking 或
+# model_info.<model>.thinking。本文件在运行时只读，没有用户副本，也没有编辑器。
+#
+# 匹配顺序：精确 id → aliases → families 正则（按文件顺序，先具体后宽泛）。
+# 什么都没匹配到的模型视为未知：不发送任何思考字段，
+# 上下文长度回退到 llm.yaml 的 context_windows，再回退到「未知」。
+#
+# thinking.format 的取值与含义见 core/llm/thinking/wire.py：
+#   openai | openrouter | deepseek | moonshot | zai | qwen | qwen-template |
+#   together | anthropic | string | none
+#
+# 我们的 UI 档位到「请求档位」的固定映射在 core/session/thinking/config.py：
+#   auto → 不发字段   off → off   light → low   deep → medium   ultra → xhigh
+# 下面每个模型的 levels / level_map 决定这个请求档位最终落到厂商的哪个值。
+
+version: 1
+
+models:
+  # ══ Anthropic ══════════════════════════════════════════════════════════
+  # Claude 3 / 3.5 没有扩展思考请求字段；3.7 到 4.5 用 budget 块（不发即关闭，
+  # 且开启时 temperature 必须为 1）；4.6 起是 adaptive；4.7 起还拒绝任何非默认
+  # 采样参数。Haiku 全系没有扩展思考。claude-fable 强制推理，显式关闭会 400。
+  - id: claude-3-opus-20240229
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 4096
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: claude-3-sonnet-20240229
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 4096
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: claude-3-haiku-20240307
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 4096
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: claude-3-5-sonnet-20240620
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 8192
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: claude-3-5-sonnet-20241022
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 8192
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: claude-3-5-sonnet-20250219
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 8192
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: claude-3-5-haiku-20241022
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 8192
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: claude-3-7-sonnet-20250219
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 128000
+    input_modalities: [text, image]
+    thinking: &anthropic-budget
+      format: anthropic
+      adaptive: false
+      levels: [low, medium, high, xhigh]
+      can_disable: true
+      supports_effort: false
+      disable_by_omission: true
+  - id: claude-4-opus-20250514
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 32000
+    input_modalities: [text, image]
+    thinking: *anthropic-budget
+  - id: claude-4-sonnet-20250514
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 64000
+    input_modalities: [text, image]
+    thinking: *anthropic-budget
+  - id: claude-opus-4-1
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 32000
+    input_modalities: [text, image]
+    thinking: *anthropic-budget
+  - id: claude-opus-4-5
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 64000
+    input_modalities: [text, image]
+    thinking: *anthropic-budget
+  - id: claude-sonnet-4-5
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 64000
+    input_modalities: [text, image]
+    thinking: *anthropic-budget
+  - id: claude-haiku-4-5
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 64000
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: claude-opus-4-6
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 128000
+    input_modalities: [text, image]
+    thinking: &anthropic-adaptive-46
+      format: anthropic
+      adaptive: true
+      levels: [low, medium, high, max]
+      level_map: {xhigh: max}
+      can_disable: true
+      supports_effort: true
+  - id: claude-sonnet-4-6
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 64000
+    input_modalities: [text, image]
+    thinking: *anthropic-adaptive-46
+  - id: claude-opus-4-7
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 128000
+    input_modalities: [text, image]
+    forbids_sampling: true
+    thinking: &anthropic-adaptive-modern
+      format: anthropic
+      adaptive: true
+      levels: [low, medium, high, xhigh, max]
+      can_disable: true
+      supports_effort: true
+  - id: claude-opus-4-8
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 128000
+    input_modalities: [text, image]
+    forbids_sampling: true
+    thinking: *anthropic-adaptive-modern
+  - id: claude-sonnet-5
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 128000
+    input_modalities: [text, image]
+    forbids_sampling: true
+    thinking: *anthropic-adaptive-modern
+  - id: claude-fable-5
+    vendor: anthropic
+    context_window: 1000000
+    max_output_tokens: 128000
+    input_modalities: [text, image]
+    forbids_sampling: true
+    thinking:
+      <<: *anthropic-adaptive-modern
+      can_disable: false        # 强制推理：发 disabled 会 400，off 退到最低档
+
+  # ══ DeepSeek ═══════════════════════════════════════════════════════════
+  # V4 起：每次请求都必须显式带 thinking 开关（省略则服务端默认开启，并要求
+  # 后续轮次回传 reasoning_content，否则第一次工具调用后 400）。R1 恒定推理，
+  # V3 及更早没有思考开关。
+  - id: deepseek-v4-flash
+    vendor: deepseek
+    context_window: 1048576
+    input_modalities: [text]
+    aliases: [deepseek-flash]
+    echo_reasoning_content: true
+    thinking: &deepseek-v4
+      format: deepseek
+      levels: [low, medium, high, max]
+      level_map: {xhigh: max}
+      can_disable: true
+      supports_effort: true
+  # 历史 id：现在指向 V4 Flash，思考行为与 V4 相同，但上下文长度沿用本项目
+  # 一直在用的数值（中转可能并不放开到 1M），需要时在覆盖层改。
+  - id: deepseek-chat
+    vendor: deepseek
+    context_window: 65536
+    input_modalities: [text]
+    echo_reasoning_content: true
+    thinking: *deepseek-v4
+  - id: deepseek-reasoner
+    vendor: deepseek
+    context_window: 65536
+    input_modalities: [text]
+    echo_reasoning_content: true
+    thinking: *deepseek-v4
+  - id: deepseek-v4-pro
+    vendor: deepseek
+    input_modalities: [text]
+    echo_reasoning_content: true
+    thinking: *deepseek-v4
+  - id: deepseek-v3
+    vendor: deepseek
+    context_window: 65536
+    input_modalities: [text]
+    thinking: {format: none}
+  - id: deepseek-r1
+    vendor: deepseek
+    context_window: 65536
+    input_modalities: [text]
+    thinking: {format: none}
+  - id: deepseek-v2
+    vendor: deepseek
+    context_window: 128000
+    input_modalities: [text]
+    thinking: {format: none}
+
+  # ══ GLM / Z.AI ═════════════════════════════════════════════════════════
+  # 4.5 起有 thinking 开关（接受显式 disabled）；5.2 增加 high/max 两档
+  # reasoning_effort；5.3 扩展为 low/medium/high/max 四档。4.5 之前无开关。
+  - id: glm-5.3
+    vendor: zai
+    input_modalities: [text]
+    aliases: [glm-5-3, glm-5p3, zai-org-glm-5-3]
+    thinking: &glm-53
+      format: zai
+      levels: [low, medium, high, max]
+      level_map: {xhigh: max}
+      can_disable: true
+      supports_effort: true
+      enable_value: {type: enabled}
+      disable_value: {type: disabled}
+  - id: glm-5.2
+    vendor: zai
+    input_modalities: [text]
+    aliases: [glm-5-2, glm-5p2]
+    thinking:
+      <<: *glm-53
+      levels: [high, max]
+  - id: glm-5
+    vendor: zai
+    input_modalities: [text]
+    thinking: &glm-toggle
+      format: zai
+      levels: []
+      can_disable: true
+      supports_effort: false
+      enable_value: {type: enabled}
+      disable_value: {type: disabled}
+  - id: glm-4.6
+    vendor: zai
+    input_modalities: [text]
+    thinking: *glm-toggle
+  - id: glm-4.5
+    vendor: zai
+    input_modalities: [text]
+    thinking: *glm-toggle
+
+  # ══ Kimi / Moonshot ════════════════════════════════════════════════════
+  # chat_completions 端点上 thinking 与 reasoning_effort 互斥，同时发会 400：
+  # 有档位时只发 effort，只有关闭时才发 thinking。Moonshot 还不接受采样温度。
+  # 同一批模型也有 Anthropic 兼容端点，那边说的是 adaptive thinking，而且关闭
+  # 的方式是不发字段，所以按协议分别声明。
+  - id: kimi-k3
+    vendor: moonshot
+    input_modalities: [text]
+    aliases: [k3]
+    forbids_sampling: true
+    thinking: &kimi-k3
+      openai:
+        format: moonshot
+        levels: [low, high, max]
+        level_map: {medium: high, xhigh: max}
+        can_disable: true
+        supports_effort: true
+        disable_value: {type: disabled}
+      anthropic:
+        format: anthropic
+        adaptive: true
+        levels: [low, high, max]
+        level_map: {medium: high, xhigh: max}
+        can_disable: false      # 该端点上「关闭」就是不发字段
+        supports_effort: true
+  - id: kimi-k2-thinking
+    vendor: moonshot
+    input_modalities: [text]
+    forbids_sampling: true
+    thinking: &kimi-k2
+      openai:
+        format: moonshot
+        levels: [low, medium, high]
+        level_map: {xhigh: high}
+        can_disable: true
+        supports_effort: true
+        disable_value: {type: disabled}
+      anthropic:
+        format: anthropic
+        adaptive: true
+        levels: [low, medium, high]
+        level_map: {xhigh: high}
+        can_disable: false
+        supports_effort: true
+  - id: kimi-k2-turbo-preview
+    vendor: moonshot
+    input_modalities: [text]
+    forbids_sampling: true
+    thinking: *kimi-k2
+  - id: moonshot-v1-8k
+    vendor: moonshot
+    context_window: 8192
+    input_modalities: [text]
+    thinking: {format: none}
+  - id: moonshot-v1-32k
+    vendor: moonshot
+    context_window: 32768
+    input_modalities: [text]
+    thinking: {format: none}
+  - id: moonshot-v1-128k
+    vendor: moonshot
+    context_window: 128000
+    input_modalities: [text]
+    thinking: {format: none}
+
+  # ══ Qwen ═══════════════════════════════════════════════════════════════
+  # Qwen3 起用 enable_thinking 开关；qwen-max / qwen-plus / qwen-turbo 这些
+  # 2.x 世代 id 没有已验证的思考开关，只登记上下文长度。
+  - id: qwen3
+    vendor: alibaba
+    input_modalities: [text]
+    thinking: &qwen-thinking
+      format: qwen
+      levels: [low, medium, high]
+      level_map: {xhigh: high}
+      can_disable: true
+      supports_effort: true
+  - id: qwen-turbo
+    vendor: alibaba
+    context_window: 131072
+    input_modalities: [text]
+    thinking: {format: none}
+  - id: qwen-plus
+    vendor: alibaba
+    context_window: 131072
+    input_modalities: [text]
+    thinking: {format: none}
+  - id: qwen-max
+    vendor: alibaba
+    context_window: 32768
+    input_modalities: [text]
+    thinking: {format: none}
+  - id: qwen-max-longcontext
+    vendor: alibaba
+    context_window: 1048576
+    input_modalities: [text]
+    thinking: {format: none}
+
+  # ══ OpenAI ═════════════════════════════════════════════════════════════
+  # 非推理模型（gpt-4o / 4.1 / 3.5）不接受 reasoning_effort，发了会 400，
+  # 所以显式登记为 format: none。o 系列无法关闭思考；gpt-5 用 minimal 兜底，
+  # 5.1 起接受 none。
+  - id: gpt-5.6
+    vendor: openai
+    input_modalities: [text, image]
+    thinking: &openai-reasoning-disableable
+      format: openai
+      levels: [low, medium, high]
+      level_map: {"off": none, xhigh: high}   # off 必须加引号：YAML 1.1 会把它解析成布尔 False
+      can_disable: true
+      supports_effort: true
+  - id: gpt-5.5
+    vendor: openai
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-disableable
+  - id: gpt-5.4
+    vendor: openai
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-disableable
+  - id: gpt-5.2
+    vendor: openai
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-disableable
+  - id: gpt-5.1
+    vendor: openai
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-disableable
+  - id: gpt-5
+    vendor: openai
+    input_modalities: [text, image]
+    thinking:
+      format: openai
+      levels: [low, medium, high]
+      level_map: {"off": minimal, xhigh: high}
+      can_disable: true
+      supports_effort: true
+  - id: o1
+    vendor: openai
+    context_window: 200000
+    input_modalities: [text, image]
+    thinking: &openai-reasoning-mandatory
+      format: openai
+      levels: [low, medium, high]
+      level_map: {xhigh: high}
+      can_disable: false
+      supports_effort: true
+  - id: o1-mini
+    vendor: openai
+    context_window: 128000
+    input_modalities: [text]
+    thinking: *openai-reasoning-mandatory
+  - id: o3
+    vendor: openai
+    context_window: 200000
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-mandatory
+  - id: o3-mini
+    vendor: openai
+    context_window: 200000
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-mandatory
+  - id: o4-mini
+    vendor: openai
+    context_window: 200000
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-mandatory
+  - id: gpt-4o
+    vendor: openai
+    context_window: 128000
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: gpt-4o-mini
+    vendor: openai
+    context_window: 128000
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: gpt-4.1
+    vendor: openai
+    context_window: 1048576
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: gpt-4.1-mini
+    vendor: openai
+    context_window: 1048576
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: gpt-4.1-nano
+    vendor: openai
+    context_window: 1048576
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: gpt-4
+    vendor: openai
+    context_window: 8192
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: gpt-4-32k
+    vendor: openai
+    context_window: 32768
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: gpt-4-turbo
+    vendor: openai
+    context_window: 128000
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - id: gpt-3.5-turbo
+    vendor: openai
+    context_window: 16385
+    input_modalities: [text]
+    thinking: {format: none}
+  - id: gpt-3.5-turbo-16k
+    vendor: openai
+    context_window: 16385
+    input_modalities: [text]
+    thinking: {format: none}
+
+  # ══ xAI Grok ═══════════════════════════════════════════════════════════
+  - id: grok-4.3
+    vendor: xai
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-disableable
+  - id: grok-4
+    vendor: xai
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-mandatory
+  - id: grok-3
+    vendor: xai
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-mandatory
+  - id: grok-3-mini
+    vendor: xai
+    input_modalities: [text, image]
+    thinking:
+      format: openai
+      levels: [low, high]
+      level_map: {medium: high, xhigh: high}
+      can_disable: false
+      supports_effort: true
+
+  # ══ Google Gemini ══════════════════════════════════════════════════════
+  # 这里只经过 OpenAI 兼容端点访问，原生 generationConfig 形态会被忽略，
+  # 因此按 reasoning_effort 处理；无法关闭。
+  - id: gemini-3-pro
+    vendor: google
+    input_modalities: [text, image]
+    thinking: &gemini-reasoning
+      format: openai
+      levels: [low, medium, high]
+      level_map: {xhigh: high}
+      can_disable: false
+      supports_effort: true
+  - id: gemini-2.5-pro
+    vendor: google
+    input_modalities: [text, image]
+    thinking: *gemini-reasoning
+  - id: gemini-2.5-flash
+    vendor: google
+    input_modalities: [text, image]
+    thinking: *gemini-reasoning
+
+  # ══ Mistral ════════════════════════════════════════════════════════════
+  - id: mistral-tiny
+    vendor: mistral
+    context_window: 32768
+    thinking: {format: none}
+  - id: mistral-small
+    vendor: mistral
+    context_window: 32768
+    thinking: {format: none}
+  - id: mistral-medium
+    vendor: mistral
+    context_window: 32768
+    thinking: {format: none}
+  - id: mistral-large
+    vendor: mistral
+    context_window: 32768
+    thinking: {format: none}
+  - id: mistral-large-2
+    vendor: mistral
+    context_window: 128000
+    thinking: {format: none}
+
+  # ══ Xiaomi MiMo ════════════════════════════════════════════════════════
+  # 未经验证的中转模型：保留既有的 reasoning_effort 行为（levels 为空表示
+  # 不钳制、关闭时不发字段）。如果某个中转拒绝 reasoning_effort，在
+  # llm.yaml 的 model_info.<model>.thinking 里写 {format: none} 即可。
+  - id: mimo-v2.5
+    vendor: xiaomi
+    context_window: 65536
+    thinking: &legacy-effort
+      format: openai
+      levels: []
+      level_map: {xhigh: high}
+      can_disable: false
+      supports_effort: true
+  - id: mimo-v2
+    vendor: xiaomi
+    context_window: 65536
+    thinking: *legacy-effort
+  - id: mimo-v2-flash
+    vendor: xiaomi
+    context_window: 65536
+    thinking: *legacy-effort
+  - id: mimo-v2-mini
+    vendor: xiaomi
+    context_window: 65536
+    thinking: *legacy-effort
+  - id: mimo-v3
+    vendor: xiaomi
+    context_window: 65536
+    thinking: *legacy-effort
+  - id: mimo-v3-flash
+    vendor: xiaomi
+    context_window: 65536
+    thinking: *legacy-effort
+  - id: mimo-v3-turbo
+    vendor: xiaomi
+    context_window: 65536
+    thinking: *legacy-effort
+  - id: mimo-v3.5
+    vendor: xiaomi
+    context_window: 131072
+    thinking: *legacy-effort
+
+  # ══ 其他 ═══════════════════════════════════════════════════════════════
+  - id: yuangu-v2
+    vendor: yuangu
+    context_window: 65536
+    thinking: {format: none}
+
+# 未收录版本的兜底：按文件顺序匹配，先具体后宽泛。
+families:
+  # Anthropic
+  - match: "^claude-3([-.].*)?$"
+    thinking: {format: none}
+  - match: "^claude-.*haiku"
+    thinking: {format: none}
+  - match: "^claude-(opus|sonnet)-4-[0-5]"
+    vendor: anthropic
+    context_window: 200000
+    input_modalities: [text, image]
+    thinking: *anthropic-budget
+  - match: "^claude-4-(opus|sonnet|haiku)"
+    vendor: anthropic
+    context_window: 200000
+    input_modalities: [text, image]
+    thinking: *anthropic-budget
+  - match: "^claude-(opus|sonnet)-4-6"
+    vendor: anthropic
+    context_window: 200000
+    input_modalities: [text, image]
+    thinking: *anthropic-adaptive-46
+  - match: "^claude-fable"
+    vendor: anthropic
+    context_window: 1000000
+    max_output_tokens: 128000
+    input_modalities: [text, image]
+    forbids_sampling: true
+    thinking:
+      <<: *anthropic-adaptive-modern
+      can_disable: false
+  - match: "^claude-(opus|sonnet)-([5-9]|4-[7-9])"
+    vendor: anthropic
+    context_window: 200000
+    max_output_tokens: 128000
+    input_modalities: [text, image]
+    forbids_sampling: true
+    thinking: *anthropic-adaptive-modern
+  # DeepSeek
+  - match: "^deepseek-v[4-9]"
+    vendor: deepseek
+    input_modalities: [text]
+    echo_reasoning_content: true
+    thinking: *deepseek-v4
+  # GLM：5.3 / 5.2 的具体档位必须排在宽泛的 4.5+ 规则前面
+  - match: "^glm-5[.\\-p]?3"
+    vendor: zai
+    input_modalities: [text]
+    thinking: *glm-53
+  - match: "^glm-5[.\\-p]?2"
+    vendor: zai
+    input_modalities: [text]
+    thinking:
+      <<: *glm-53
+      levels: [high, max]
+  - match: "^glm-(4\\.[5-9]|[5-9])"
+    vendor: zai
+    input_modalities: [text]
+    thinking: *glm-toggle
+  # Kimi
+  - match: "^kimi-k3"
+    vendor: moonshot
+    input_modalities: [text]
+    forbids_sampling: true
+    thinking: *kimi-k3
+  - match: "^kimi-k[2-9]"
+    vendor: moonshot
+    input_modalities: [text]
+    forbids_sampling: true
+    thinking: *kimi-k2
+  # Qwen3 世代（含中转的 Qwen3.7-Plus / Qwen3.8-Max 这类命名）
+  - match: "^qwen3"
+    vendor: alibaba
+    input_modalities: [text]
+    thinking: *qwen-thinking
+  # OpenAI
+  - match: "^gpt-5\\.[1-9]"
+    vendor: openai
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-disableable
+  - match: "^gpt-5($|[^.])"
+    vendor: openai
+    input_modalities: [text, image]
+    thinking:
+      format: openai
+      levels: [low, medium, high]
+      level_map: {"off": minimal, xhigh: high}
+      can_disable: true
+      supports_effort: true
+  - match: "^o[1-9]($|-)"
+    vendor: openai
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-mandatory
+  - match: "^gpt-4o"
+    vendor: openai
+    context_window: 128000
+    input_modalities: [text, image]
+    thinking: {format: none}
+  - match: "^gpt-4\\.1"
+    vendor: openai
+    context_window: 1048576
+    input_modalities: [text, image]
+    thinking: {format: none}
+  # Grok / Gemini
+  - match: "^grok-4\\.[1-9]"
+    vendor: xai
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-disableable
+  - match: "^grok-[34]($|[^.])"
+    vendor: xai
+    input_modalities: [text, image]
+    thinking: *openai-reasoning-mandatory
+  - match: "^gemini-[2-9]"
+    vendor: google
+    input_modalities: [text, image]
+    thinking: *gemini-reasoning
+  # MiMo
+  - match: "^mimo-v[2-9]"
+    vendor: xiaomi
+    context_window: 65536
+    thinking: *legacy-effort

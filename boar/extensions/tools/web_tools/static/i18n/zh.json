@@ -1,0 +1,17 @@
+{
+  "hint": "每行一个引擎：显示名 + 完整搜索链接（{query} = 搜索词，{count} = 结果数提示），顶部优先。baidu.com / so.com / sogou.com / bing.com / google.com 的链接会被自动识别；其它域名会询问按哪家的结果格式提取。",
+  "save": "保存",
+  "reset": "重置",
+  "add": "添加引擎",
+  "remove": "移除",
+  "ok": "确定",
+  "cancel": "取消",
+  "labelPlaceholder": "我的引擎",
+  "parserPrefix": "按哪家格式提取",
+  "parserHint": "按",
+  "parserRules": "的结果格式提取",
+  "saved": "已保存 — 立即生效。",
+  "loadFailed": "加载失败：",
+  "invalidUrl": "链接必须是包含 {query} 的 http(s) 地址。",
+  "dupUrl": "该链接已在列表中。"
+}

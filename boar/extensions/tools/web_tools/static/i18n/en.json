@@ -1,0 +1,17 @@
+{
+  "hint": "One row per engine: display name + full SERP link ({query} = the search words, {count} = result-count hint), top = tried first. Links on baidu.com / so.com / sogou.com / bing.com / google.com are understood automatically; any other domain asks which engine's result format to expect.",
+  "save": "Save",
+  "reset": "Reset",
+  "add": "Add engine",
+  "remove": "Remove",
+  "ok": "OK",
+  "cancel": "Cancel",
+  "labelPlaceholder": "My engine",
+  "parserPrefix": "Extract as",
+  "parserHint": "Extracted with",
+  "parserRules": "rules",
+  "saved": "Saved — applied immediately.",
+  "loadFailed": "Load failed: ",
+  "invalidUrl": "The link must be an http(s) URL containing {query}.",
+  "dupUrl": "This link is already in the list."
+}

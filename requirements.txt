@@ -1,0 +1,21 @@
+# Core dependencies for BoarAi
+# Requires Python 3.10+
+# python_requires>=3.10
+
+# HTTP/WebSocket server
+aiohttp>=3.8.0
+
+# YAML configuration support
+pyyaml>=6.0
+
+# Async file operations
+aiofiles>=23.0.0
+
+# Accurate token counting (pre-call estimation)
+tiktoken>=0.5.0
+
+# Optional: process memory stats in /api/status
+psutil>=5.9.0
+
+# Optional dependencies for extensions
+# Extensions can declare their own dependencies in extension.yaml pip_dependencies field

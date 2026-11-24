@@ -1,0 +1,12 @@
+name: "{{name}}"
+version: "0.1.0"
+extension_type: "{{type}}"
+description: "Hello extension — a minimal runnable container (GET /api/ext/{{name}}/ping)."
+author: "you"
+{{channel_identity}}
+contributes:
+  routes:
+    - method: GET
+      path: "/ping"
+      handler: code.py#ping
+      description: "Health-check endpoint"

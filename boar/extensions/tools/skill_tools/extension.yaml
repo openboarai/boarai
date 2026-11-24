@@ -1,0 +1,5 @@
+name: skill_tools
+version: 1.0.0
+extension_type: tool
+description: Skill tools — list, view, read resources and manage reusable skills
+author: BoarAi

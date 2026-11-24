@@ -1,0 +1,19 @@
+# VCS / tooling
+.git
+.gitignore
+.codebuddy
+.playwright-cli
+
+# Docs & repo-level assets are not needed inside the image
+docs
+LICENSE
+README_zh.md
+CODE_STANDARDS.md
+CODE_STANDARDS_zh.md
+
+# Bytecode and caches
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache

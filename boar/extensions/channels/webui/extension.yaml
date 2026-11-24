@@ -1,0 +1,25 @@
+name: "webui"
+version: "0.2.0"
+extension_type: "channel"
+description: "Modern WebUI with Vue 3, responsive design, and component architecture"
+author: "BoarAi Team"
+enabled: true
+source_id: "webui"
+source_display: "Web Browser Interface"
+dependencies: []
+pip_dependencies:
+  - "aiohttp>=3.8.0"
+# No host/port: the WebUI shares the core server's single port. The listen
+# address is owned by core.server.unified_server (BOARAI_HOST / BOARAI_PORT,
+# default 0.0.0.0:26620) — declaring it here would be a knob that does nothing.
+config_defaults:
+  theme: "light"
+  language: "en"
+provides:
+  - "web"
+  - "http"
+  - "api"
+permissions:
+  - "http_routes"
+  - "static_files"
+  - "api_endpoints"

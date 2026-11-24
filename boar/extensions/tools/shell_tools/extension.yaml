@@ -1,0 +1,5 @@
+name: shell_tools
+version: 1.0.0
+extension_type: tool
+description: Shell command execution with safety checks
+author: BoarAi

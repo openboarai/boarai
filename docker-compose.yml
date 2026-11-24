@@ -1,0 +1,41 @@
+# One-command build & run (SOURCE channel, the default):
+#   docker compose up -d --build
+#
+# The other two install channels are compose overrides of this file — an
+# install only ever updates through its own channel (update/steward), so each
+# variant gets its own image:
+#   pypi:    docker compose -f docker-compose.yml -f docker-compose.pypi.yml up -d --build
+#   github:  BOARAI_GIT_REPO=<url> docker compose -f docker-compose.yml -f docker-compose.github.yml up -d --build
+#
+# Data lives in the named volume `boarai-data` (mounted at /data through
+# BOARAI_DATA_DIR, the kernel's data-dir anchor). Removing the container
+# never loses sessions/memory/config; `docker volume rm` does.
+
+name: boarai
+
+services:
+  boarai:
+    build:
+      context: .
+    image: boarai:local
+    container_name: boarai
+    ports:
+      # host:container — the kernel listens on 26620 inside (BOARAI_PORT)
+      - "26620:26620"
+    environment:
+      BOARAI_DATA_DIR: /data
+      # First-run access key. The browser setup page accepts loopback peers
+      # only, which a bridged container never sees, so seed the key one of
+      # two ways:
+      #   1. one-off command (prints the key once):
+      #        source/github images:  docker compose run --rm boarai python main.py key init
+      #        pypi image:            docker compose run --rm boarai python -m boarai key init
+      #   2. pre-seed a token here (>=32 base64url chars; adopted on first
+      #      run only, never overrides an existing key):
+      # BOARAI_API_TOKEN: "replace-with-32-plus-base64url-chars"
+    volumes:
+      - boarai-data:/data
+    restart: unless-stopped
+
+volumes:
+  boarai-data:

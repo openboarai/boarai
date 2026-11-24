@@ -1,0 +1,44 @@
+{
+  "explorer": {
+    "display_name": "Explorer",
+    "description": "Read-only codebase investigation. Search files, read content, list directories.",
+    "allowed_tools": ["file_read", "file_search", "file_glob", "file_grep", "shell_execute"],
+    "tool_denylist": [],
+    "shell_commands": ["^ls\\b", "^cat\\b", "^grep\\b", "^find\\b", "^pwd\\b", "^which\\b", "^type\\b", "^Get-ChildItem\\b", "^Get-Content\\b", "^Select-String\\b"]
+  },
+  "planner": {
+    "display_name": "Planner",
+    "description": "Pure analysis and planning. Read files, search, but no writing or execution.",
+    "allowed_tools": ["file_read", "file_search", "file_glob", "file_grep"],
+    "tool_denylist": ["file_write", "shell_execute"],
+    "shell_commands": []
+  },
+  "verifier": {
+    "display_name": "Verifier",
+    "description": "Verify implementation correctness. Run tests, check outputs, validate changes.",
+    "allowed_tools": ["file_read", "file_search", "file_glob", "file_grep", "shell_execute"],
+    "tool_denylist": [],
+    "shell_commands": ["^ls\\b", "^cat\\b", "^grep\\b", "^find\\b", "^pwd\\b", "^which\\b", "^(python|pytest|npm|npx|node)\\b", "^pip\\s+(list|show|check)", "^cargo\\s+(check|test|build)", "^go\\s+(test|build|vet|fmt)", "^git\\s+(status|diff|log|show|branch)"]
+  },
+  "general": {
+    "display_name": "General",
+    "description": "Full subtask delegation with all available tools.",
+    "allowed_tools": ["*"],
+    "tool_denylist": [],
+    "shell_commands": [".*"]
+  },
+  "coder": {
+    "display_name": "Coder",
+    "description": "Focus on code modifications. Read, write, search, limited shell (syntax only).",
+    "allowed_tools": ["file_read", "file_write", "file_edit", "file_search", "file_glob", "file_grep", "shell_execute"],
+    "tool_denylist": [],
+    "shell_commands": ["^ls\\b", "^cat\\b", "^grep\\b", "^find\\b", "^pwd\\b", "^which\\b", "^type\\b", "^(python|npm|npx|cargo|go|rustc)\\s+(--version|-v|-V)", "^flake8\\b", "^eslint\\b", "^prettier\\b", "^black\\b", "^isort\\b", "^python\\s+-m\\s+(py_compile|compileall)"]
+  },
+  "debugger": {
+    "display_name": "Debugger",
+    "description": "Debug and troubleshoot. Read logs, run tests, trace errors.",
+    "allowed_tools": ["file_read", "file_search", "file_glob", "file_grep", "shell_execute"],
+    "tool_denylist": ["file_write", "file_edit"],
+    "shell_commands": ["^ls\\b", "^cat\\b", "^grep\\b", "^find\\b", "^pwd\\b", "^which\\b", "^(python|pytest|npm|npx|node)\\b", "^pip\\s+(list|show|check|install\\s+--dry-run)", "^git\\s+(status|diff|log|show|blame)", "^journalctl\\b", "^dmesg\\b", "^tail\\b", "^echo\\s+\\$", "$Error", "$LASTEXITCODE"]
+  }
+}

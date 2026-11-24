@@ -1,0 +1,1 @@
+"""Web tools extension package."""

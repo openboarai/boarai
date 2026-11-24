@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "boarai"
+description = "BoarAI - a minimal, hot-pluggable, cross-platform microkernel AI agent framework"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "BoarAI Team" }]
+keywords = ["ai", "agent", "llm", "microkernel", "framework"]
+dynamic = ["version"]
+dependencies = [
+    "aiohttp>=3.8.0",      # HTTP/WebSocket server
+    "pyyaml>=6.0",         # YAML configuration support
+    "aiofiles>=23.0.0",    # async file operations
+    "tiktoken>=0.5.0",     # accurate token counting (pre-call estimation)
+]
+
+[project.optional-dependencies]
+# Process memory stats in /api/status (import is guarded; degrades without it)
+stats = ["psutil>=5.9.0"]
+
+[project.scripts]
+boarai = "boarai.__main__:main"
+
+[project.urls]
+Homepage = "https://pypi.org/project/boarai/"
+
+# Single version authority: boarai/core/__init__.py::__version__ (resolved
+# by AST, no import at build time). Git tags / PyPI releases must match it.
+[tool.setuptools.dynamic]
+version = { attr = "boarai.core.__version__" }
+
+[tool.setuptools]
+include-package-data = true
+
+# `boarai` is the distribution package (kernel at boarai/core); `boar`
+# (prompts/defaults/extensions with their manifests, YAML, HTML/JS/CSS
+# assets) has directories WITHOUT __init__.py, so discovery must run in
+# namespace mode to carry them all.
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["boarai*", "boar*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+"*" = ["**/*"]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["**/__pycache__/**", "**/*.pyc", "**/*.pyo"]

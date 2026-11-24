@@ -1,0 +1,1345 @@
+/* Refined visual system for the existing WebUI components. */
+:root {
+  --ui-canvas: #f5f6fa;
+  --ui-surface: #ffffff;
+  --ui-surface-muted: #fafbfe;
+  --ui-border: #e7e9f1;
+  --ui-shadow: 0 8px 24px rgb(22 28 45 / 0.045), 0 1px 2px rgb(22 28 45 / 0.035);
+  --ui-shadow-raised: 0 16px 36px rgb(22 28 45 / 0.09), 0 2px 8px rgb(22 28 45 / 0.045);
+
+  /* Conversation column width. Fluid, so it follows the pane instead of
+     pinning the messages to a fixed strip: 94% of the message pane, floored
+     so a narrow pane never squeezes the bubbles below a readable measure and
+     capped so an ultrawide monitor cannot stretch a line of prose across the
+     whole screen. The percentage resolves against each consuming element's
+     own containing block, which is the message pane (or the stack inside it)
+     for every rule using this variable, so they all agree. */
+  --session-column: clamp(680px, 94%, 1560px);
+}
+
+html.dark,
+[data-theme="dark"],
+[data-theme-resolved="dark"] {
+  --ui-canvas: #11131a;
+  --ui-surface: #181b24;
+  --ui-surface-muted: #1d202a;
+  --ui-border: #2b2f3a;
+  --ui-shadow: 0 8px 24px rgb(0 0 0 / 0.2), 0 1px 2px rgb(0 0 0 / 0.16);
+  --ui-shadow-raised: 0 18px 42px rgb(0 0 0 / 0.32), 0 2px 8px rgb(0 0 0 / 0.2);
+}
+
+body {
+  color: var(--text-primary);
+  font-family: Inter, "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.008em;
+}
+
+#app > div.min-h-screen {
+  background:
+    radial-gradient(ellipse at 15% 0%, rgb(var(--primary-rgb) / 0.055), transparent 34rem),
+    linear-gradient(145deg, #f8f9fc 0%, var(--ui-canvas) 62%, #f8f9fc 100%);
+}
+
+html.dark #app > div.min-h-screen,
+[data-theme="dark"] #app > div.min-h-screen,
+[data-theme-resolved="dark"] #app > div.min-h-screen {
+  background:
+    radial-gradient(ellipse at 15% 0%, rgb(var(--primary-rgb) / 0.12), transparent 34rem),
+    linear-gradient(145deg, #141720 0%, var(--ui-canvas) 62%, #12151c 100%);
+}
+
+#app nav.fixed.top-0 {
+  background: color-mix(in srgb, var(--ui-surface) 90%, transparent);
+  border-color: var(--ui-border);
+  box-shadow: 0 1px 0 rgb(15 23 42 / 0.025), 0 8px 24px rgb(15 23 42 / 0.035);
+}
+
+#app nav.fixed.top-0 a[aria-current="page"] {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark));
+  box-shadow: 0 5px 14px rgb(var(--primary-rgb) / 0.22);
+}
+
+#app main {
+  background: transparent;
+}
+
+#app main .bg-white.rounded-xl.border,
+#app main .bg-white.rounded-2xl.border,
+#app main .rounded-xl.border.bg-white,
+#app main .rounded-2xl.border.bg-white {
+  border-color: var(--ui-border);
+  box-shadow: var(--ui-shadow);
+}
+
+#app main button.bg-primary.text-white {
+  background-image: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark));
+  box-shadow: 0 5px 14px rgb(var(--primary-rgb) / 0.19);
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+#app main button.bg-primary.text-white:hover:not(:disabled) {
+  box-shadow: 0 8px 18px rgb(var(--primary-rgb) / 0.25);
+  transform: translateY(-1px);
+}
+
+#app main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+#app main textarea,
+#app main select {
+  border-color: var(--ui-border);
+}
+
+#app main input:focus,
+#app main textarea:focus,
+#app main select:focus {
+  box-shadow: 0 0 0 4px rgb(var(--primary-rgb) / 0.11);
+}
+
+#app footer.fixed.bottom-0 {
+  background: color-mix(in srgb, var(--ui-surface) 93%, transparent);
+  border-color: var(--ui-border);
+  backdrop-filter: blur(14px);
+}
+
+/* Session workspace */
+.sessions-viewport {
+  background: transparent;
+}
+
+.session-sidebar {
+  background: color-mix(in srgb, var(--ui-surface) 92%, var(--ui-canvas));
+  border-color: var(--ui-border);
+}
+
+.session-sidebar > div:first-child,
+.session-chat-header {
+  background: color-mix(in srgb, var(--ui-surface) 88%, transparent);
+  border-color: var(--ui-border);
+  backdrop-filter: blur(12px);
+}
+
+/* Sidebar header and chat header share one height so their bottom borders
+   meet at the seam instead of ending 8px apart. */
+.session-sidebar > div:first-child,
+.session-chat-header,
+.session-info-panel-header {
+  min-height: 56px;
+  height: 56px;
+  box-sizing: border-box;
+}
+
+.session-chat-header {
+  padding-inline: 22px;
+}
+
+.session-messages {
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgb(var(--primary-rgb) / 0.035), transparent 36rem),
+    linear-gradient(180deg, color-mix(in srgb, var(--ui-surface) 40%, var(--ui-canvas)), var(--ui-canvas));
+  scroll-padding-block: 24px;
+}
+
+.session-message-stack {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  /* .session-messages is a flex column, so the stack is a flex item. Its
+     percentage min-height replaced the automatic min-size and let it shrink to
+     the viewport height; every row then overflowed the stack's own box, which
+     swallowed the trailing margin/padding and left the run-activity row flush
+     against (and briefly clipped by) the composer toolbar. */
+  flex: 0 0 auto;
+}
+
+.session-message-row {
+  /* width:100% is required: the row is a flex item of the column-flex
+     .session-message-stack, and auto horizontal margins alone make a flex
+     item shrink-to-fit instead of stretching. A shrink-to-fit row then
+     resolves the inner max-w-[80%]/[75%] bubbles against its own collapsed
+     width, squeezing user bubbles to one CJK character per line. */
+  width: 100%;
+  max-width: var(--session-column);
+  margin-inline: auto;
+  padding-inline: 8px;
+  box-sizing: border-box;
+}
+
+.session-user-bubble {
+  border-radius: 18px 18px 5px 18px !important;
+  /* 20% lighter than the raw primary/primary-dark pair so the bubble reads
+     softer against the canvas while keeping the same gradient direction. */
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--primary-color) 80%, #fff),
+    color-mix(in srgb, var(--primary-color-dark) 80%, #fff)
+  ) !important;
+  box-shadow: 0 6px 16px rgb(var(--primary-rgb) / 0.12);
+  padding: 12px 16px !important;
+  line-height: 1.65;
+}
+
+.session-assistant-message {
+  /* Prose measure, not column width: the reply body stays capped in ch so a
+     wide pane does not turn a paragraph into a 130-character line, while
+     100% keeps it inside the bubble wrapper on narrow panes. */
+  max-width: min(100%, 92ch);
+  line-height: 1.75;
+  /* One inset for every assistant message in a round (avatar + name header,
+     thinking toggle, tool cards, reply text). A round renders as several rows,
+     so padding only on the row that happened to have reply text left the other
+     rows 16px to the left and made the header look detached. */
+  padding-inline: 16px;
+}
+
+/* Standalone (unpaired) tool cards — rejected/orphan tool results and cold
+   windows whose assistant fell outside the loaded page — render in their own
+   row. Give them the SAME inset and prose cap as .session-assistant-message
+   or they sit 16px left of (and wider than) the paired cards beside them. */
+.session-tool-standalone {
+  max-width: min(100%, 92ch);
+  padding-inline: 16px;
+  box-sizing: border-box;
+}
+
+/* Round footer (finished chip + copy + consumption pills) renders at row
+   level on the round's last message; same inset as the assistant column so
+   the chips line up with the reply text and tool cards above them. */
+.session-round-footer {
+  padding-inline: 16px;
+  box-sizing: border-box;
+}
+
+/* Replies render as plain prose on the canvas (no bubble, tint or border) so
+   the avatar + name header and the text read as one block.
+
+   Avatar + agent name, pinned as one unit at the top of a round. The avatar
+   carries the primary tint so the round has a visible anchor even when the
+   reply is a plain paragraph with no card behind it. */
+.session-assistant-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Row-level label: same 75% body width, same 16px inset as
+     .session-assistant-message, so the avatar lines up with the reply text
+     while the header stays a sibling of the message div (not inside it). */
+  width: 100%;
+  max-width: 75%;
+  padding-inline: 16px;
+  box-sizing: border-box;
+}
+
+.session-assistant-avatar {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  place-items: center;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(
+    145deg,
+    rgb(var(--primary-rgb) / 0.92),
+    color-mix(in srgb, var(--primary-color) 72%, #1e1b4b)
+  );
+  box-shadow:
+    0 2px 6px rgb(var(--primary-rgb) / 0.3),
+    inset 0 0 0 1px rgb(255 255 255 / 0.22);
+}
+
+.session-assistant-avatar i {
+  width: 21px;
+  height: 21px;
+}
+
+html.dark .session-assistant-avatar,
+[data-theme="dark"] .session-assistant-avatar,
+[data-theme-resolved="dark"] .session-assistant-avatar {
+  color: #fff;
+  background: linear-gradient(
+    145deg,
+    rgb(var(--primary-rgb) / 0.85),
+    color-mix(in srgb, var(--primary-color) 58%, #0b0d14)
+  );
+  box-shadow:
+    0 2px 8px rgb(var(--primary-rgb) / 0.35),
+    inset 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+
+.session-assistant-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--text-primary) 76%, transparent);
+}
+
+html.dark .session-assistant-name,
+[data-theme="dark"] .session-assistant-name,
+[data-theme-resolved="dark"] .session-assistant-name {
+  color: color-mix(in srgb, var(--text-primary) 82%, transparent);
+}
+
+.assistant-message-content {
+  min-width: 0;
+}
+
+.assistant-stream-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 3px;
+  vertical-align: -0.14em;
+  border-radius: 2px;
+  background: var(--primary-color);
+  animation: assistant-caret 1s steps(2, start) infinite;
+}
+
+/* Skill evolution outcome card: centered, low-key, primary-tinted chip.
+   Kind variants: created/improved (emerald tint) vs rejected/restored
+   (amber tint) so a failed review reads differently at a glance. */
+.session-skill-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(100%, 560px);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--primary-color) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 18%, transparent);
+}
+
+.session-skill-card > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-skill-card--created i,
+.session-skill-card--improved i {
+  color: var(--primary-color);
+}
+
+.session-skill-card--rejected,
+.session-skill-card--restored {
+  background: color-mix(in srgb, #d97706 7%, transparent);
+  border-color: color-mix(in srgb, #d97706 22%, transparent);
+}
+
+.session-skill-card--rejected i,
+.session-skill-card--restored i {
+  color: #d97706;
+}
+
+.session-run-activity {
+  display: flex;
+  align-items: center;
+  /* Same column as .session-message-row, inset to the assistant text edge
+     (8px column padding + 16px message padding) now that the avatar is gone. */
+  width: min(100%, var(--session-column));
+  margin: 12px auto 18px;
+  padding-inline: 24px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.session-run-activity-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  /* Plain status line: no card, border or shadow around the label. */
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: color-mix(in srgb, var(--text-secondary) 86%, var(--primary-color));
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Rotating label: fixed-width slot keeps the animated dots from drifting
+   while phrases of different lengths cross-fade. */
+.session-run-activity-label {
+  display: inline-block;
+  min-width: 9em;
+}
+
+.activity-fade-enter-active,
+.activity-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.activity-fade-enter-from,
+.activity-fade-leave-to {
+  opacity: 0;
+}
+
+/* Round hover picker: compact card instead of a fanned blur disc. */
+.session-round-picker {
+  border: 1px solid color-mix(in srgb, var(--ui-border) 90%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ui-surface) 96%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 18px 42px rgb(15 23 42 / 0.16),
+    0 2px 8px rgb(15 23 42 / 0.06);
+  /* Card glides up/down with the hovered dash (inline transform is dynamic). */
+  transition: transform 160ms ease-out;
+}
+
+.session-round-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-border) 55%, transparent);
+  color: color-mix(in srgb, var(--text-secondary) 80%, transparent);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.session-round-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+}
+
+.session-round-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: left;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.session-round-picker-item:hover {
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+}
+
+.session-round-picker-item.is-active {
+  background: color-mix(in srgb, var(--primary-color) 8%, transparent);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.session-round-picker-index {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.session-round-picker-item.is-active .session-round-picker-index {
+  background: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(var(--primary-rgb) / 0.35);
+}
+
+.session-round-picker-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.session-run-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.session-run-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  animation: session-dot-bounce 1.2s ease-in-out infinite;
+}
+
+.session-run-dots span:nth-child(2) { animation-delay: 140ms; }
+.session-run-dots span:nth-child(3) { animation-delay: 280ms; }
+
+.session-load-progress {
+  position: sticky;
+  z-index: 5;
+  top: 0;
+  width: min(100%, var(--session-column));
+  height: 3px;
+  margin: 0 auto 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(var(--primary-rgb) / 0.1);
+}
+
+.session-load-progress::after {
+  position: absolute;
+  inset: 0 auto 0 -40%;
+  width: 40%;
+  content: "";
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+  animation: session-progress 1.35s ease-in-out infinite;
+}
+
+.session-loading-state,
+.session-empty-conversation {
+  display: flex;
+  width: min(100%, 680px);
+  min-height: 250px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 22px;
+  margin: 22px auto 30px;
+  padding: 28px;
+  border: 1px solid var(--ui-border);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--ui-surface) 84%, transparent);
+  box-shadow: var(--ui-shadow);
+  align-self: center;
+  margin-block: auto;
+}
+
+.session-loading-title {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.session-loading-title i {
+  color: var(--primary-color);
+  animation: spin 1.2s linear infinite;
+}
+
+.session-loading-skeleton {
+  display: grid;
+  gap: 18px;
+}
+
+.session-skeleton-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.session-skeleton-row.is-user {
+  justify-content: flex-end;
+}
+
+.session-skeleton-avatar,
+.session-skeleton-bubble,
+.session-skeleton-line {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--ui-border) 72%, var(--ui-surface));
+}
+
+.session-skeleton-avatar::after,
+.session-skeleton-bubble::after,
+.session-skeleton-line::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(var(--primary-rgb) / 0.09), transparent);
+  animation: session-shimmer 1.8s ease-in-out infinite;
+}
+
+.session-skeleton-avatar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 11px;
+}
+
+.session-skeleton-bubble {
+  display: grid;
+  width: min(84%, 430px);
+  gap: 9px;
+  padding: 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: 16px 16px 16px 5px;
+}
+
+.session-skeleton-row.is-user .session-skeleton-bubble {
+  width: min(58%, 280px);
+  border-radius: 16px 16px 5px 16px;
+  background: rgb(var(--primary-rgb) / 0.08);
+}
+
+.session-skeleton-line {
+  height: 8px;
+  border-radius: 999px;
+}
+
+.session-skeleton-line.short { width: 43%; }
+.session-skeleton-line.medium { width: 72%; }
+.session-skeleton-line.long { width: 92%; }
+
+.session-empty-conversation {
+  align-items: center;
+  min-height: 220px;
+  gap: 10px;
+  text-align: center;
+  box-shadow: none;
+  background: transparent;
+  border-color: transparent;
+}
+
+.session-empty-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 5px;
+  place-items: center;
+  color: var(--primary-color);
+  border: 1px solid rgb(var(--primary-rgb) / 0.12);
+  border-radius: 17px;
+  background: rgb(var(--primary-rgb) / 0.07);
+}
+
+.session-empty-title {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.session-empty-hint {
+  max-width: 38ch;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.session-composer {
+  border-color: var(--ui-border);
+  background: color-mix(in srgb, var(--ui-surface) 94%, transparent);
+  box-shadow: 0 -8px 24px rgb(15 23 42 / 0.035);
+  backdrop-filter: blur(14px);
+}
+
+.session-composer textarea,
+.session-welcome-composer textarea {
+  border-color: var(--ui-border) !important;
+  border-radius: 14px !important;
+  background: var(--ui-surface-muted) !important;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.session-composer textarea:focus,
+.session-welcome-composer textarea:focus {
+  border-color: rgb(var(--primary-rgb) / 0.55) !important;
+  background: var(--ui-surface) !important;
+  box-shadow: 0 0 0 4px rgb(var(--primary-rgb) / 0.09) !important;
+}
+
+.session-welcome {
+  width: min(100%, 760px);
+  height: auto !important;
+  min-height: 330px;
+  max-height: calc(100% - 48px);
+  align-self: center;
+  margin: auto;
+  padding: 36px 28px;
+  border: 1px solid var(--ui-border);
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--ui-surface) 88%, transparent);
+  box-shadow: var(--ui-shadow-raised);
+}
+
+.session-welcome-icon {
+  width: 58px;
+  height: 58px;
+  border: 1px solid rgb(var(--primary-rgb) / 0.12);
+  border-radius: 19px;
+  background: linear-gradient(145deg, rgb(var(--primary-rgb) / 0.12), rgb(var(--primary-rgb) / 0.055));
+}
+
+.session-welcome-composer {
+  padding: 7px;
+  border: 1px solid var(--ui-border);
+  border-radius: 18px;
+  background: var(--ui-surface);
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.055);
+}
+
+.session-welcome-composer textarea {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.session-welcome-composer textarea:focus {
+  background: transparent !important;
+}
+
+@keyframes assistant-caret {
+  to { visibility: hidden; }
+}
+
+@keyframes session-dot-bounce {
+  0%, 60%, 100% { opacity: 0.38; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+@keyframes session-progress {
+  from { transform: translateX(0); }
+  to { transform: translateX(360%); }
+}
+
+@keyframes session-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* ---------------------------------------------------------------------------
+ * Mobile layout contract (<= 1023.98px)
+ *
+ * Two breakpoints only:
+ *   1023.98px — drawer/panel form factor + touch affordances
+ *    767.98px — vertical chrome heights (status bar / bottom nav / safe area)
+ *
+ * Geometry note: the real navbar height is 60px and the status bar 40px,
+ * generated by the Tailwind `spacing` entries in index.html. The CSS variables
+ * --navbar-height / --statusbar-height are NOT authoritative on mobile (they
+ * are 60/40 at :root and must stay that way for the desktop formulas). The
+ * phone overrides below are the single source for the bottom chrome.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 1023.98px) {
+  /* Session list drawer: keep the top bar usable and paint ABOVE the fixed
+     chrome (nav/status/footer are z-1030). Previously the drawer started at
+     y=0 with z-50, so its own header (collapse button + "New session") was
+     hidden behind the top bar and the last rows sat under the bottom nav. */
+  #app .session-sidebar {
+    z-index: 1035;
+    /* Belt and braces: sidebarClasses() also adds top-[60px]/bottom-0, but the
+       geometry must not depend on Tailwind generating those arbitrary values. */
+    top: 60px;
+    bottom: 0;
+  }
+
+  #app .session-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1034;
+    background: rgb(0 0 0 / 0.45);
+  }
+
+  /* Session info panel: was an inline flex sibling (w-72) that squeezed the
+     conversation down to 102px. On phones/tablets it becomes an 88%-wide
+     right-side drawer with its own backdrop; desktop keeps the inline panel. */
+  #app .session-info-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: 88%;
+    max-width: 360px;
+    z-index: 1035;
+    border-left: 1px solid var(--ui-border);
+    box-shadow: -18px 0 48px rgb(15 23 42 / 0.18);
+  }
+
+  /* The drawer paints to the very bottom, so its scroll body (header is 56px)
+     carries the home-indicator inset; without it the last row sits under it. */
+  #app .session-info-panel > div:last-child {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  #app .session-info-panel-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1034;
+    background: rgb(0 0 0 / 0.45);
+  }
+
+  /* Touch targets: 24/32px icon buttons are unhittable with a thumb. */
+  #app .session-chat-header button,
+  #app .session-sidebar > div:first-child button {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+}
+
+/* CSS safety net for the pin/rename/delete row actions: JS sets isTouch via
+   matchMedia("(hover: none)"), but a coarse pointer alone must be enough to
+   reveal them (some WebViews report hover:hover). A desktop with a mouse
+   matches neither query, so the hover-only behaviour is preserved there. */
+@media (max-width: 1023.98px) and (hover: none),
+       (max-width: 1023.98px) and (pointer: coarse) {
+  #app .session-row-actions {
+    display: flex;
+  }
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    /* Single contract for the bottom chrome. */
+    --mobile-statusbar-h: calc(28px + env(safe-area-inset-bottom, 0px));
+    --mobile-nav-h: 57px; /* h-14 (56px) + 1px top border */
+    --mobile-bottom-chrome: calc(var(--mobile-statusbar-h) + var(--mobile-nav-h));
+  }
+
+  /* The status bar keeps only the latency readout (see statusbar.js) and
+     shrinks to 28px; the safe-area padding lives inside its own height so the
+     strip never sits on the iPhone home indicator. */
+  footer.h-statusbar {
+    height: var(--mobile-statusbar-h);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+
+  /* Bottom nav sits directly on top of the status strip. */
+  nav.bottom-statusbar {
+    bottom: var(--mobile-statusbar-h);
+    height: var(--mobile-nav-h);
+    box-sizing: border-box;
+  }
+
+  /* Scrollable pages get exactly the bottom chrome as padding. */
+  main.pt-navbar {
+    padding-bottom: var(--mobile-bottom-chrome);
+  }
+
+  /* 100dvh (not 100vh) so the URL bar does not push the composer off-screen;
+     subtract the real chrome (60px top bar + status strip + bottom nav). */
+  main .sessions-viewport {
+    height: calc(100dvh - 60px - var(--mobile-bottom-chrome));
+  }
+
+  /* 100vh min-heights would still let the document scroll by the toolbar
+     delta on iOS; pin the app shell to the dynamic viewport instead. */
+  #app > div.min-h-screen,
+  main.min-h-screen {
+    min-height: 100dvh;
+  }
+
+  /* iOS Safari zooms the page when a focused field is < 16px. */
+  main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  main textarea,
+  main select {
+    font-size: 16px;
+  }
+
+  .session-sidebar > div:first-child,
+  .session-chat-header,
+  .session-info-panel-header {
+    min-height: 52px;
+    height: 52px;
+  }
+
+  .session-chat-header {
+    padding-inline: 14px;
+  }
+
+  .session-messages {
+    padding-inline: 10px !important;
+  }
+
+  .session-message-row {
+    padding-inline: 2px;
+  }
+
+  /* Keep the activity pill on the assistant text edge on narrow panes:
+     2px row padding + the 16px message inset. */
+  .session-run-activity {
+    padding-inline: 18px;
+  }
+
+  .session-user-bubble {
+    max-width: 88%;
+  }
+
+  .session-loading-state,
+  .session-empty-conversation {
+    min-height: 210px;
+    margin-block: 14px;
+    padding: 20px 14px;
+    border-radius: 18px;
+  }
+
+  .session-welcome {
+    min-height: 290px;
+    max-height: calc(100% - 24px);
+    padding: 25px 16px;
+    border-radius: 22px;
+  }
+
+  .session-composer {
+    padding: 10px !important;
+  }
+
+  /* ---------------------------------------------------------------------
+   * Composer toolbar: text pills -> one compact icon row.
+   *
+   * At 360px the desktop toolbar wrapped into three rows (~90px) because
+   * every pill carried its label. Labels are dropped here, the pills get
+   * tighter padding and a 4px column gap, which fits a single row and still
+   * has room for the model name. The row is allowed to wrap (no
+   * overflow-x: auto) because a scroll container would clip the popovers
+   * that open upwards from these triggers.
+   * ------------------------------------------------------------------- */
+  #app .session-toolbar {
+    /* Anchor for the full-width model popover (see below); the welcome pane
+       centres its toolbar on desktop only. */
+    position: relative;
+    justify-content: flex-start;
+    column-gap: 3px;
+    row-gap: 2px;
+    padding: 4px 10px;
+  }
+
+  /* Icon-only pills still need a thumb-sized hit area. */
+  #app .session-toolbar .session-toolbar-pill {
+    padding: 3px 6px;
+    min-height: 26px;
+  }
+
+  /* Status / thinking / approval / agent / workspace become icon-only; the
+     colour of the dot and of the shield carries their meaning. The caret is a
+     Lucide-hydrated <i> that app.js pins to display:contents inline, so this
+     one rule needs !important to win. */
+  #app .session-toolbar .session-toolbar-label {
+    display: none;
+  }
+
+  #app .session-toolbar .session-toolbar-caret {
+    display: none !important;
+  }
+
+  /* Token total is available in the session info panel; dropping it here is
+     what keeps the row within 360px. */
+  #app .session-toolbar .session-toolbar-optional {
+    display: none;
+  }
+
+  #app .session-toolbar .session-toolbar-context-full {
+    display: none;
+  }
+
+  #app .session-toolbar .session-toolbar-context-pct {
+    display: inline;
+  }
+
+  #app .session-toolbar .session-toolbar-model-label {
+    max-width: 64px;
+  }
+
+  #app .session-toolbar .session-toolbar-context-bar {
+    width: 32px;
+  }
+
+  /* Model picker: the desktop layout floats the model list in a second column
+     at left: 109px (279px in total), which leaves a 360px screen once the pill
+     is not the first item. Phones anchor the popover to the toolbar itself and
+     show both panes side by side at full toolbar width. */
+  #app .session-model-anchor {
+    position: static;
+  }
+
+  #app .session-model-popover {
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    display: flex;
+    gap: 6px;
+    margin-bottom: 4px;
+    /* Each pane sizes to its own content instead of stretching to the taller
+       sibling (a single provider would otherwise leave a tall empty column). */
+    align-items: flex-start;
+  }
+
+  #app .session-model-popover .session-model-providers {
+    position: static;
+    width: 38%;
+    max-height: 52vh;
+    overflow-y: auto;
+  }
+
+  #app .session-model-popover .session-model-models {
+    position: static;
+    left: auto;
+    bottom: auto;
+    width: auto;
+    flex: 1;
+    max-height: 52vh;
+    overflow-y: auto;
+  }
+
+  /* Round footer (time / copy / tokens / duration) used to stay on one line
+     and overflow the message column on phones. */
+  .session-round-footer {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  /* The drawer now ends at the viewport bottom, so its scroll area has to
+     clear the home indicator itself. The height must follow the 52px mobile
+     header (the template's h-[calc(100%-48px)] assumed the 48px desktop one
+     and pushed the last row 4px past the viewport). */
+  #app .session-list-scroll {
+    height: calc(100% - 52px);
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+}
+
+/* Very narrow phones (<= 419.98px): two stat cards per row squeeze the labels
+   into 3-4 lines; fall back to one card per row. */
+@media (max-width: 419.98px) {
+  #app main .data-stat-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+/* Below 360px even the truncated model name no longer fits the icon row; the
+   CPU icon plus the popover carry the identity there. */
+@media (max-width: 359.98px) {
+  #app .session-toolbar .session-toolbar-model-label {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Composer toolbar context readout: desktop renders "used / limit", phones
+   only the percentage. The percentage copy is hidden by default so the
+   desktop DOM/layout is untouched. */
+.session-toolbar-context-pct {
+  display: none;
+}
+
+/* Visible scrollbar for the conversation column only. main.css hides every
+   scrollbar globally (width:0 + scrollbar-width:none); a long transcript has
+   no other position cue, so re-enable a thin themed thumb here. Class
+   selectors outrank the global `*` / bare pseudo-element rules. */
+.session-messages {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(100 100 100 / 0.35) transparent;
+}
+.dark .session-messages {
+  scrollbar-color: rgb(255 255 255 / 0.25) transparent;
+}
+.session-messages::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+}
+.session-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+.session-messages::-webkit-scrollbar-thumb {
+  background: rgb(100 100 100 / 0.35);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.session-messages::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 100 100 / 0.55);
+  background-clip: content-box;
+}
+.dark .session-messages::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.25);
+  background-clip: content-box;
+}
+.dark .session-messages::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.4);
+  background-clip: content-box;
+}
+
+/* Diff viewer scrollbars (file-change cards). The block is always dark and
+   global scrollbars are hidden, so long lines looked clipped with no affordance
+   to scroll. Fixed light-on-dark palette, same thin geometry as above. */
+.diff-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.28) transparent;
+}
+.diff-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+}
+.diff-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.diff-scroll::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.28);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.diff-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.45);
+  background-clip: content-box;
+}
+
+/* ── File manager panes (tree under session list + viewer left of chat) ────
+   Split bars: 5px hit area with a 1px visible line that lights up on hover.
+   The body class during drag kills text selection and pins the cursor. */
+.fm-split {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+}
+.fm-split-v {
+  height: 5px;
+  margin: -2px 0;
+  cursor: row-resize;
+}
+.fm-split-h {
+  width: 5px;
+  margin: 0 -2px;
+  cursor: col-resize;
+}
+.fm-split::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  background: transparent;
+  transition: background 0.15s;
+}
+.fm-split-v::after { height: 1px; width: 100%; }
+.fm-split-h::after { width: 1px; height: 100%; }
+.fm-split:hover::after,
+.fm-split:active::after { background: rgb(59 130 246 / 0.6); }
+body.fm-resizing-v { cursor: row-resize; user-select: none; }
+body.fm-resizing-h { cursor: col-resize; user-select: none; }
+body.fm-resizing-v *, body.fm-resizing-h * { cursor: inherit !important; }
+
+/* Collapsed tree bar (sidebar bottom) */
+.fm-collapsed-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+.fm-collapsed-bar:hover { background: rgb(0 0 0 / 0.04); }
+.dark .fm-collapsed-bar:hover { background: rgb(255 255 255 / 0.06); }
+
+/* Tree rows + icon chips */
+.fm-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.fm-icon-btn:hover { background: rgb(0 0 0 / 0.06); }
+.dark .fm-icon-btn:hover { background: rgb(255 255 255 / 0.08); }
+.fm-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 3px;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.fm-tree-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(100 100 100 / 0.35) transparent;
+}
+.dark .fm-tree-body { scrollbar-color: rgb(255 255 255 / 0.25) transparent; }
+.fm-tree-body::-webkit-scrollbar { width: 8px; background: transparent; }
+.fm-tree-body::-webkit-scrollbar-thumb {
+  background: rgb(100 100 100 / 0.35);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Viewer pane */
+.fm-viewer {
+  min-width: 320px;
+  max-width: 75%;
+  border-right: 1px solid rgb(229 231 235);
+}
+.dark .fm-viewer { border-right-color: rgb(55 65 81); }
+.fm-tabs { scrollbar-width: none; }
+.fm-tabs::-webkit-scrollbar { display: none; }
+.fm-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  opacity: 0;
+  color: rgb(156 163 175);
+}
+.fm-tab:hover .fm-tab-close { opacity: 1; }
+.fm-tab-close:hover { background: rgb(0 0 0 / 0.08); color: rgb(107 114 128); }
+.dark .fm-tab-close:hover { background: rgb(255 255 255 / 0.1); color: rgb(209 213 219); }
+
+/* Code surface: shared metrics between gutter, pre and textarea so line
+   numbers always align with their lines. */
+.fm-gutter,
+.fm-code,
+.fm-editor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 18px;
+  tab-size: 4;
+}
+.fm-gutter {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  padding: 8px 0;
+  min-width: 44px;
+  text-align: right;
+  color: rgb(156 163 175);
+  background: rgb(249 250 251);
+  border-right: 1px solid rgb(229 231 235);
+  user-select: none;
+  flex-shrink: 0;
+}
+.dark .fm-gutter {
+  color: rgb(107 114 128);
+  background: rgb(17 24 39);
+  border-right-color: rgb(55 65 81);
+}
+.fm-gutter-edit {
+  overflow: hidden;
+  position: static;
+}
+.fm-ln {
+  height: 18px;
+  padding: 0 8px 0 6px;
+}
+.fm-code {
+  margin: 0;
+  padding: 8px 12px;
+  color: rgb(31 41 55);
+  white-space: pre;
+  min-width: 0;
+}
+.dark .fm-code { color: rgb(229 231 235); }
+.fm-code.fm-wrap,
+.fm-editor.fm-wrap {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.fm-editor {
+  padding: 8px 12px;
+  color: rgb(31 41 55);
+  background: transparent;
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: auto;
+  white-space: pre;
+}
+.dark .fm-editor { color: rgb(229 231 235); }
+.fm-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(100 100 100 / 0.35) transparent;
+}
+.dark .fm-scroll { scrollbar-color: rgb(255 255 255 / 0.25) transparent; }
+.fm-scroll::-webkit-scrollbar { width: 10px; height: 10px; background: transparent; }
+.fm-scroll::-webkit-scrollbar-thumb {
+  background: rgb(100 100 100 / 0.35);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.dark .fm-scroll::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.25);
+  background-clip: content-box;
+}
+
+/* Token colors for the reused mdHighlight tokenizer (palette kept in sync
+   with the markdown code blocks in main.css .tok-*). */
+.fm-code .tok-kw { color: rgb(167 69 181); }
+.fm-code .tok-str { color: rgb(22 163 74); }
+.fm-code .tok-num { color: rgb(202 138 4); }
+.fm-code .tok-comment { color: rgb(156 163 175); font-style: italic; }
+.fm-code .tok-fn { color: rgb(37 99 235); }
+.fm-code .tok-type { color: rgb(8 145 178); }
+.fm-code .tok-lit { color: rgb(219 39 119); }
+.fm-code .tok-dec { color: rgb(234 88 12); }
+.fm-code .tok-var { color: rgb(202 138 4); }
+.fm-code .tok-attr { color: rgb(8 145 178); }
+.fm-code .tok-tag { color: rgb(37 99 235); }
+.fm-code .tok-key { color: rgb(8 145 178); }
+.dark .fm-code .tok-kw { color: rgb(192 132 252); }
+.dark .fm-code .tok-str { color: rgb(74 222 128); }
+.dark .fm-code .tok-num { color: rgb(250 204 21); }
+.dark .fm-code .tok-comment { color: rgb(107 114 128); }
+.dark .fm-code .tok-fn { color: rgb(96 165 250); }
+.dark .fm-code .tok-type { color: rgb(34 211 238); }
+.dark .fm-code .tok-lit { color: rgb(244 114 182); }
+.dark .fm-code .tok-dec { color: rgb(251 146 60); }
+.dark .fm-code .tok-var { color: rgb(250 204 21); }
+.dark .fm-code .tok-attr { color: rgb(34 211 238); }
+.dark .fm-code .tok-tag { color: rgb(96 165 250); }
+.dark .fm-code .tok-key { color: rgb(34 211 238); }
+
+/* Image preview checkerboard (transparent PNG/GIF visibility) */
+.fm-img-wrap {
+  background-image:
+    linear-gradient(45deg, rgb(0 0 0 / 0.05) 25%, transparent 25%, transparent 75%, rgb(0 0 0 / 0.05) 75%),
+    linear-gradient(45deg, rgb(0 0 0 / 0.05) 25%, transparent 25%, transparent 75%, rgb(0 0 0 / 0.05) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
+.dark .fm-img-wrap {
+  background-image:
+    linear-gradient(45deg, rgb(255 255 255 / 0.06) 25%, transparent 25%, transparent 75%, rgb(255 255 255 / 0.06) 75%),
+    linear-gradient(45deg, rgb(255 255 255 / 0.06) 25%, transparent 25%, transparent 75%, rgb(255 255 255 / 0.06) 75%);
+}
+
+/* Compact toolbar: a ResizeObserver on the bottom toolbar flips .fm-compact
+   when the chat column gets narrow (file viewer open / small desktop), so
+   pills go icon-only, the context bar shows percent only, and the optional
+   token pill is dropped. Mirrors the existing phone rules, but reacts to pane
+   drags instead of viewport breakpoints. */
+.session-toolbar.fm-compact .session-toolbar-label { display: none; }
+.session-toolbar.fm-compact .session-toolbar-model-label { max-width: 72px; }
+.session-toolbar.fm-compact .session-toolbar-context-full { display: none; }
+.session-toolbar.fm-compact .session-toolbar-context-pct { display: inline; }
+.session-toolbar.fm-compact .session-toolbar-optional { display: none; }
+.session-toolbar.fm-compact .session-toolbar-caret { display: none; }
+/* Icon-only pills: one icon size (12px) everywhere, no leftover text gaps,
+   centered within a uniform minimum pill width. */
+.session-toolbar.fm-compact .session-toolbar-pill { gap: 0; justify-content: center; min-width: 26px; }
+/* lucide keeps the <i> wrapper (display:contents) and nests the svg inside,
+   so a child combinator would miss it — match descendants. */
+.session-toolbar.fm-compact .session-toolbar-pill svg { width: 12px; height: 12px; }

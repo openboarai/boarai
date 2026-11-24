@@ -1,0 +1,20 @@
+# sdist completeness: the wheel is assembled from package-data, but the
+# sdist must also carry the resource tree and the source-tree entry.
+include main.py
+include requirements.txt
+include README.md README_zh.md
+recursive-include boar *
+recursive-include boarai *
+
+global-exclude *.pyc *.pyo
+prune **/__pycache__
+prune tests
+prune tool_tests
+prune temp
+prune docs
+prune .boarai
+prune .codebuddy
+prune .vscode
+prune boarai-develop
+prune boarai-release
+prune 其他Agent项目

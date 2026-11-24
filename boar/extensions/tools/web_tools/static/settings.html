@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web tools settings</title>
+<script src="/static/js/boar-sdk.js"></script>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; padding: 16px; font: 13px/1.5 system-ui, sans-serif;
+    background: transparent;
+  }
+  .hint { color: #6b7280; margin: 0 0 12px; }
+  .hint code { font-family: ui-monospace, monospace; font-size: 11px; }
+  .row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .row .tag {
+    width: 96px; flex: none; font-weight: 600; font-size: 12px;
+    color: #374151; text-align: center; padding: 6px 4px;
+    border: 1px solid #e5e7eb; border-radius: 8px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .row input { flex: 1; min-width: 0; box-sizing: border-box; padding: 7px 10px;
+    border: 1px solid #d1d5db; border-radius: 8px; font: 12px ui-monospace, monospace; }
+  .iconbtn {
+    flex: none; width: 30px; height: 30px; padding: 0; border: 1px solid #e5e7eb;
+    border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px;
+    color: #6b7280;
+  }
+  .iconbtn:hover { background: #f3f4f6; }
+  .actions { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+  button.main {
+    padding: 8px 14px; border: 0; border-radius: 8px; font: inherit;
+    background: #2563eb; color: #fff; cursor: pointer;
+  }
+  button.ghost {
+    padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px;
+    background: transparent; color: #6b7280; cursor: pointer; font: inherit;
+  }
+  button:disabled { opacity: .5; cursor: default; }
+  #msg { min-height: 18px; }
+  .ok { color: #059669; } .err { color: #dc2626; }
+  /* Inline "new entry" form: parser choice + display name + link. */
+  #newRow { display: none; gap: 6px; align-items: center; margin: 10px 0;
+    padding: 10px; border: 1px dashed #d1d5db; border-radius: 8px; }
+  #newRow.open { display: flex; flex-wrap: wrap; }
+  #newRow select, #newRow input {
+    padding: 7px 8px; border: 1px solid #d1d5db; border-radius: 8px;
+    font: 12px system-ui, sans-serif; background: transparent;
+  }
+  #newLabel { width: 120px; }
+  #newUrl { flex: 1; min-width: 200px; font-family: ui-monospace, monospace; }
+  @media (prefers-color-scheme: dark) {
+    .row .tag { color: #d1d5db; border-color: #4b5563; }
+    input, select { background: #1f2937 !important; border-color: #4b5563; color: #e5e7eb; }
+    .iconbtn, button.ghost, #newRow { border-color: #4b5563; color: #9ca3af; }
+    .iconbtn:hover { background: #374151; }
+  }
+</style>
+</head>
+<body>
+  <p class="hint" id="hint"></p>
+  <div id="rows"></div>
+  <div id="newRow">
+    <select id="newParser"></select>
+    <input id="newLabel" placeholder="My engine">
+    <input id="newUrl" spellcheck="false">
+    <button id="newOk" class="main">OK</button>
+    <button id="newCancel" class="ghost">Cancel</button>
+  </div>
+  <div class="actions">
+    <!-- Disabled until load() finishes: a click before the config arrives
+         would be overwritten by the async fetch (rows are replaced wholesale). -->
+    <button id="add" class="ghost" disabled>Add engine</button>
+    <button id="save" class="main" disabled>Save</button>
+    <button id="reset" class="ghost" disabled>Reset</button>
+    <span id="msg"></span>
+  </div>
+
+<script>
+(function () {
+  // name = parser (HTML extraction is engine-specific); label = your own name;
+  // url = that entry's full SERP link. The same parser may repeat with
+  // different links.
+  const LABELS = { baidu: 'Baidu', so360: '360', sogou: 'Sogou',
+                   bing: 'Bing', google: 'Google' };
+  const ORDER = ['baidu', 'so360', 'sogou', 'bing', 'google'];
+  // Host suffix → parser: on a known engine's domain the parser is implied by
+  // the link itself, so the picker stays hidden (it only appears for foreign
+  // domains, where YOU decide which extraction rules to try).
+  const HOSTS = [['baidu.com', 'baidu'], ['so.com', 'so360'],
+                 ['sogou.com', 'sogou'], ['bing.com', 'bing'],
+                 ['google.com', 'google']];
+  const DEFAULTS = {
+    baidu: 'https://www.baidu.com/s?ie=utf-8&rn={count}&wd={query}',
+    so360: 'https://www.so.com/s?ie=utf-8&q={query}',
+    sogou: 'https://www.sogou.com/web?ie=utf8&query={query}',
+    bing: 'https://www.bing.com/search?q={query}&count={count}',
+    google: 'https://www.google.com/search?q={query}&num={count}&hl=zh-CN',
+  };
+  // The settings dialog passes the active WebUI language; the page keeps its
+  // own strings in i18n/<lang>.json (extensions own their panel copy).
+  const lang = (new URLSearchParams(location.search).get('lang') || 'en')
+    .split('-')[0];
+  let T = {};
+  let ready = false;      // false until load() has applied the server config
+  let touched = false;    // true once the user edits rows before load lands
+  let rows = [];          // [{name, label, url}] in priority order
+  const rowsEl = document.getElementById('rows');
+  const msg = document.getElementById('msg');
+  const addBtn = document.getElementById('add');
+  const newRow = document.getElementById('newRow');
+  const newParser = document.getElementById('newParser');
+  const newLabel = document.getElementById('newLabel');
+  const newUrl = document.getElementById('newUrl');
+  const setMsg = (txt, c) => { msg.textContent = txt; msg.className = c || ''; };
+  const t = (k, fb) => T[k] || fb;
+
+  function applyText() {
+    document.getElementById('hint').textContent = t('hint',
+      'One row per engine: display name + full SERP link ({query} = the search '
+      + 'words, {count} = result-count hint). Top = tried first. Links on '
+      + 'baidu.com / so.com / sogou.com are understood automatically; any '
+      + 'other domain asks which engine\'s result format to expect.');
+    addBtn.textContent = t('add', 'Add engine');
+    document.getElementById('save').textContent = t('save', 'Save');
+    document.getElementById('reset').textContent = t('reset', 'Reset');
+    document.getElementById('newOk').textContent = t('ok', 'OK');
+    document.getElementById('newCancel').textContent = t('cancel', 'Cancel');
+    newLabel.placeholder = t('labelPlaceholder', 'My engine');
+    newParser.textContent = '';
+    ORDER.forEach((n) => {
+      const o = document.createElement('option');
+      o.value = n; o.textContent = t('parserPrefix', 'Parser') + ': ' + LABELS[n];
+      newParser.appendChild(o);
+    });
+  }
+
+  function render() {
+    rowsEl.textContent = '';
+    rows.forEach((r, i) => {
+      const row = document.createElement('div');
+      row.className = 'row';
+
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = r.label || LABELS[r.name] || r.name;
+      // Only call out the parser when the link's domain does not imply it —
+      // that is the one case where the choice is not obvious from the URL.
+      if (inferParser(r.url) !== r.name) {
+        tag.title = t('parserHint', 'Extracted with') + ' ' + LABELS[r.name]
+          + ' ' + t('parserRules', 'rules');
+      }
+
+      const input = document.createElement('input');
+      input.value = r.url;
+      input.spellcheck = false;
+      input.oninput = () => { touched = true; r.url = input.value.trim(); };
+
+      const up = document.createElement('button');
+      up.className = 'iconbtn'; up.textContent = '↑';
+      up.disabled = i === 0;
+      up.onclick = () => { touched = true; [rows[i - 1], rows[i]] = [rows[i], rows[i - 1]]; render(); };
+      const down = document.createElement('button');
+      down.className = 'iconbtn'; down.textContent = '↓';
+      down.disabled = i === rows.length - 1;
+      down.onclick = () => { touched = true; [rows[i + 1], rows[i]] = [rows[i], rows[i + 1]]; render(); };
+      const del = document.createElement('button');
+      del.className = 'iconbtn'; del.textContent = '✕';
+      del.title = t('remove', 'Remove') + ' ' + (r.label || r.name);
+      del.onclick = () => { touched = true; rows.splice(i, 1); render(); };
+
+      row.append(tag, input, up, down, del);
+      rowsEl.appendChild(row);
+    });
+  }
+
+  function inferParser(url) {
+    let host = '';
+    try { host = (new URL(url).hostname || '').toLowerCase(); } catch (e) { /* keep '' */ }
+    for (const [suffix, name] of HOSTS) {
+      if (host === suffix || host.endsWith('.' + suffix)) return name;
+    }
+    return '';
+  }
+
+  // Hide the parser picker while the link's own domain implies one; show it
+  // (with a hint) only for foreign domains.
+  function syncParserVisibility() {
+    const implied = inferParser(newUrl.value.trim());
+    if (implied) {
+      newParser.value = implied;
+      newParser.style.display = 'none';
+    } else {
+      newParser.style.display = '';
+    }
+  }
+
+  function openNew() {
+    newParser.value = ORDER[0];
+    newLabel.value = '';
+    newUrl.value = DEFAULTS[ORDER[0]];
+    syncParserVisibility();
+    newRow.classList.add('open');
+    newLabel.focus();
+  }
+
+  newUrl.oninput = syncParserVisibility;
+  newParser.onchange = () => { newUrl.value = DEFAULTS[newParser.value]; };
+  addBtn.onclick = () => { if (ready) openNew(); };
+  document.getElementById('newCancel').onclick = () => {
+    newRow.classList.remove('open');
+  };
+  document.getElementById('newOk').onclick = () => {
+    const name = newParser.value;
+    const url = newUrl.value.trim();
+    if (!url.startsWith('http') || !url.includes('{query}')) {
+      setMsg(t('invalidUrl', 'The link must be an http(s) URL containing {query}.'), 'err');
+      return;
+    }
+    if (rows.some((r) => r.url === url)) {
+      setMsg(t('dupUrl', 'This link is already in the list.'), 'err');
+      return;
+    }
+    touched = true;
+    // On a known engine's domain the parser is implied by the link — store
+    // only label+url; foreign domains carry the chosen parser explicitly.
+    const implied = inferParser(url);
+    rows.push(implied
+      ? { name: implied, label: newLabel.value.trim() || LABELS[implied], url }
+      : { name, label: newLabel.value.trim() || name, url });
+    newRow.classList.remove('open');
+    setMsg('');
+    render();
+  };
+
+  async function load() {
+    try {
+      const resp = await fetch('i18n/' + lang + '.json');
+      if (resp.ok) T = await resp.json();
+    } catch (e) { /* English literals below are the fallback */ }
+    applyText();
+    try {
+      const cfg = await boar.getConfig();
+      const urls = Array.isArray(cfg.engine_urls) && cfg.engine_urls.length
+        ? cfg.engine_urls : null;
+      const server = urls
+        ? urls.map((e) => ({
+            name: e.name,
+            label: e.label || LABELS[e.name] || e.name,
+            url: e.url,
+          }))
+        : ORDER.map((n) => ({ name: n, label: LABELS[n], url: DEFAULTS[n] }));
+      // If the user already edited rows while this fetch was in flight, keep
+      // theirs and only add entries they do not have — a wholesale replace
+      // would silently discard their clicks (the "dead button" bug).
+      rows = touched
+        ? rows.concat(server.filter((s) => !rows.some((r) => r.url === s.url)))
+        : server;
+    } catch (e) {
+      if (!touched) {
+        rows = ORDER.map((n) => ({ name: n, label: LABELS[n], url: DEFAULTS[n] }));
+      }
+      setMsg(t('loadFailed', 'Load failed: ') + e.message, 'err');
+    }
+    ready = true;
+    render();
+    document.getElementById('save').disabled = false;
+    document.getElementById('reset').disabled = false;
+    addBtn.disabled = false;
+  }
+
+  document.getElementById('save').onclick = async () => {
+    if (!ready) return;
+    const btn = document.getElementById('save');
+    btn.disabled = true; setMsg('');
+    const bad = rows.find((r) => !r.url.startsWith('http')
+      || !r.url.includes('{query}'));
+    if (bad) {
+      setMsg(t('invalidUrl', 'The link must be an http(s) URL containing {query}.'), 'err');
+      btn.disabled = false;
+      return;
+    }
+    try {
+      await boar.saveConfig({ engine_urls: rows });
+      setMsg(t('saved', 'Saved — applied immediately.'), 'ok');
+    } catch (e) { setMsg(e.message, 'err'); }
+    btn.disabled = false;
+  };
+
+  document.getElementById('reset').onclick = async () => {
+    if (!ready) return;
+    touched = true;
+    rows = ORDER.map((n) => ({ name: n, label: LABELS[n], url: DEFAULTS[n] }));
+    render();
+    document.getElementById('save').click();
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>

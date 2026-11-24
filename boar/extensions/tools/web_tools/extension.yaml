@@ -1,0 +1,26 @@
+name: web_tools
+version: 1.6.0
+extension_type: tool
+description: "Web access — key-free web_search (configurable engines: baidu/so360/sogou/bing/google, tried in priority order; the first three are China-reachable) and web_fetch (URL to clean text via anti-bot tiered chain: direct / curl_cffi impersonation / reader relay)"
+author: BoarAi
+pip_dependencies: []
+
+# Settings are a custom iframe panel (the declarative form was removed).
+# `engine_urls` (config.json) is a PRIORITY ORDER of {name, label, url}
+# entries: `name` picks the HTML parser (baidu/so360/sogou/bing/google —
+# extraction is engine-specific), `label` is the display name and `url` that
+# entry's full SERP link, so the same parser can appear several times with
+# different links.
+# Entries are tried strictly in order; the first one returning relevant results
+# wins. The legacy `search_engines` name-list string stays accepted. The page
+# lives in static/settings.html and talks to the core through
+# /static/js/boar-sdk.js.
+contributes:
+  ui:
+    panel:
+      title: "Web tools"
+      title_i18n: {zh: "网页工具"}
+      icon: "search"
+      kind: custom
+      custom_url: "/static/web_tools/settings.html"
+      custom_height: 300

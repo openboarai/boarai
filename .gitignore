@@ -1,0 +1,26 @@
+﻿# ── 运行时数据：只落数据锚（默认 ~/.boarai），绝不进仓库 ──
+/.boarai/
+
+# ── Python 字节码（曾发生 215 个 .pyc 被误提交并漂移的事故）──
+__pycache__/
+*.py[cod]
+
+# ── 构建产物（py -m build / setuptools；上传前必须先删 build/ 防旧包泄漏进 wheel）──
+build/
+dist/
+*.egg-info/
+*.egg
+
+# ── 测试与工具缓存 ──
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── 虚拟环境 ──
+.venv/
+venv/
+
+# ── 编辑器/工具 ──
+.vscode/
+.idea/
+.playwright-cli/

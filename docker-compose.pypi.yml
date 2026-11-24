@@ -1,0 +1,15 @@
+# PyPI-channel override. Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.pypi.yml up -d --build
+# Pin a release (optional):  BOARAI_VERSION=1.2.3 docker compose ... up -d --build
+#
+# The container self-updates through the pip channel (`pip install -U boarai`
+# into its user-owned venv), matching how a host pip install updates.
+
+services:
+  boarai:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.pypi
+      args:
+        BOARAI_VERSION: "${BOARAI_VERSION:-}"
+    image: boarai-pypi:local
