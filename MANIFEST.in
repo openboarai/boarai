@@ -1,20 +1,26 @@
-# sdist completeness: the wheel is assembled from package-data, but the
-# sdist must also carry the resource tree and the source-tree entry.
+# PyPI doubles as the source repository, so the sdist carries the WHOLE
+# in-repo tree (docs, Dockerfiles, compose files, standards); only build
+# artifacts and bytecode stay out. The wheel is the runtime payload and is
+# assembled from package-data instead — see pyproject.toml.
+#
+# Every path below is relative to THIS repo root. Never list anything that
+# lives outside it (the old tests/temp/.codebuddy prunes did, and only
+# produced "no previously-included directories" noise).
 include main.py
 include requirements.txt
 include README.md README_zh.md
+include LICENSE
+include CODE_STANDARDS.md CODE_STANDARDS_zh.md
+include Dockerfile .dockerignore
+include docker-compose.yml docker-compose.github.yml docker-compose.pypi.yml
+include .gitignore .gitattributes
 recursive-include boar *
 recursive-include boarai *
+recursive-include docs *
+recursive-include docker *
 
 global-exclude *.pyc *.pyo
 prune **/__pycache__
-prune tests
-prune tool_tests
-prune temp
-prune docs
+prune build
+prune dist
 prune .boarai
-prune .codebuddy
-prune .vscode
-prune boarai-develop
-prune boarai-release
-prune 其他Agent项目
