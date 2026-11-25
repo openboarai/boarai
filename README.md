@@ -73,14 +73,22 @@ To use a host directory instead (common on a NAS), replace `- boarai-data:/data`
 mkdir -p /volume1/docker/boarai && chown -R 10001:10001 /volume1/docker/boarai
 ```
 
-**First-run access key.** The browser setup page trusts loopback peers only, which a bridged container never sees, so create the key once:
+**First-run access key.** A bridged container never looks like a loopback peer, so claim the key whichever way suits you:
 
-```bash
-docker compose run --rm boarai python main.py key init       # source / github images
-docker compose run --rm boarai python -m boarai key init     # pypi image
-```
+1. **Setup code (simplest).** The first-run log prints a one-shot code — open the WebUI from *any* machine and type it in. It is re-minted on every restart until the key is claimed; loopback peers need no code.
 
-and unlock the WebUI with the printed key — or pre-seed `BOARAI_API_TOKEN` (32+ base64url characters) in the compose file.
+   ```bash
+   docker compose logs boarai
+   ```
+
+2. **One-off command**, which prints the key once:
+
+   ```bash
+   docker compose run --rm boarai python main.py key init       # source / github images
+   docker compose run --rm boarai python -m boarai key init     # pypi image
+   ```
+
+3. **Pre-seed** `BOARAI_API_TOKEN` (32+ base64url characters) in the compose file — adopted on first run only, never overrides an existing key.
 
 ## Quick start
 

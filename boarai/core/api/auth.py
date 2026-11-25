@@ -227,7 +227,7 @@ class AuthAPIHandler:
                     "the server startup log",
                 )
             if not self._store.check_setup_code(code):
-                delay = self._store.record_failure(ip)
+                delay = self._store.record_failure(ip, shared=False)
                 response = self._err(
                     403,
                     "auth_setup_code_invalid",
@@ -261,6 +261,7 @@ class AuthAPIHandler:
             logger.error("First-run setup failed: %s", exc)
             return self._err(500, "INTERNAL_ERROR", "Could not store the access key")
 
+        self._store.record_success(ip)
         response = self._ok(
             {
                 "session_id": record["id"],

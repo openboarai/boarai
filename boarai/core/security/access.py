@@ -414,7 +414,7 @@ class AccessStore:
                 state["source"] = "env"
                 state["created_at"] = now
                 self._save()
-                self._setup_code = None
+                self.clear_setup_code()
                 logger.info("Adopted BOARAI_API_TOKEN as the WebUI access key")
                 return None, "env"
 
@@ -446,7 +446,7 @@ class AccessStore:
             state["source"] = "generated"
             state["created_at"] = time.time()
             self._save()
-            self._setup_code = None
+            self.clear_setup_code()
 
             # Mint a session for this claiming device
             return self.create_session(ttl_seconds, remember=remember, user_agent=user_agent, ip=ip)
@@ -465,7 +465,7 @@ class AccessStore:
             state["source"] = "generated"
             state["created_at"] = time.time()
             self._save()
-            self._setup_code = None
+            self.clear_setup_code()
             logger.info("Generated a new WebUI access key (%s)", mask_key(key))
             return key
 
@@ -781,8 +781,15 @@ class AccessStore:
             )
         return int(max(ip_wait, global_wait) + 0.999)
 
-    def record_failure(self, ip: str) -> int:
-        """Count one wrong key and return the imposed delay in seconds."""
+    def record_failure(self, ip: str, *, shared: bool = True) -> int:
+        """Count one wrong key and return the imposed delay in seconds.
+
+        ``shared=False`` keeps the failure out of the GLOBAL backoff. Used for
+        first-run setup-code guesses: that code is 48 random bits, so per-IP
+        throttling already defeats guessing, and a stranger must not be able
+        to keep the owner's remote claim in a permanent global lockout.
+        Wrong access keys stay shared — they protect a human-chosen secret.
+        """
         now = time.time()
         with self._lock:
             self._expire_failures(now)
@@ -795,10 +802,12 @@ class AccessStore:
             delay = self._backoff(entry["count"])
             entry["blocked_until"] = now + delay
 
-            self._global_failures["count"] += 1
-            self._global_failures["last_failure"] = now
-            global_delay = self._backoff(self._global_failures["count"])
-            self._global_failures["blocked_until"] = now + global_delay
+            global_delay = 0.0
+            if shared:
+                self._global_failures["count"] += 1
+                self._global_failures["last_failure"] = now
+                global_delay = self._backoff(self._global_failures["count"])
+                self._global_failures["blocked_until"] = now + global_delay
 
             count = int(entry["count"])
         logger.warning(

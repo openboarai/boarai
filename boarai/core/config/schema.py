@@ -148,11 +148,18 @@ class SessionConfig:
 
 from boarai.core.logging.config import LoggingConfig  # noqa: E402
 
+def _package_version() -> str:
+    """Single version source, imported lazily: core/__init__ imports this module."""
+    from boarai.core import __version__
+
+    return str(__version__)
+
+
 @dataclass
 class SystemConfig:
     """System configuration schema."""
     name: str = "BoarAi"
-    version: str = "0.1.0"
+    version: str = field(default_factory=_package_version)
     debug: bool = False
     data_dir: str = ".boarai"
     temp_dir: str = ".boarai/temp"

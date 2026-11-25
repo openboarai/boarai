@@ -73,14 +73,22 @@ docker run --rm -v boarai-data:/data -v "$PWD":/backup alpine tar xzf /backup/bo
 mkdir -p /volume1/docker/boarai && chown -R 10001:10001 /volume1/docker/boarai
 ```
 
-**首次访问钥匙**：浏览器引导页只信任回环来源，桥接网络下的容器永远不满足，因此钥匙用一次性命令创建：
+**首次访问钥匙**：桥接网络下的容器永远不像回环来源，因此认领钥匙有三种方式，任选其一：
 
-```bash
-docker compose run --rm boarai python main.py key init       # 源码 / github 镜像
-docker compose run --rm boarai python -m boarai key init     # pypi 镜像
-```
+1. **setup code（最省事）**：首次启动的日志会打印一个一次性验证码，在**任何**机器上打开 WebUI 输进去即可。钥匙认领前每次重启都会重新生成；回环来源不需要验证码。
 
-用打印出的钥匙解锁 WebUI；也可以在 compose 文件里预置 `BOARAI_API_TOKEN`（≥32 位 base64url 字符）。
+   ```bash
+   docker compose logs boarai
+   ```
+
+2. **一次性命令**，会打印出钥匙：
+
+   ```bash
+   docker compose run --rm boarai python main.py key init       # 源码 / github 镜像
+   docker compose run --rm boarai python -m boarai key init     # pypi 镜像
+   ```
+
+3. **预置** `BOARAI_API_TOKEN`（≥32 位 base64url 字符）到 compose 文件里——只在首次启动时被采纳，绝不覆盖已有钥匙。
 
 ## 快速上手
 

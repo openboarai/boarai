@@ -121,12 +121,15 @@ services:
       - "${BOARAI_HOST_PORT:-26620}:26620"
     environment:
       BOARAI_DATA_DIR: /data
-      # First-run access key. The browser setup page trusts loopback peers
-      # only, which a bridged container never sees, so seed the key one of two
-      # ways:
-      #   1. one-off command (prints the key once):
+      # First-run access key. A bridged container never looks like a loopback
+      # peer, so claim the key one of three ways:
+      #   1. setup code (simplest): the first-run log prints a one-shot code —
+      #        docker compose -f docker-compose.pypi.yml logs boarai
+      #      open the WebUI from ANY machine and type it in. Re-minted on every
+      #      restart until the key is claimed; loopback peers need no code.
+      #   2. one-off command (prints the key once):
       #        docker compose -f docker-compose.pypi.yml run --rm boarai python -m boarai key init
-      #   2. pre-seed a token here (>=32 base64url chars; adopted on first run
+      #   3. pre-seed a token here (>=32 base64url chars; adopted on first run
       #      only, never overrides an existing key):
       # BOARAI_API_TOKEN: "replace-with-32-plus-base64url-chars"
     volumes:
