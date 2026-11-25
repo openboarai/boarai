@@ -137,7 +137,8 @@ class UnifiedServer:
         )
         self._app.router.add_get("/api/auth/settings", auth_api.handle_auth_settings_get)
         self._app.router.add_put("/api/auth/settings", auth_api.handle_auth_settings_update)
-        # First-run setup: the browser creates the key (loopback only).
+        # First-run setup: the browser creates the key (loopback freely,
+        # remote peers only with the console-printed one-shot code).
         self._app.router.add_post("/api/auth/setup", auth_api.handle_auth_setup)
         # Console hand-off: /auth/launch?key=<process token> → cookie + redirect.
         self._app.router.add_get(LAUNCH_PATH, auth_api.handle_auth_launch)
@@ -872,10 +873,21 @@ class UnifiedServer:
         )
         logger.info("BoarAi WebUI: %s%s", local_base, bound)
         if not self._access_store.configured:
+            code = self._access_store.setup_code()
             logger.info(
-                "First run: open the address above on this machine to create "
-                "your access key. Until then every API request is refused and "
-                "only loopback may complete setup."
+                "First run: open the address above (or any reachable address) "
+                "to create your access key. Until then every API request is "
+                "refused."
+            )
+            # Deliberately NOT registered with the log redactor: the queue
+            # formatter runs after this line is enqueued, so redacting would
+            # hide the code from the very log that is supposed to carry it.
+            # Nothing else ever logs it — the setup handler never echoes the
+            # presented candidate.
+            logger.info(
+                "  Setup on this machine needs nothing extra; from another "
+                "machine enter this one-time setup code: %s",
+                code,
             )
         elif self._access_store.source == "env":
             logger.info("Access key comes from BOARAI_API_TOKEN")

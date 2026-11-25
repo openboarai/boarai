@@ -60,7 +60,9 @@ _PUBLIC_EXACT: frozenset[Tuple[str, str]] = frozenset(
         # token here. The handler itself refuses every non-loopback peer, so
         # the gate only has to stop it from answering 401 first.
         ("GET", "/api/auth/token"),
-        # First-run setup: loopback-only endpoint to claim the key.
+        # First-run setup: claim the key. Loopback needs nothing extra; a
+        # remote peer must add the console-printed one-shot setup code
+        # (checked in the handler, so the gate stays public here).
         ("POST", "/api/auth/setup"),
     }
 )
@@ -206,8 +208,10 @@ class AccessGate:
             # First run: nobody has claimed the instance yet. Everything except
             # the public shell and the setup endpoints stays CLOSED — an
             # unclaimed server must not be usable by whoever reaches it first.
-            # ``POST /api/auth/setup`` is public at the gate and loopback-only
-            # in the handler, so a remote client cannot claim it.
+            # ``POST /api/auth/setup`` is public at the gate; the handler lets
+            # loopback claim freely but demands the console-printed one-shot
+            # setup code from any remote peer, so merely reaching the box is
+            # still not enough to take it.
             #
             # One exception, and it is the documented boundary: process
             # management must keep working. `boarai stop|restart` and the update

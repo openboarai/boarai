@@ -38,6 +38,15 @@ services:
     build:
       # The context only has to exist; the inline Dockerfile copies nothing.
       context: .
+      # Always full-rebuild (no layer cache) so every `build` / `up -d --build`
+      # reinstalls the LATEST published boarai from PyPI instead of reusing a
+      # stale cached `pip install` layer. Without this, an unpinned
+      # `pip install boarai` is cached by its command string and a rebuild
+      # never notices a new release. Trade-off: slower + not reproducible — a
+      # rebuild can silently pull whatever was published latest (including a
+      # bad release). For cached, reproducible builds set `no_cache: false`
+      # (or drop the line) and pin BOARAI_VERSION to a known-good release.
+      no_cache: true
       args:
         # Empty = latest published release.
         BOARAI_VERSION: "${BOARAI_VERSION:-}"

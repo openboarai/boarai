@@ -224,6 +224,11 @@ class AccessStore:
         #: Per-process launch token: whoever can read the server's stdout is
         #: already trusted, so this is a convenience, not a second factor.
         self._launch_token: Optional[str] = None
+        #: First-run console code (normalized, no separators). Headless and
+        #: remote installs cannot open a browser on the server, so the startup
+        #: log prints this once; a non-loopback client must present it to
+        #: claim the key. Memory only: a restart re-mints and re-prints it.
+        self._setup_code: Optional[str] = None
         #: Prepared-but-unapplied rotation: ``{"key", "expires_at"}``. Memory
         #: only, never persisted — an abandoned candidate must leave no trace
         #: and must not lock anyone out.
@@ -409,6 +414,7 @@ class AccessStore:
                 state["source"] = "env"
                 state["created_at"] = now
                 self._save()
+                self._setup_code = None
                 logger.info("Adopted BOARAI_API_TOKEN as the WebUI access key")
                 return None, "env"
 
@@ -440,6 +446,7 @@ class AccessStore:
             state["source"] = "generated"
             state["created_at"] = time.time()
             self._save()
+            self._setup_code = None
 
             # Mint a session for this claiming device
             return self.create_session(ttl_seconds, remember=remember, user_agent=user_agent, ip=ip)
@@ -458,6 +465,7 @@ class AccessStore:
             state["source"] = "generated"
             state["created_at"] = time.time()
             self._save()
+            self._setup_code = None
             logger.info("Generated a new WebUI access key (%s)", mask_key(key))
             return key
 
@@ -558,6 +566,35 @@ class AccessStore:
             return hmac.compare_digest(
                 candidate.encode("utf-8"), self._launch_token.encode("utf-8")
             )
+
+    # ---- first-run setup code ----
+
+    def setup_code(self) -> str:
+        """Console-printed code proving the caller can read the server log.
+
+        Returned grouped (``XXXX-XXXX-XXXX``) for typing; stored normalized.
+        Loopback clients never need it — it exists so a headless or remote
+        install can finish first-run setup from another machine.
+        """
+        with self._lock:
+            if self._setup_code is None:
+                self._setup_code = secrets.token_hex(6).upper()
+            raw = self._setup_code
+        return "-".join(raw[i:i + 4] for i in (0, 4, 8))
+
+    def check_setup_code(self, candidate: str) -> bool:
+        """Constant-time check; separators, case and spacing are ignored."""
+        norm = re.sub(r"[^0-9A-Z]", "", (candidate or "").upper())
+        with self._lock:
+            expected = self._setup_code
+        if not norm or not expected:
+            return False
+        return hmac.compare_digest(norm.encode("utf-8"), expected.encode("utf-8"))
+
+    def clear_setup_code(self) -> None:
+        """Drop the console code once a key exists (claim / init / env)."""
+        with self._lock:
+            self._setup_code = None
 
     # ---- session signing ----
 

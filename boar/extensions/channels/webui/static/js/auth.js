@@ -138,19 +138,23 @@
 
     /**
      * First-run setup: claim the access key and get a session immediately.
+     * `setupCode` is the console-printed one-shot code a remote browser must
+     * add; loopback claims omit it.
      * @param {string} key
-     * @param {{ttlSeconds?: number, remember?: boolean}} [options]
+     * @param {{ttlSeconds?: number, remember?: boolean, setupCode?: string}} [options]
      */
     async setup(key, options) {
       const opts = options || {};
+      const payload = {
+        key: key,
+        ttl_seconds: opts.ttlSeconds,
+        remember: opts.remember !== false,
+      };
+      if (opts.setupCode) payload.setup_code = opts.setupCode;
       const data = await request('/api/auth/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          key: key,
-          ttl_seconds: opts.ttlSeconds,
-          remember: opts.remember !== false,
-        }),
+        body: JSON.stringify(payload),
       });
       status = null;
       return data;

@@ -44,11 +44,16 @@ const SetupPage = {
                      autocapitalize="off"
                      :disabled="busy"
                      :placeholder="t('setup.keyPlaceholder') || 'boarai_…'"
-                     class="w-full px-3 py-2 pr-10 text-sm font-mono bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-60" />
+                     class="w-full px-3 py-2 pr-16 text-sm font-mono bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-60" />
               <button type="button" @click="reveal = !reveal"
                       :title="reveal ? (t('unlock.hide') || 'Hide') : (t('unlock.show') || 'Show')"
-                      class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                      class="absolute right-8 top-1/2 -translate-y-1/2 p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
                 <i :data-lucide="reveal ? 'eye-off' : 'eye'" class="w-4 h-4"></i>
+              </button>
+              <button type="button" @click="copyKey"
+                      :title="copied ? (t('setup.copied') || 'Copied') : (t('setup.copy') || 'Copy')"
+                      class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                <i :data-lucide="copied ? 'check' : 'copy'" class="w-4 h-4"></i>
               </button>
             </div>
             <div class="flex items-center gap-2 mt-2">
@@ -58,6 +63,20 @@ const SetupPage = {
               <span v-if="strengthMessage" class="text-xs"
                     :class="strengthColor">{{ strengthMessage }}</span>
             </div>
+          </form-field>
+
+          <!-- Remote first-run: prove console access with the printed code -->
+          <form-field v-if="setupCodeRequired"
+                      :label="t('setup.codeLabel') || 'Setup code'"
+                      :hint="t('setup.codeHint') || 'Printed in the server startup log (docker logs / journalctl). Not needed on the server machine.'">
+            <input type="text"
+                   v-model="setupCode"
+                   autocomplete="off"
+                   spellcheck="false"
+                   autocapitalize="off"
+                   :disabled="busy"
+                   :placeholder="t('setup.codePlaceholder') || 'XXXX-XXXX-XXXX'"
+                   class="w-full px-3 py-2 text-sm font-mono bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-60" />
           </form-field>
 
           <!-- Session lifetime -->
@@ -87,15 +106,12 @@ const SetupPage = {
           </p>
         </form>
 
-        <!-- Not allowed from remote host -->
-        <div v-if="statusLoaded && !setupAllowed"
-             class="mt-4 rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 p-3">
-          <p class="text-xs text-red-800 dark:text-red-200">
-            {{ t('setup.remoteForbidden') || 'First-run setup must be completed on the server machine.' }}
+        <!-- Remote first-run: point at the console-printed one-shot code -->
+        <div v-if="setupCodeRequired"
+             class="mt-4 rounded-lg border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/40 p-3">
+          <p class="text-xs text-amber-800 dark:text-amber-200">
+            {{ t('setup.remoteNote') || 'You are setting up from another machine. Enter the one-time setup code printed in the server startup log; on the server itself no code is needed.' }}
           </p>
-          <code class="mt-1 block text-xs font-mono text-red-900 dark:text-red-100">
-            http://127.0.0.1:{{ port }}
-          </code>
         </div>
 
         <p class="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
@@ -115,8 +131,9 @@ const SetupPage = {
       generating: false,
       error: '',
       retryAfter: 0,
-      statusLoaded: false,
-      setupAllowed: true,
+      setupCode: '',
+      setupCodeRequired: false,
+      copied: false,
       // Raw seconds only. Labels are derived in a computed so they follow the
       // language switch — baking them into data froze them at the first locale.
       ttlSeconds: [],
@@ -133,10 +150,6 @@ const SetupPage = {
   },
 
   computed: {
-    port() {
-      const location = window.location;
-      return location.port || (location.protocol === 'https:' ? '443' : '80');
-    },
     ttlOptions() {
       return this.ttlSeconds.map((seconds) => ({
         value: String(seconds),
@@ -162,7 +175,7 @@ const SetupPage = {
           this.$router.replace(this.safeNext() || { name: 'dashboard' });
           return;
         }
-        this.setupAllowed = !!status.setup_allowed;
+        this.setupCodeRequired = !!status.setup_code_required;
         this.minKeyLength = Number(status.min_key_length) || 32;
         this.ttlSeconds = (status.ttl_options || []).map(Number);
         const preferred = String(status.ttl_seconds || '');
@@ -170,13 +183,10 @@ const SetupPage = {
           ? preferred
           : (this.ttlSeconds.length ? String(this.ttlSeconds[0]) : '');
       } catch (error) {
-        this.statusLoaded = false;
         this.error = error && error.message
           ? error.message
           : (this.t('unlock.serverUnreachable') || 'Cannot reach the BoarAI server.');
-        return;
       }
-      this.statusLoaded = true;
     },
 
     durationLabel(seconds) {
@@ -245,6 +255,20 @@ const SetupPage = {
       this.strengthColor = 'text-green-600 dark:text-green-400';
     },
 
+    async copyKey() {
+      if (!this.key || this.busy) return;
+      const ok = await window.UiKit.copyToClipboard(this.key);
+      if (ok) {
+        this.copied = true;
+        setTimeout(() => { this.copied = false; }, 2000);
+      } else {
+        // Clipboard blocked (insecure context / permissions): the input can
+        // be revealed and selected, so say what to do instead of failing.
+        this.error = this.t('setup.copyManual')
+          || 'Clipboard blocked — reveal the key and copy it manually.';
+      }
+    },
+
     async submit() {
       const key = (this.key || '').trim();
       if (!key || this.busy) return;
@@ -254,6 +278,7 @@ const SetupPage = {
         await window.BoarAiAuth.setup(key, {
           ttlSeconds: this.ttl ? Number(this.ttl) : undefined,
           remember: this.remember,
+          setupCode: this.setupCodeRequired ? this.setupCode.trim() : undefined,
         });
         this.key = '';
         const next = this.safeNext() || '/dashboard';
@@ -266,6 +291,11 @@ const SetupPage = {
         if (code === 'auth_throttled' || (error && error.status === 429)) {
           this.error = this.t('unlock.throttledError') || 'Too many failed attempts.';
           this.startCountdown(Number(error.retryAfter) || 30);
+        } else if (code === 'auth_setup_code_required') {
+          this.error = this.t('setup.codeRequired')
+            || 'Remote setup needs the setup code from the server startup log.';
+        } else if (code === 'auth_setup_code_invalid') {
+          this.error = this.t('setup.codeInvalid') || 'That setup code is not correct.';
         } else if (code === 'auth_key_weak') {
           this.error = error.message || 'Key does not meet strength requirements.';
         } else if (code === 'auth_already_configured') {

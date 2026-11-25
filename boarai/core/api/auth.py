@@ -11,6 +11,8 @@ WebUI store can treat auth like any other endpoint. Error bodies always carry
 Endpoints::
 
     GET    /api/auth/status              public   gate state for this browser
+    POST   /api/auth/setup               public   first-run claim; remote peers
+                                                  add the console setup code
     POST   /api/auth/session             public   {key, ttl_seconds, remember}
     DELETE /api/auth/session             auth     log this device out
     POST   /api/auth/ws-ticket           auth     single-use upgrade ticket
@@ -158,7 +160,11 @@ class AuthAPIHandler:
                     # First run: no key exists yet, so the SPA shows the setup
                     # page (create a key) rather than the unlock page (type one).
                     "must_setup": not key_configured,
-                    "setup_allowed": (not key_configured) and loopback,
+                    # The instance is still claimable via the setup page.
+                    "setup_allowed": not key_configured,
+                    # Remote browsers may claim too, but only with the
+                    # console-printed one-shot code; loopback needs nothing.
+                    "setup_code_required": (not key_configured) and not loopback,
                     "min_key_length": MIN_KEY_LENGTH,
                     "expires_at": float(session["expires_at"]) if session else None,
                     "session_id": session.get("id") if session else None,
@@ -182,17 +188,27 @@ class AuthAPIHandler:
     # ==================== First-run setup ====================
 
     async def handle_auth_setup(self, request: web.Request) -> web.Response:
-        """POST /api/auth/setup — create the access key on first run."""
+        """POST /api/auth/setup — create the access key on first run.
+
+        Loopback claims need nothing extra. A remote claim must present the
+        one-shot setup code printed in the server startup log, so "whoever
+        reaches an unclaimed box first" still cannot take it — only whoever
+        can read the console can.
+        """
         if self._store.configured:
             return self._err(
                 409, "auth_already_configured", "An access key already exists"
             )
-        if not self._gate.is_loopback(request):
-            return self._err(
-                403,
-                "auth_loopback_only",
-                "First-run setup must be completed on the server machine",
-            )
+        ip = self._client_ip(request)
+        loopback = self._gate.is_loopback(request)
+        if not loopback:
+            wait = self._store.retry_after(ip)
+            if wait > 0:
+                response = self._err(
+                    429, "auth_throttled", "Too many failed attempts", retry_after=wait
+                )
+                response.headers["Retry-After"] = str(wait)
+                return response
 
         try:
             body = await request.json()
@@ -201,13 +217,33 @@ class AuthAPIHandler:
         if not isinstance(body, dict):
             return self._err(400, "INVALID_REQUEST", "Body must be a JSON object")
 
+        if not loopback:
+            code = str(body.get("setup_code") or "").strip()
+            if not code:
+                return self._err(
+                    403,
+                    "auth_setup_code_required",
+                    "Remote first-run setup needs the setup code printed in "
+                    "the server startup log",
+                )
+            if not self._store.check_setup_code(code):
+                delay = self._store.record_failure(ip)
+                response = self._err(
+                    403,
+                    "auth_setup_code_invalid",
+                    "That setup code is not correct",
+                    retry_after=delay,
+                )
+                if delay > 0:
+                    response.headers["Retry-After"] = str(delay)
+                return response
+
         key = str(body.get("key") or "").strip()
         if not key:
             return self._err(400, "auth_key_required", "Access key is required")
 
         ttl = self._ttl_seconds(body.get("ttl_seconds"))
         remember = body.get("remember", True) is not False
-        ip = self._client_ip(request)
         try:
             value, record = self._store.claim_key(
                 key,
