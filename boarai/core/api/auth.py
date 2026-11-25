@@ -13,6 +13,8 @@ Endpoints::
     GET    /api/auth/status              public   gate state for this browser
     POST   /api/auth/setup               public   first-run claim; remote peers
                                                   add the console setup code
+    GET    /api/auth/setup-code          public   loopback-only in the handler:
+                                                  re-print the setup code
     POST   /api/auth/session             public   {key, ttl_seconds, remember}
     DELETE /api/auth/session             auth     log this device out
     POST   /api/auth/ws-ticket           auth     single-use upgrade ticket
@@ -276,6 +278,26 @@ class AuthAPIHandler:
         response.headers["Cache-Control"] = "no-store"
         # Never log the key itself — not even a masked tail on this path.
         logger.info("First-run setup completed from %s (ttl=%ss)", ip or "?", ttl)
+        return response
+
+    async def handle_auth_setup_code(self, request: web.Request) -> web.Response:
+        """GET /api/auth/setup-code — loopback-only recovery of the code.
+
+        Detached/headless starts (Windows service, docker, nohup) may never
+        show the startup banner on a terminal. Whoever can reach loopback on
+        the server could claim the key directly anyway, so printing the code
+        to them grants no new power.
+        """
+        if not self._gate.is_loopback(request):
+            return self._err(
+                403, "auth_loopback_only", "This endpoint is available only from loopback"
+            )
+        if self._store.configured:
+            return self._err(
+                409, "auth_already_configured", "An access key already exists"
+            )
+        response = self._ok({"setup_code": self._store.setup_code()})
+        response.headers["Cache-Control"] = "no-store"
         return response
 
     # ==================== Session (login / logout) ====================

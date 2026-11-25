@@ -60,18 +60,22 @@ pip install -r requirements.txt     # 或：pip install -e .
 
 锁定版本：`BOARAI_VERSION=0.1.1`（PyPI 变体）、`BOARAI_GIT_REF=v0.1.1`（GitHub 变体）、`BOARAI_GIT_REPO=<你的 fork>`；换宿主端口用 `BOARAI_HOST_PORT=8080`。
 
-**数据持久化**：会话、记忆、日志、配置与用户扩展全部落在 `BOARAI_DATA_DIR=/data`，由命名卷 `boarai-data` 承载（三个变体共用同一个卷，换渠道不丢数据）。`docker compose down` 保留数据，`docker compose down -v` 会删除。备份与恢复：
+**数据持久化**：容器内数据全部落在 `BOARAI_DATA_DIR=/data`，绑定挂载到 **compose 文件旁边的 `./.boarai`**——也就是你在 NAS 界面创建项目时选的那个文件夹，目录名与裸机的 `~/.boarai` 对齐。`down`、`down -v`、重建镜像、重启 NAS 都不会丢。注意：点开头文件夹在部分 NAS 文件管理器里默认隐藏，需开启「显示隐藏文件」；想让多个变体共用一个目录或换个位置，用 `BOARAI_DATA_HOST_DIR` 覆盖成绝对路径。
+
+备份与恢复就是普通 `tar`：
 
 ```bash
-docker run --rm -v boarai-data:/data -v "$PWD":/backup alpine tar czf /backup/boarai-data.tgz -C /data .
-docker run --rm -v boarai-data:/data -v "$PWD":/backup alpine tar xzf /backup/boarai-data.tgz -C /data
+tar czf boarai-data.tgz -C ./.boarai .
+tar xzf boarai-data.tgz -C ./.boarai
 ```
 
-想直接用宿主目录（NAS 常见做法），把 `- boarai-data:/data` 换成 `- /volume1/docker/boarai:/data`，并先把目录属主改成运行时用户——容器**不是 root**，跑在 uid/gid `10001`（可用 `BOARAI_UID` / `BOARAI_GID` 覆盖）：
+从旧版（命名卷 `boarai-data`）升级？首次启动**之前**在 compose 所在目录执行一次：
 
 ```bash
-mkdir -p /volume1/docker/boarai && chown -R 10001:10001 /volume1/docker/boarai
+docker run --rm -v boarai-data:/from -v "$PWD/.boarai":/to alpine sh -c "cp -a /from/. /to/"
 ```
+
+**升级顺序**：先迁移（上面的命令）或接受全新开始 → 在 NAS 界面删旧项目时**不要勾「删除卷」**（勾了旧数据立即不可恢复）→ 再部署新 yml；新旧容器名同为 `boarai`，旧容器必须先删。
 
 **首次访问钥匙**：桥接网络下的容器永远不像回环来源，因此认领钥匙有三种方式，任选其一：
 

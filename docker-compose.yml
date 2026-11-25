@@ -1,40 +1,17 @@
-# BoarAI — SOURCE channel (the default): the copied tree IS the install.
-#
+# BoarAI — SOURCE channel (the default): the copied tree IS the install, and
+# the update steward swaps verified release archives into it in place. Build
+# from a checkout next to this file — or an unpacked PyPI sdist, which carries
+# the same tree:
 #   docker compose up -d --build
-#
-# Unlike the other two variants this one BUILDS FROM THE TREE NEXT TO IT
-# (`Dockerfile` + `boarai/` + `boar/` + `main.py`), so run it from a source
-# checkout — or from an unpacked sdist, which carries the same full tree:
-#   pip download boarai --no-binary :all: --no-deps -d /tmp/src
-#   tar xzf /tmp/src/boarai-*.tar.gz -C /tmp/src && cd /tmp/src/boarai-*
-#   docker compose up -d --build
+#   host port : BOARAI_HOST_PORT=8080 docker compose up -d --build
 # If you only have this one file and no tree, use docker-compose.pypi.yml or
 # docker-compose.github.yml instead — both are fully self-contained.
 #
-#   host port : BOARAI_HOST_PORT=8080 docker compose up -d --build
-#
-# CHANNEL SEMANTICS (not taste): no `pip install` of the package happens here.
-# update/steward classifies a running tree without `.git` as the source
-# channel and updates it in place by swapping verified release archives; a
-# pip-installed copy would be detected as the pip channel and an in-container
-# update would cross channels — forbidden by design. The tree therefore stays
-# writable by the runtime user.
-#
-# DATA PERSISTENCE — everything the kernel writes (config / sessions / logs /
-# memory / cache / agents / user extensions) lands under BOARAI_DATA_DIR=/data:
-#   docker compose down      -> data SURVIVES
-#   docker compose down -v   -> data is DELETED
-#   inspect : docker volume inspect boarai-data
-#   backup  : docker run --rm -v boarai-data:/data -v "$PWD":/backup \
-#               alpine tar czf /backup/boarai-data.tgz -C /data .
-#   restore : docker run --rm -v boarai-data:/data -v "$PWD":/backup \
-#               alpine tar xzf /backup/boarai-data.tgz -C /data
-# The volume name is shared by all three variants, so switching channel keeps
-# your sessions. Prefer a host directory (typical on a NAS)? Replace the volume
-# line with
-#   - /volume1/docker/boarai:/data
-# and chown it to the runtime uid/gid first (the image is NOT root):
-#   mkdir -p /volume1/docker/boarai && chown -R 10001:10001 /volume1/docker/boarai
+# DATA / FIRST-RUN KEY — same as the docker-compose.pypi.yml header: ./.boarai
+# next to this file survives everything; the first-run log prints a one-shot
+# setup code for claiming the WebUI key. Upgrading from the old named-volume
+# install? See the upgrade-order warning in that header — same container name,
+# same data folder.
 
 name: boarai
 
@@ -43,36 +20,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        BOARAI_UID: "${BOARAI_UID:-10001}"
-        BOARAI_GID: "${BOARAI_GID:-10001}"
     image: boarai:local
     container_name: boarai
-    # tini as PID 1: the kernel spawns subprocesses (shell tools), so signals
-    # must be forwarded and orphans reaped.
+    # tini as PID 1: the kernel spawns subprocesses (shell tools).
     init: true
     ports:
-      # host:container — the kernel listens on 26620 inside
       - "${BOARAI_HOST_PORT:-26620}:26620"
-    environment:
-      BOARAI_DATA_DIR: /data
-      # First-run access key. A bridged container never looks like a loopback
-      # peer, so claim the key one of three ways:
-      #   1. setup code (simplest): the first-run log prints a one-shot code —
-      #        docker compose logs boarai
-      #      open the WebUI from ANY machine and type it in. Re-minted on every
-      #      restart until the key is claimed; loopback peers need no code.
-      #   2. one-off command (prints the key once):
-      #        docker compose run --rm boarai python main.py key init
-      #   3. pre-seed a token here (>=32 base64url chars; adopted on first run
-      #      only, never overrides an existing key):
-      # BOARAI_API_TOKEN: "replace-with-32-plus-base64url-chars"
     volumes:
-      - boarai-data:/data
+      - ${BOARAI_DATA_HOST_DIR:-./.boarai}:/data
     restart: unless-stopped
-    # The kernel writes through atomic temp+rename, so a hard stop cannot
-    # corrupt state; the grace period still lets in-flight requests finish.
-    stop_grace_period: 30s
     security_opt:
       - no-new-privileges:true
     logging:
@@ -80,9 +36,3 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
-volumes:
-  boarai-data:
-    # Explicit name: the backup/inspect commands above stay valid no matter
-    # which directory compose was invoked from.
-    name: boarai-data

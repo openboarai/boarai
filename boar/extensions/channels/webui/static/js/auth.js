@@ -160,6 +160,11 @@
       return data;
     },
 
+    /** Loopback-only: current first-run setup code (unclaimed instances). */
+    async setupCode() {
+      return request('/api/auth/setup-code');
+    },
+
     /** Single-use credential for the WebSocket upgrade. */
     async getTicket() {
       const data = await request(TICKET_PATH, { method: 'POST' });

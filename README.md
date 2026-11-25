@@ -60,18 +60,22 @@ Three images mirror the three install/update channels — an install only ever u
 
 Pin releases with `BOARAI_VERSION=0.1.1` (PyPI variant), `BOARAI_GIT_REF=v0.1.1` (GitHub variant), or `BOARAI_GIT_REPO=<your-fork>`; map a different host port with `BOARAI_HOST_PORT=8080`.
 
-**Data persistence.** Sessions, memory, logs, config and user extensions all live under `BOARAI_DATA_DIR=/data`, backed by the named volume `boarai-data` (shared by the three variants, so switching channel keeps your data). `docker compose down` keeps it, `docker compose down -v` deletes it. Backup and restore:
+**Data persistence.** Inside the container everything lands under `BOARAI_DATA_DIR=/data`, bind-mounted to **`./.boarai` next to the compose file** — the folder you picked in the NAS UI when creating the project, named like a bare-metal `~/.boarai`. It survives `down`, `down -v`, image rebuilds and NAS reboots. Note: a dot-folder is hidden by default in some NAS file managers — enable "show hidden files". Set `BOARAI_DATA_HOST_DIR` to an absolute path to share one directory across variants or move it elsewhere.
+
+Backup and restore are plain `tar`:
 
 ```bash
-docker run --rm -v boarai-data:/data -v "$PWD":/backup alpine tar czf /backup/boarai-data.tgz -C /data .
-docker run --rm -v boarai-data:/data -v "$PWD":/backup alpine tar xzf /backup/boarai-data.tgz -C /data
+tar czf boarai-data.tgz -C ./.boarai .
+tar xzf boarai-data.tgz -C ./.boarai
 ```
 
-To use a host directory instead (common on a NAS), replace `- boarai-data:/data` with `- /volume1/docker/boarai:/data` and chown it to the runtime user first — the container is **not** root, it runs as uid/gid `10001` (override with `BOARAI_UID` / `BOARAI_GID`):
+Upgrading from an older install that used the named volume `boarai-data`? Run this once from the compose directory **before** the first start:
 
 ```bash
-mkdir -p /volume1/docker/boarai && chown -R 10001:10001 /volume1/docker/boarai
+docker run --rm -v boarai-data:/from -v "$PWD/.boarai":/to alpine sh -c "cp -a /from/. /to/"
 ```
+
+**Upgrade order**: migrate first (the command above) or accept a fresh start → delete the old project in the NAS UI **without ticking "delete volumes"** (ticking it destroys the old data irrecoverably) → deploy the new yml; old and new share the container name `boarai`, so the old container must be gone first.
 
 **First-run access key.** A bridged container never looks like a loopback peer, so claim the key whichever way suits you:
 

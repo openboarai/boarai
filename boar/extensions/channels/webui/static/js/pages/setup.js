@@ -114,6 +114,32 @@ const SetupPage = {
           </p>
         </div>
 
+        <!-- Loopback first-run: show the code here too — a detached start may
+             never print the banner on a terminal. Loopback visitors could
+             claim directly anyway, so displaying it grants no new power. -->
+        <div v-else-if="localSetupCode"
+             class="mt-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
+          <p class="text-xs font-medium text-gray-700 dark:text-gray-300">
+            {{ t('setup.localCodeTitle') || 'Claiming from another machine? Use this one-time code:' }}
+          </p>
+          <div class="mt-2 flex items-center gap-2">
+            <code class="flex-1 text-sm font-mono tracking-wider text-gray-900 dark:text-gray-100 select-all">{{ localSetupCode }}</code>
+            <button type="button" @click="copyLocalCode"
+                    class="shrink-0 px-2 py-1 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-1">
+              <i :data-lucide="localCodeCopied ? 'check' : 'copy'" class="w-3.5 h-3.5"></i>
+              {{ localCodeCopied ? (t('setup.copied') || 'Copied') : (t('setup.copy') || 'Copy') }}
+            </button>
+            <button type="button" @click="loadLocalCode"
+                    :title="t('setup.refresh') || 'Refresh'"
+                    class="shrink-0 px-2 py-1 text-xs rounded-lg border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+            {{ t('setup.localCodeHint') || 'Visible only on the server itself; re-minted on restart.' }}
+          </p>
+        </div>
+
         <p class="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
           {{ t('unlock.footer') || 'The key is only stored as a hash on the server and never leaves it.' }}
         </p>
@@ -134,6 +160,8 @@ const SetupPage = {
       setupCode: '',
       setupCodeRequired: false,
       copied: false,
+      localSetupCode: '',
+      localCodeCopied: false,
       // Raw seconds only. Labels are derived in a computed so they follow the
       // language switch — baking them into data froze them at the first locale.
       ttlSeconds: [],
@@ -176,6 +204,7 @@ const SetupPage = {
           return;
         }
         this.setupCodeRequired = !!status.setup_code_required;
+        if (!this.setupCodeRequired) await this.loadLocalCode();
         this.minKeyLength = Number(status.min_key_length) || 32;
         this.ttlSeconds = (status.ttl_options || []).map(Number);
         const preferred = String(status.ttl_seconds || '');
@@ -253,6 +282,28 @@ const SetupPage = {
       }
       this.strengthMessage = this.t('setup.strong') || 'Strong';
       this.strengthColor = 'text-green-600 dark:text-green-400';
+    },
+
+    async loadLocalCode() {
+      // Loopback-only endpoint; refresh simply re-reads the current code.
+      try {
+        const data = await window.BoarAiAuth.setupCode();
+        this.localSetupCode = (data && data.setup_code) || '';
+      } catch (_) {
+        this.localSetupCode = '';
+      }
+    },
+
+    async copyLocalCode() {
+      if (!this.localSetupCode) return;
+      const ok = await window.UiKit.copyToClipboard(this.localSetupCode);
+      if (ok) {
+        this.localCodeCopied = true;
+        setTimeout(() => { this.localCodeCopied = false; }, 2000);
+      } else {
+        this.error = this.t('setup.copyManual')
+          || 'Clipboard blocked — select the code and copy it manually.';
+      }
     },
 
     async copyKey() {

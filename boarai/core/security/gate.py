@@ -64,6 +64,9 @@ _PUBLIC_EXACT: frozenset[Tuple[str, str]] = frozenset(
         # remote peer must add the console-printed one-shot setup code
         # (checked in the handler, so the gate stays public here).
         ("POST", "/api/auth/setup"),
+        # Recovery path for "the terminal never showed the code": loopback-
+        # only in the handler (same trust domain as /api/auth/token).
+        ("GET", "/api/auth/setup-code"),
     }
 )
 
