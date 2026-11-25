@@ -9,9 +9,12 @@ FROM python:3.12-slim
 
 # tiktoken encoding cache lives in the data dir: downloaded once, reused
 # across rebuilds instead of re-fetched per container.
+# TZ is a POSIX string (glibc parses it without tzdata): UTC+8, no DST.
+# Override at runtime with -e TZ=<posix string or IANA name>.
 ENV PYTHONUNBUFFERED=1 \
     BOARAI_DATA_DIR=/data \
-    TIKTOKEN_CACHE_DIR=/data/.tiktoken
+    TIKTOKEN_CACHE_DIR=/data/.tiktoken \
+    TZ=CST-8
 
 WORKDIR /opt/boarai
 

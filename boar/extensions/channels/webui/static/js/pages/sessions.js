@@ -734,10 +734,13 @@ const FileChangeCard = {
   },
   computed: {
     path() { return (this.change && this.change.path) || ''; },
-    // Absolute path = session workspace root + workspace-relative path.
+    // Absolute path = session workspace root + workspace-relative path;
+    // already-absolute stored paths pass through unchanged.
     fullPath() {
+      const p = String(this.path || '');
+      if (/^([a-zA-Z]:[\\/]|[\\/])/.test(p)) return p;
       const b = String(this.base || '').replace(/[\\/]+$/, '');
-      return b ? b + '/' + this.path : this.path;
+      return b ? b + '/' + p : p;
     },
     ctype() { return (this.change && this.change.change_type) || 'modified'; },
     additions() { return (this.change && this.change.additions) || 0; },
@@ -2086,7 +2089,7 @@ const SessionsPage = {
                 <span class="px-1 py-0.5 rounded text-[10px] font-medium flex-shrink-0" :class="changeBadgeClass(f.change_type)">
                   {{ changeTypeLabel(f.change_type) }}
                 </span>
-                <span class="flex-1 min-w-0 truncate text-gray-700 dark:text-gray-300" :title="absFilePath(f.path)">{{ absFilePath(f.path) }}</span>
+                <span class="flex-1 min-w-0 truncate text-gray-700 dark:text-gray-300" :title="absFilePath(f.path)">{{ f.path }}</span>
                 <span class="flex-shrink-0 tabular-nums whitespace-nowrap">
                   <span class="text-emerald-600 dark:text-emerald-400">+{{ f.additions || 0 }}</span>
                   <span class="text-red-500 dark:text-red-400 ml-0.5">-{{ f.deletions || 0 }}</span>
@@ -6986,10 +6989,13 @@ ${SESSION_TOOLBAR_SNIPPET}
       return this.getFileChange(m);
     },
     // Stored change paths are workspace-RELATIVE; join with the session
-    // workspace root so the UI can show a genuinely full (absolute) path.
+    // workspace root for the hover tooltip. Paths already absolute (file
+    // edited outside the workspace) pass through unchanged.
     absFilePath(rel) {
+      const p = String(rel || '');
+      if (/^([a-zA-Z]:[\\/]|[\\/])/.test(p)) return p;
       const base = String(this.workspaceDisplayPath || '').replace(/[\\/]+$/, '');
-      return base ? base + '/' + rel : rel;
+      return base ? base + '/' + p : p;
     },
 
     async loadChanges(sessionId) {
