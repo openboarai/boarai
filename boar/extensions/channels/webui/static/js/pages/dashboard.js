@@ -1,8 +1,8 @@
 /**
  * Dashboard Page Component
  *
- * Real data dashboard showing token usage, sessions, extensions, LLM status,
- * recent requests, and compression savings — all from live API endpoints.
+ * Real data dashboard showing token usage, sessions, extensions, LLM status
+ * and recent requests — all from live API endpoints.
  * Uses TailwindCSS for styling. Supports i18n. Uses Lucide Icons.
  */
 
@@ -146,7 +146,7 @@ const DashboardPage = {
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- Recent Requests -->
-        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <div class="lg:col-span-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
           <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
             <i data-lucide="activity" class="w-4 h-4 text-gray-500"></i>
             {{ t('dashboard.recentRequests') }}
@@ -167,7 +167,7 @@ const DashboardPage = {
               <tbody>
                 <tr v-for="(r, i) in recentRequests" :key="i"
                     class="border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                  <td class="py-2 pr-3 text-gray-700 dark:text-gray-300">{{ r.agent || r.model ? r.model.split('/')[0] : '-' }}</td>
+                  <td class="py-2 pr-3 text-gray-700 dark:text-gray-300">{{ r.agent || '-' }}</td>
                   <td class="py-2 pr-3 text-gray-500 dark:text-gray-500 font-mono">{{ r.model ? r.model.split('/').pop() : '-' }}</td>
                   <td class="py-2 pr-3 text-right">
                     <span class="inline-flex items-center gap-1"
@@ -182,58 +182,6 @@ const DashboardPage = {
             </table>
           </div>
         </div>
-
-        <!-- Compression & Savings -->
-        <div class="space-y-4">
-          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <i data-lucide="layers" class="w-4 h-4 text-gray-500"></i>
-              {{ t('dashboard.compression') }}
-            </h3>
-            <div class="flex items-center justify-between text-sm mb-3">
-              <span class="text-gray-500 dark:text-gray-500">{{ t('dashboard.compressionCount') }}</span>
-              <span class="font-medium text-gray-900 dark:text-white tabular-nums">{{ compression.total_count || 0 }}</span>
-            </div>
-          </div>
-
-          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <i data-lucide="piggy-bank" class="w-4 h-4 text-gray-500"></i>
-              {{ t('dashboard.savings') }}
-            </h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex items-center justify-between">
-                <span class="text-gray-500 dark:text-gray-500">{{ t('dashboard.tokensSaved') }}</span>
-                <span class="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">{{ formatNumber(savings.tokens_saved) }}</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-gray-500 dark:text-gray-500">{{ t('dashboard.estimatedUsd') }}</span>
-                <span class="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">{{ '$' + (savings.estimated_usd || 0).toFixed(4) }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Per-Agent Table -->
-          <div v-if="perAgent.length > 0" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <i data-lucide="users" class="w-4 h-4 text-gray-500"></i>
-              {{ t('dashboard.perAgent') }}
-            </h3>
-            <div class="space-y-2 text-xs">
-              <div v-for="a in perAgent" :key="a.agent"
-                   class="flex items-center justify-between py-1.5 border-b border-gray-50 dark:border-gray-700/50 last:border-0">
-                <span class="text-gray-700 dark:text-gray-300">{{ a.agent }}</span>
-                <div class="flex items-center gap-3">
-                  <span class="text-gray-500 dark:text-gray-500 tabular-nums">{{ a.requests }} req</span>
-                  <span class="tabular-nums"
-                        :class="(a.avg_hit_rate || 0) > 70 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'">
-                    {{ (a.avg_hit_rate || 0).toFixed(0) }}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   `,
@@ -245,9 +193,6 @@ const DashboardPage = {
       extensions: { total: 0, running: 0, error: 0, disabled: 0 },
       llmStatus: { total_providers: 0, default_model: '', available_models: [] },
       recentRequests: [],
-      compression: { total_count: 0 },
-      savings: { tokens_saved: 0, estimated_usd: 0 },
-      perAgent: [],
     };
   },
 
@@ -287,9 +232,6 @@ const DashboardPage = {
         const d = json.data;
         this.tokens = d.tokens || { total: 0, today: 0, hit_rate: 0 };
         this.sessions = { ...(d.sessions || {}), today: (d.sessions && d.sessions.today) || d.sessions?.active || 0 };
-        this.compression = d.compression || { total_count: 0 };
-        this.savings = d.savings || { tokens_saved: 0, estimated_usd: 0 };
-        this.perAgent = d.per_agent || [];
 
         // Build recent requests with hit_rate computed
         const raw = (d.recent_requests || []).slice(0, 20);

@@ -1363,9 +1363,6 @@ const BoarAiStore = {
           tokens: { total: 0, today: 0, hit_rate: 0, trend: [0,0,0,0,0,0,0] },
           cache: { total_read: 0, total_created: 0, hit_rate: 0, trend: [0,0,0,0,0,0,0] },
           sessions: { total: 0, active: 0 },
-          compression: { total_count: 0 },
-          savings: { estimated_usd: 0, tokens_saved: 0 },
-          per_agent: [],
           recent_requests: [],
         };
       }

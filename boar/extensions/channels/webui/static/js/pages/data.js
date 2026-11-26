@@ -555,28 +555,6 @@ const DataPage = {
               <donut-chart v-else :data="providerDonutData" :size="150" :thickness="24"></donut-chart>
             </div>
 
-            <!-- Per-agent (role) breakdown -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-              <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">{{ t('data.byAgent') }}</h3>
-              <div v-if="perAgentSorted.length === 0"
-                   class="text-xs text-gray-400 dark:text-gray-500 py-8 text-center">{{ t('data.noData') }}</div>
-              <div v-else class="space-y-3">
-                <div v-for="a in perAgentSorted" :key="a.agent">
-                  <div class="flex items-center justify-between gap-2 mb-1">
-                    <span class="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
-                      <i data-lucide="bot" class="w-3 h-3 shrink-0 text-primary"></i>
-                      <span class="truncate">{{ a.agent }}</span>
-                    </span>
-                    <span class="text-xs text-gray-500 shrink-0 whitespace-nowrap">{{ formatNumber(a.input || 0) }} · {{ a.requests }} {{ t('data.requestsUnit') }} · {{ a.hit_rate || 0 }}%</span>
-                  </div>
-                  <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div class="h-full rounded-full transition-all duration-300"
-                         :style="{ width: agentBarWidth(a) + '%', background: chartColor }"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- Per-session usage breakdown -->
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
               <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">{{ t('data.sessionUsage') }}</h3>
@@ -718,9 +696,6 @@ const DataPage = {
                   today_completion: 0, today_requests: 0, requests: 0 },
         cache: { total_read: 0, total_created: 0, hit_rate: 0, trend: [0,0,0,0,0,0,0] },
         sessions: { total: 0, active: 0 },
-        compression: { total_count: 0 },
-        savings: { estimated_usd: 0, tokens_saved: 0 },
-        per_agent: [],
         recent_requests: [],
         trend_30d: [],
         trend_today: [],
@@ -895,12 +870,6 @@ const DataPage = {
         color: palette[i % palette.length],
       }));
     },
-    perAgentSorted() {
-      return (this.stats.per_agent || [])
-        .slice()
-        .sort((x, y) => (y.input || 0) - (x.input || 0))
-        .slice(0, 8);
-    },
     cacheRateChartData() {
       if (this.statRange === 'today') {
         return (this.stats.trend_today_rate || []).map((v, i) => ({
@@ -1041,11 +1010,6 @@ const DataPage = {
       const list = this.stats.per_model || [];
       const max = Math.max(...list.map(x => x.input || 0), 1);
       return Math.max(2, Math.round((m.input || 0) / max * 100));
-    },
-
-    agentBarWidth(a) {
-      const max = Math.max(...this.perAgentSorted.map(x => x.input || 0), 1);
-      return Math.max(2, Math.round((a.input || 0) / max * 100));
     },
 
     sessionBarWidth(s) {

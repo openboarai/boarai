@@ -115,13 +115,7 @@
     "noRequests": "暂无请求记录",
     "agent": "角色",
     "modelShort": "模型",
-    "tokens": "Token",
-    "compression": "压缩",
-    "compressionCount": "压缩次数",
-    "savings": "节省",
-    "tokensSaved": "节省 Token",
-    "estimatedUsd": "节省费用",
-    "perAgent": "分角色统计"
+    "tokens": "Token"
   },
   "tasks": {
     "title": "任务管理",
@@ -600,7 +594,6 @@
     "rangeMonthly": "按月",
     "byModel": "模型用量",
     "byProvider": "供应商用量",
-    "byAgent": "角色用量",
     "sessionUsage": "会话用量",
     "dailyActivity": "每日活跃度",
     "less": "少",

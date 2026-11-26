@@ -116,7 +116,20 @@ class ContextPrep:
             session.status = "active"
             await self._session_manager.save_session(run.session_id)
 
-        model = run.model
+        # Runs started without an explicit model (channel hosts, tasks, skill
+        # evolution) ledgered "unknown" while the wire call silently used the
+        # provider default. Resolve once here so usage/events/logs carry the
+        # model actually requested; session.model stays the user preference.
+        model = run.model or session.model or ""
+        if not model:
+            try:
+                from boarai.core.llm import get_llm_manager
+
+                model = get_llm_manager().default_model or ""
+            except Exception:  # noqa: BLE001 — no LLM configured yet
+                model = ""
+        if model and model != run.model:
+            run.model = model
         agent_name = getattr(run, "_agent_name", "default")
         assembler = self._assembler or get_prompt_assembler()
 

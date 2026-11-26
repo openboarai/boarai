@@ -78,7 +78,6 @@ async def _compute_stats(range_key: str = "all") -> Dict[str, Any]:
     today_input = 0
     today_cache_read = 0
 
-    agent_stats: Dict[str, Dict] = {}
     all_requests: List[Dict] = []
     # Local-time windows: "today" must mean the USER's today, not UTC's.
     today_start = datetime.now().astimezone().replace(
@@ -87,7 +86,7 @@ async def _compute_stats(range_key: str = "all") -> Dict[str, Any]:
     month_start = today_start.replace(day=1)
     today_active_sessions = set()
 
-    # Range filter for breakdowns (per-model/provider/agent/session)
+    # Range filter for breakdowns (per-model/provider/session)
     from datetime import timedelta
     if range_key == "today":
         cutoff = today_start
@@ -186,6 +185,9 @@ async def _compute_stats(range_key: str = "all") -> Dict[str, Any]:
         cc = req.get("cache_creation_tokens", 0)
         comp = req.get("completion_tokens", 0)
         model = req.get("model", "unknown")
+        provider = model_provider.get(model) or (
+            model.split("/", 1)[0] if "/" in model else "unknown"
+        )
         sid = req.get("session_id", "")
         ts_raw = req.get("ts", "")
 
@@ -205,25 +207,9 @@ async def _compute_stats(range_key: str = "all") -> Dict[str, Any]:
             r_cache_created += cc
             r_requests += 1
 
-        # Per-agent tracking (ledger carries the producing agent)
-        agent = req.get("agent_name") or "default"
-        if in_range:
-            if agent not in agent_stats:
-                agent_stats[agent] = {
-                    "requests": 0, "input": 0, "completion": 0,
-                    "cache_read": 0,
-                }
-            agent_stats[agent]["requests"] += 1
-            agent_stats[agent]["input"] += inp
-            agent_stats[agent]["completion"] += comp
-            agent_stats[agent]["cache_read"] += cr
-
         # Per-model / per-session (range-filtered) + per-day / per-month
         # trends (always full-window)
         if in_range:
-            provider = model_provider.get(model) or (
-                model.split("/", 1)[0] if "/" in model else "unknown"
-            )
             mst = model_stats.setdefault(model, {
                 "provider": provider, "requests": 0, "input": 0,
                 "completion": 0, "cache_read": 0,
@@ -281,6 +267,8 @@ async def _compute_stats(range_key: str = "all") -> Dict[str, Any]:
             "ts": req.get("ts", ""),
             "day": ts.strftime("%Y-%m-%d") if ts is not None else "",
             "model": model,
+            "provider": provider,
+            "agent": req.get("agent_name") or "default",
             "input_tokens": inp,
             "completion_tokens": req.get("completion_tokens", 0),
             "cache_read_tokens": cr,
@@ -436,25 +424,6 @@ async def _compute_stats(range_key: str = "all") -> Dict[str, Any]:
             "cost_usd": round(cost, 4),
         })
 
-    # Per-agent breakdown (sorted by input tokens desc)
-    per_agent = []
-    for agent, st in sorted(
-        agent_stats.items(), key=lambda kv: kv[1]["input"], reverse=True
-    ):
-        agent_hit = (
-            round((st["cache_read"] / st["input"]) * 100, 1)
-            if st["input"] > 0 else 0.0
-        )
-        per_agent.append({
-            "agent": agent,
-            "requests": st["requests"],
-            "input": st["input"],
-            "completion": st["completion"],
-            "cache_read": st["cache_read"],
-            "avg_hit_rate": agent_hit,
-            "hit_rate": agent_hit,
-        })
-
     # Recent requests (last 20)
     recent = sorted(all_requests, key=lambda r: r.get("ts", ""), reverse=True)[:20]
 
@@ -516,7 +485,6 @@ async def _compute_stats(range_key: str = "all") -> Dict[str, Any]:
             "estimated_usd": savings,
             "tokens_saved": total_cache_read,
         },
-        "per_agent": per_agent,
         "recent_requests": recent,
     }
     import time as _time

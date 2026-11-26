@@ -115,13 +115,7 @@
     "noRequests": "No requests yet",
     "agent": "Agent",
     "modelShort": "Model",
-    "tokens": "Tokens",
-    "compression": "Compression",
-    "compressionCount": "Times",
-    "savings": "Savings",
-    "tokensSaved": "Tokens Saved",
-    "estimatedUsd": "Est. Cost Saved",
-    "perAgent": "Per Agent"
+    "tokens": "Tokens"
   },
   "tasks": {
     "title": "Task Management",
@@ -600,7 +594,6 @@
     "rangeMonthly": "Monthly",
     "byModel": "Model Usage",
     "byProvider": "Provider Usage",
-    "byAgent": "Agent Usage",
     "sessionUsage": "Session Usage",
     "dailyActivity": "Daily Activity",
     "less": "Less",

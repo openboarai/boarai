@@ -213,6 +213,16 @@ class SubAgentSession:
 
             # 3. Tool execution loop via ThinkingEngine
             engine = ThinkingEngine()
+            # Resolve the model once so thinking config and the usage ledger
+            # know what the wire call actually uses (empty = provider default).
+            model = ""
+            try:
+                from boarai.core.llm import get_llm_manager
+
+                model = get_llm_manager().default_model or ""
+            except Exception:  # noqa: BLE001 — no LLM configured yet
+                model = ""
+            self._model = model
             total_turns = 0
             final_content = ""
             all_failures: List[str] = []
@@ -227,7 +237,7 @@ class SubAgentSession:
                     llm_call=self._make_llm_call(),
                     user_input=self.instruction if iteration == 0 else "",
                     session_messages=messages,
-                    model="",
+                    model=model,
                     tools=tools,
                     thinking_mode=subagent_thinking,
                     max_turns=self.max_turns - iteration,
@@ -452,6 +462,7 @@ class SubAgentSession:
                     "cache_creation_input_tokens": agg["cache_creation"],
                 },
                 kind="subagent",
+                model=getattr(self, "_model", "") or "unknown",
                 session_id=self.session_id,
                 agent_name=f"subagent:{self.preset_name}",
             )
