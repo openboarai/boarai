@@ -3,7 +3,7 @@
 The check is read-only and network-flaky by nature: every failure degrades
 to "no update known" with the error surfaced in the status payload — an
 unreachable registry must never break startup or spam retries (the cache
-TTL and the failure cooldown in ``core.update.state`` bound the churn).
+TTL bounds the churn).
 
 Config (``update`` section of config.yaml, see core.config.schema):
   ``pypi_url``           — the JSON endpoint (default PyPI; any
@@ -12,7 +12,7 @@ Config (``update`` section of config.yaml, see core.config.schema):
                            It is the SINGLE version oracle for ALL channels;
                            the source channel also resolves its sdist
                            download URL + sha256 from the per-version JSON.
-  ``check_interval_hours`` / ``cooldown_hours`` / ``auto_check`` / ``enabled``
+  ``check_interval_hours`` / ``auto_check`` / ``enabled``
   ``pip_extra_args``     — extra args for the worker's pip install
                            (e.g. ``["--no-index", "--find-links", <dir>]``)
 """
@@ -68,6 +68,11 @@ def get_update_config():
                 elif key == "backup_keep":
                     try:
                         value = max(0, int(value))
+                    except (TypeError, ValueError):
+                        continue
+                elif key in ("check_interval_hours", "stop_timeout_s"):
+                    try:
+                        value = max(0.0, float(value))
                     except (TypeError, ValueError):
                         continue
                 setattr(fallback, key, value)

@@ -42,6 +42,50 @@ def _cmdline_is_boar(cmd: str) -> bool:
     return any(p.search(low) for p in _BOAR_CMD_PATTERNS)
 
 
+def _pids_from_procfs(port: int, proc_root: str = "/proc") -> list:
+    """PIDs LISTENING on ``port`` parsed straight from /proc (slim containers ship neither psutil nor lsof)."""
+    inodes = set()
+    try:
+        for table in ("net/tcp", "net/tcp6"):
+            table_path = Path(proc_root) / table
+            if not table_path.is_file():
+                continue
+            for line in table_path.read_text(encoding="utf-8", errors="replace").splitlines()[1:]:
+                fields = line.split()
+                if len(fields) < 10 or fields[3] != "0A":  # 0A = TCP_LISTEN
+                    continue
+                try:
+                    local_port = int(fields[1].rsplit(":", 1)[1], 16)
+                except (IndexError, ValueError):
+                    continue
+                if local_port == port:
+                    inodes.add(fields[9])
+    except OSError:
+        return []
+    if not inodes:
+        return []
+    pids = []
+    try:
+        entries = list(Path(proc_root).iterdir())
+    except OSError:
+        return []
+    for entry in entries:
+        if not entry.name.isdigit():
+            continue
+        try:
+            for fd in (entry / "fd").iterdir():
+                try:
+                    target = os.readlink(str(fd))
+                except OSError:
+                    continue  # other users' fds or races — skip silently
+                if target.startswith("socket:[") and target[8:-1] in inodes:
+                    pids.append(int(entry.name))
+                    break
+        except OSError:
+            continue
+    return pids
+
+
 class ProcessManager:
     """Answer "is the server up, and which PID owns it" without trusting disk."""
 
@@ -212,7 +256,12 @@ class ProcessManager:
                         pids.append(conn.pid)
                 return pids
             except (psutil.AccessDenied, psutil.Error):
-                pass  # fall through to netstat/lsof
+                pass  # fall through to procfs/lsof
+
+        if sys.platform != "win32":
+            pids = _pids_from_procfs(port)
+            if pids:
+                return pids
 
         import subprocess
 

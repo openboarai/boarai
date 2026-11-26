@@ -104,9 +104,10 @@ class PluginConfig:
 
     - "off": never auto-install; a missing dependency fails the load with a
       clear error asking the user to install it manually.
-    - "system": auto-install only for built-in system-layer extensions
-      (trusted); user/local extensions must be installed manually or the
-      policy changed. Recommended default.
+    - "system": auto-install for trusted extensions — the system layer, or
+      user extensions that passed the operator trust gate (they may already
+      execute arbitrary Python in-process, so installing their DECLARED
+      dependencies grants no new authority). Recommended default.
     - "all": auto-install for every layer (legacy permissive behavior).
     """
 
@@ -459,7 +460,7 @@ class UpdateConfig:
     enabled: bool = True
     auto_check: bool = True
     check_interval_hours: float = 24.0
-    cooldown_hours: float = 6.0
+    stop_timeout_s: float = 120.0
     pypi_url: str = "https://pypi.org/pypi/boarai/json"
     pip_extra_args: List[str] = field(default_factory=list)
     git_remote: str = "origin"
@@ -663,6 +664,11 @@ class BoarAiConfig:
                             value = max(0, int(value))
                         except (TypeError, ValueError):
                             value = 1
+                    elif key in ("check_interval_hours", "stop_timeout_s"):
+                        try:
+                            value = max(0.0, float(value))
+                        except (TypeError, ValueError):
+                            continue
                     setattr(config.update, key, value)
 
         # Update security config

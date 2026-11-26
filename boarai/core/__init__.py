@@ -23,7 +23,7 @@ from .dependency import get_dependency_manager
 # and the update worker verifies a pip install by having a FRESH
 # interpreter print it — keep it in lock-step with the published git tags
 # / PyPI releases.
-__version__ = "0.1.2.4"
+__version__ = "0.1.2.5"
 __author__ = "BoarAi Team"
 
 __all__ = [

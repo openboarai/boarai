@@ -155,13 +155,13 @@ def verify_install(cwd: Optional[str] = None) -> Optional[str]:
     return lines[-1] if lines else None
 
 
-def request_stop(base_url: str) -> bool:
-    """Ask the running server to shut down gracefully (no-op when already down)."""
+def request_stop(base_url: str) -> Tuple[bool, str]:
+    """Ask the running server to shut down gracefully; returns (ok, failure reason)."""
     import urllib.request
 
     token = _api_token(base_url)
     if not token:
-        return False
+        return False, f"could not fetch a loopback token from {base_url}/api/auth/token"
     request = urllib.request.Request(
         f"{base_url}/api/server/stop",
         method="POST",
@@ -169,9 +169,32 @@ def request_stop(base_url: str) -> bool:
     )
     try:
         with urllib.request.urlopen(request, timeout=10) as resp:
-            return resp.status == 200
-    except Exception:  # noqa: BLE001
-        return False
+            if resp.status == 200:
+                return True, ""
+            return False, f"POST /api/server/stop returned HTTP {resp.status}"
+    except Exception as e:  # noqa: BLE001
+        return False, f"POST /api/server/stop failed: {e}"
+
+
+def _stop_and_wait(base_url: str, port: int, stop_timeout_s: float) -> Optional[str]:
+    """Graceful stop + port wait; None on success, a diagnostic string on failure."""
+    ok, reason = request_stop(base_url)
+    if not ok:
+        print(f"[worker] stop request failed: {reason}", flush=True)
+    if wait_port_free(port, timeout_s=stop_timeout_s):
+        return None
+    detail = f"server port still held after graceful stop; update aborted"
+    detail += f" (stop request: {'accepted' if ok else reason})"
+    detail += f"; waited {stop_timeout_s:.0f}s"
+    return detail
+
+
+def _stop_timeout_s(cfg) -> float:
+    """How long to wait for the graceful stop to release the port (config)."""
+    try:
+        return max(30.0, float(getattr(cfg, "stop_timeout_s", 120.0)))
+    except (TypeError, ValueError):
+        return 120.0
 
 
 def wait_port_free(port: int, timeout_s: float = 30.0) -> bool:
@@ -477,19 +500,19 @@ def prune_backups(root: Path, keep: int) -> None:
 # ---------------------------------------------------------------------------
 
 def _pip_channel_update(
-    target: str, from_version: str, extra_args: List[str],
+    cfg, target: str, from_version: str, extra_args: List[str],
     set_phase, finish, respawn, port: int, base_url: str, neutral_cwd: str,
 ) -> int:
     # 1) STOP first: on Windows pip cannot replace a package whose files a
     #    live server process holds; and even where it could, replacing the
     #    code under a running agent is asking for a mixed-state crash.
     set_phase(update_state.PHASE_STOPPING)
-    request_stop(base_url)  # best effort — the server may already be down
-    if not wait_port_free(port):
+    stop_failure = _stop_and_wait(base_url, port, _stop_timeout_s(cfg))
+    if stop_failure:
         # Installing against a held port is how Windows pip explodes
         # (SHFileOperationW); abort cleanly and put the server back up.
         respawn()
-        return finish(update_state.PHASE_FAILED, "server port still held after graceful stop; update aborted")
+        return finish(update_state.PHASE_FAILED, stop_failure)
 
     # 2) INSTALL — pip uninstalls BEFORE installing: if the install half
     #    fails after the uninstall succeeded, the package is GONE, so the
@@ -568,10 +591,10 @@ def _git_channel_update(
 
     # 2) STOP before mutating the tree (a live server holds files on Windows)
     set_phase(update_state.PHASE_STOPPING)
-    request_stop(base_url)
-    if not wait_port_free(port):
+    stop_failure = _stop_and_wait(base_url, port, _stop_timeout_s(cfg))
+    if stop_failure:
         respawn()
-        return finish(update_state.PHASE_FAILED, "server port still held after graceful stop; update aborted")
+        return finish(update_state.PHASE_FAILED, stop_failure)
 
     # 3) CHECKOUT the tag (detached HEAD; no --force: never eat local state)
     set_phase(update_state.PHASE_INSTALLING)
@@ -637,10 +660,10 @@ def _source_channel_update(
     try:
         # 2) STOP (the swap renames the very tree the server was launched from)
         set_phase(update_state.PHASE_STOPPING)
-        request_stop(base_url)
-        if not wait_port_free(port):
+        stop_failure = _stop_and_wait(base_url, port, _stop_timeout_s(cfg))
+        if stop_failure:
             respawn()
-            return finish(update_state.PHASE_FAILED, "server port still held after graceful stop; update aborted")
+            return finish(update_state.PHASE_FAILED, stop_failure)
 
         # 3) SWAP + VERIFY (no extra phase name for the swap — the UI phase
         #    set stays the pip-channel one; the receipt records the details)
@@ -778,7 +801,7 @@ def run_update(
             set_phase, finish, respawn, tree_root, port, base_url, data_dir,
         )
     return _pip_channel_update(
-        target, from_version, extra_args,
+        cfg, target, from_version, extra_args,
         set_phase, finish, respawn, port, base_url, neutral_cwd,
     )
 

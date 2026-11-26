@@ -9,13 +9,16 @@ the event bus right before the process is re-exec'd; a client that misses
 it re-reads ``GET /api/update/status`` after reconnecting (the status
 endpoint reports the terminal state from disk).
 
-Guards (hermes-style refusals, opm-style cooldown):
+Guards (hermes-style refusals):
   - ``update.enabled`` config flag;
+  - container environments → 400 (rebuild the image instead; the worker
+    cannot own the stop→install→start cycle under a container supervisor);
   - per-channel precheck (git: binary/remote/dirty-tree; source: complete
     tree) → 400 with the refusal contract naming the fix;
   - a live worker (lock held) → 409, follow it instead of starting another;
-  - active runs → 409 (never replace the package under a working agent);
-  - finished attempt at the same target within the cooldown → 409.
+  - active runs → 409 (never replace the package under a working agent).
+  A finished attempt never blocks a retry — the worker lock is the only
+  serialization.
 """
 
 from __future__ import annotations
@@ -112,7 +115,6 @@ async def get_status() -> Dict[str, Any]:
             "enabled": bool(getattr(cfg, "enabled", True)),
             "auto_check": bool(getattr(cfg, "auto_check", True)),
             "check_interval_hours": float(getattr(cfg, "check_interval_hours", 24.0)),
-            "cooldown_hours": float(getattr(cfg, "cooldown_hours", 6.0)),
         },
         "check": cached,
         "worker": update_state.read_state(),
@@ -169,13 +171,6 @@ async def trigger_apply(target: Optional[str] = None, rollback: bool = False) ->
             raise UpdateError("no_target", "No target version available (check failed or up to date)", 400)
         if not is_newer(target, current):
             raise UpdateError("not_newer", f"Target {target} is not newer than current {current}", 400)
-        cooldown_s = max(0.0, float(getattr(cfg, "cooldown_hours", 6.0)) * 3600.0)
-        if update_state.attempt_on_hold(update_state.read_state(), target, cooldown_s):
-            raise UpdateError(
-                "cooldown",
-                f"A finished attempt at {target} is within the {cfg.cooldown_hours}h cooldown",
-                409,
-            )
         kind_label = "apply"
 
     live = _live_run_count()

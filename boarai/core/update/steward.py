@@ -72,8 +72,33 @@ def _project_root() -> Path:
     return Path(get_project_root() or Path.cwd())
 
 
+def in_container() -> bool:
+    """Whether this process runs inside a container (Docker/Podman style)."""
+    if sys.platform == "win32":
+        return False
+    try:
+        if Path("/.dockerenv").exists() or Path("/run/.containerenv").exists():
+            return True
+    except OSError:
+        pass
+    return False
+
+
 def refusal_for(kind: Optional[str] = None) -> Optional[dict]:
     """Static refusal for a kind, or None when the kind can self-update."""
+    # Containers refuse FIRST, regardless of channel: the worker's
+    # stop -> install -> start cycle only works when nothing supervises the
+    # process; a container restarts it mid-update (and an in-container pip
+    # upgrade dies with the next image rebuild anyway).
+    if in_container():
+        return {
+            "code": "container-unsupported",
+            "message": "In-container online updates are unsupported: the container "
+                       "supervisor restarts the process mid-update and an in-container "
+                       "install is replaced by the next image rebuild. Update by "
+                       "rebuilding the image instead.",
+            "update_command": "docker compose -f docker-compose.pypi.yml up -d --build",
+        }
     kind = kind or detect_install_kind()
     if kind in ("pip", "git", "source"):
         return None

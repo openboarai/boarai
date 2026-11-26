@@ -188,15 +188,3 @@ def lock_is_held() -> bool:
         probe.release()
         return False
     return True
-
-
-def attempt_on_hold(state: Optional[dict], target: str, cooldown_s: float) -> bool:
-    """Whether a FINISHED attempt at ``target`` still blocks a retry."""
-    if not state or state.get("target_version") != target:
-        return False
-    if state.get("phase") not in FINAL_PHASES:
-        return False
-    try:
-        return (time.time() - float(state.get("at", 0))) < cooldown_s
-    except (TypeError, ValueError):
-        return False

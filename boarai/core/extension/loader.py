@@ -273,7 +273,23 @@ class ExtensionLoader:
             # Keep the real cause (e.g. SyntaxError has empty str()); chain
             # the original exception so diagnostics stay meaningful.
             detail = f"{type(e).__name__}: {e}" if str(e) else repr(e)
+            code = str(getattr(e, "code", "") or "")
             error_msg = f"Failed to load extension from {extension_path}: {detail}"
+
+            # A missing import is the #1 authoring mistake; give it a
+            # dedicated code + actionable message instead of a generic
+            # loader.error (the module name is often NOT the pip name).
+            if not code and isinstance(e, ModuleNotFoundError):
+                code = "deps.missing_import"
+                missing = str(getattr(e, "name", "") or "a module")
+                error_msg = (
+                    f"Failed to load extension from {extension_path}: "
+                    f"missing import '{missing}'. Add the package to the "
+                    f"manifest's pip_dependencies (auto-installed on load "
+                    f"for trusted extensions), or install it manually with "
+                    f"pip — the pip package name may differ from the module "
+                    f"name (e.g. cv2 -> opencv-python)."
+                )
 
             logger.error(error_msg)
 
@@ -284,12 +300,12 @@ class ExtensionLoader:
                                 "extension_loader")
 
             # PROPAGATE the structured code (gate.inprocess_untrusted,
-            # manifest.*, syntax.*...): consumers (failure registry, 409
-            # responses, backoff classification) key on it, and re-wrapping
-            # without it silently downgraded every coded error to a plain
-            # message.
+            # manifest.*, syntax.*, deps.missing_import...): consumers
+            # (failure registry, 409 responses, backoff classification) key
+            # on it, and re-wrapping without it silently downgraded every
+            # coded error to a plain message.
             raise ExtensionError(
-                error_msg, code=str(getattr(e, "code", "") or "")
+                error_msg, code=code
             ) from e
 
     # --- Manifest validation ---
@@ -433,16 +449,30 @@ class ExtensionLoader:
             return
 
         policy = self._resolve_pip_policy()
-        allowed = (policy == "all") or (
-            policy == "system" and manifest.source == "system"
-        )
+        # "system" historically meant "system layer only". But the trust
+        # gate (load step 0) already refused UNTRUSTED user extensions
+        # before this point, so a user extension reaching here carries an
+        # operator trust grant to execute arbitrary Python in-process —
+        # auto-installing its DECLARED dependencies grants no new
+        # authority. Keep an explicit trust check anyway so a future
+        # direct caller cannot bypass the gate via this method.
+        if policy == "all":
+            allowed = True
+        elif policy == "off":
+            allowed = False
+        else:  # "system": trusted extensions only
+            allowed = manifest.source == "system" or (
+                os.getenv("BOARAI_ALLOW_INPROCESS_USER_EXTENSIONS", "") == "1"
+                or _per_extension_trusted(manifest.name, manifest.source)
+            )
         if not allowed:
             raise ExtensionError(
                 f"Extension '{manifest.name}' (source={manifest.source or 'unknown'}) "
-                f"requires missing pip dependencies: {', '.join(missing)}. "
-                f"Auto-install is disabled for this layer (policy='{policy}'). "
-                f"Install manually, e.g.: {sys.executable} -m pip install "
-                f"{' '.join(missing)}, or set plugin.pip_auto_install to 'all'."
+                f"requires missing pip dependencies: {', '.join(missing)} "
+                f"(pip_auto_install policy='{policy}'). Install them "
+                f"manually ({sys.executable} -m pip install "
+                f"{' '.join(missing)}), trust this extension to qualify for "
+                f"'system', or set plugin.pip_auto_install to 'all'."
             )
 
         logger.info(f"Installing pip dependencies for '{manifest.name}': {missing}")

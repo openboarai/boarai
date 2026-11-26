@@ -19,7 +19,8 @@ Checks (mirrors of loader/discovery/route-registry semantics):
 * syntax: every ``.py`` under the directory must ``ast.parse``
 * routes: reserved prefixes (``/api/``, ``/ws``, ``/static/``) may not be
   claimed with ``use_prefix: false`` by non-system extensions
-* pip_dependencies shape (format only — nothing is installed)
+* pip_dependencies shape + import cross-check: every unguarded import
+  must be stdlib / core / local / declared (nothing is installed here)
 * layer facts: user-layer trust-gate notice (info), same-name override
   across layers (warning)
 * SKILL.md bundles delegate to ``core.extension.skill.validate``
@@ -37,6 +38,7 @@ import ast
 import logging
 import os
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -116,6 +118,34 @@ ENTRY_POINTS = ("extension.py", "__init__.py", "tools.py")
 # Reserved core path prefixes (route_registry.RESERVED_PREFIXES) — untrusted
 # extensions may not mount these at root level (use_prefix: false).
 RESERVED_PREFIXES = ("/api/", "/ws", "/static/")
+
+# Import roots that are never pip packages (stdlib is checked separately
+# via sys.stdlib_module_names).
+_CORE_IMPORT_ROOTS = frozenset({"boarai", "core", "boar"})
+
+# Kernel third-party whitelist (CODE_STANDARDS: aiohttp/pyyaml/aiofiles/
+# tiktoken + optional psutil) — guaranteed present in every install, so an
+# extension importing them needs no pip_dependencies entry.
+_KERNEL_DEP_ROOTS = frozenset({"aiohttp", "yaml", "aiofiles", "tiktoken", "psutil"})
+
+# Common module-name -> pip-distribution aliases (import name != pip name).
+_IMPORT_TO_DIST = {
+    "bs4": "beautifulsoup4",
+    "crypto": "pycryptodome",
+    "cv2": "opencv-python",
+    "dateutil": "python-dateutil",
+    "dotenv": "python-dotenv",
+    "github": "pygithub",
+    "pil": "pillow",
+    "sklearn": "scikit-learn",
+    "yaml": "pyyaml",
+}
+
+# PEP 508 distribution-name prefix of a pip requirement (mirrors loader).
+_PKG_PREFIX_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*")
+
+# try/except blocks (3.11+ adds except* as ast.TryStar).
+_TRY_TYPES = (ast.Try,) + ((ast.TryStar,) if hasattr(ast, "TryStar") else ())
 
 _SKIP_DIRS = {"__pycache__", ".git", "node_modules"}
 
@@ -247,6 +277,81 @@ def _check_syntax_and_symbols(
             continue
         symbols[rel] = _top_level_symbols(tree)
     return symbols
+
+
+def _normalize_dist(name: str) -> str:
+    """PEP 503 normalization for pip distribution-name comparison."""
+    return re.sub(r"[-_.]+", "-", name.strip().lower())
+
+
+def _unguarded_import_roots(tree: ast.AST) -> set:
+    """Root module names imported outside any try/except (optional deps)."""
+    roots: set = set()
+
+    def _visit(node: ast.AST, guarded: bool) -> None:
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, ast.Import):
+                if not guarded:
+                    roots.update(a.name.split(".")[0] for a in child.names)
+            elif isinstance(child, ast.ImportFrom):
+                # level > 0: relative import of the extension's own code
+                if not guarded and child.level == 0 and child.module:
+                    roots.add(child.module.split(".")[0])
+            elif isinstance(child, _TRY_TYPES):
+                # try-wrapped imports are the optional-dependency pattern;
+                # any handler at least ImportError-broad keeps them from
+                # crashing the load, so treat them as declared-enough.
+                _visit(child, True)
+            else:
+                _visit(child, guarded)
+
+    _visit(tree, False)
+    return roots
+
+
+def _check_imports_vs_pip_deps(
+    ext: str,
+    ext_path: Path,
+    pip_deps: List[str],
+    issues: List[Issue],
+) -> None:
+    """Warn on imports that are neither stdlib/core/local nor declared deps."""
+    declared = set()
+    for dep in pip_deps:
+        if isinstance(dep, str) and dep.strip():
+            m = _PKG_PREFIX_RE.match(dep.strip())
+            if m:
+                declared.add(_normalize_dist(m.group(0)))
+    # Local modules: every .py stem plus every package dir (__init__.py).
+    local = {p.stem for p in _iter_python_files(ext_path)}
+    local.update(p.parent.name for p in ext_path.rglob("__init__.py"))
+    stdlib = getattr(sys, "stdlib_module_names", frozenset())
+    for py in _iter_python_files(ext_path):
+        rel = py.relative_to(ext_path).as_posix()
+        try:
+            tree = ast.parse(
+                py.read_text(encoding="utf-8", errors="replace"),
+                filename=str(py),
+            )
+        except (OSError, SyntaxError):
+            continue  # already reported by the syntax check
+        for root in sorted(_unguarded_import_roots(tree)):
+            if (root in stdlib or root in _CORE_IMPORT_ROOTS
+                    or root in _KERNEL_DEP_ROOTS or root in local):
+                continue
+            dist = _IMPORT_TO_DIST.get(root, root)
+            if _normalize_dist(dist) in declared:
+                continue
+            issues.append(Issue(
+                ext=ext, level=LEVEL_WARNING, code="deps.undeclared_import",
+                message=f"{rel} imports '{root}' which is neither stdlib, a "
+                        f"core module, a local module, nor declared in "
+                        f"pip_dependencies",
+                file=str(py),
+                hint=f"Add '{dist}' to pip_dependencies — declared deps are "
+                     f"auto-installed on load for trusted extensions. The "
+                     f"pip name may differ from the module name.",
+            ))
 
 
 def _check_handler_refs(
@@ -672,6 +777,13 @@ def verify_extension(ext_path: Any) -> List[Issue]:
     _check_handler_refs(ext, ext_path, contributes, symbols, issues)
     _check_routes(ext, contributes, source, issues)
     _check_ui(ext, contributes, issues)
+    # Run even with no pip_dependencies declared — forgetting to declare
+    # deps at all is exactly the mistake this check exists to catch.
+    _check_imports_vs_pip_deps(
+        ext, ext_path,
+        pip_deps if isinstance(pip_deps, list) else [],
+        issues,
+    )
 
     # --- Layer facts ---
     if source == "user":

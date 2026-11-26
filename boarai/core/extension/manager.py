@@ -630,6 +630,15 @@ class ExtensionManager:
                 "retries. Static checks need no trust: GET "
                 "/api/extensions/verify?name=<name>."
             )
+        elif code == "deps.missing_import":
+            hint = (
+                "A module this extension imports is not installed. Add the "
+                "package to the manifest's pip_dependencies (auto-installed "
+                "on the next load for trusted extensions) or install it with "
+                "pip; the pip package name may differ from the module name "
+                "(cv2 -> opencv-python). Static import report: GET "
+                "/api/extensions/verify?name=<name>."
+            )
         elif code == "loader.error":
             hint = (
                 "Run GET /api/extensions/verify?name=<name> for the "
