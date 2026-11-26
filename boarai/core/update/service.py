@@ -11,8 +11,9 @@ endpoint reports the terminal state from disk).
 
 Guards (hermes-style refusals):
   - ``update.enabled`` config flag;
-  - container environments → 400 (rebuild the image instead; the worker
-    cannot own the stop→install→start cycle under a container supervisor);
+  - container environments: pip channel updates IN PLACE (core/update/
+    container.py — install while running, then exit for the restart policy);
+    git/source containers → 400 (rebuild the image instead);
   - per-channel precheck (git: binary/remote/dirty-tree; source: complete
     tree) → 400 with the refusal contract naming the fix;
   - a live worker (lock held) → 409, follow it instead of starting another;
@@ -40,6 +41,7 @@ from .checker import get_update_config
 from .steward import (
     detect_install_kind,
     git_precheck,
+    in_container,
     refusal_for,
     running_tree_root,
     source_precheck,
@@ -182,8 +184,18 @@ async def trigger_apply(target: Optional[str] = None, rollback: bool = False) ->
         )
 
     attempt_id = uuid.uuid4().hex[:12]
-    _spawn_worker(target, current, attempt_id, kind_label)
-    asyncio.get_running_loop().create_task(_watch_worker(attempt_id))
+    if kind == "pip" and in_container():
+        # Containers: IN-PLACE pip update inside this process, then exit so
+        # the restart policy brings the new code up. No detached worker (it
+        # would die with the container), no stop phase, no watch task — the
+        # UI polls the status file across the restart.
+        from . import container as container_update
+
+        asyncio.get_running_loop().create_task(
+            container_update.run_pip_update(target, current, attempt_id, kind_label))
+    else:
+        _spawn_worker(target, current, attempt_id, kind_label)
+        asyncio.get_running_loop().create_task(_watch_worker(attempt_id))
     return {
         "attempt_id": attempt_id,
         "kind": kind_label,

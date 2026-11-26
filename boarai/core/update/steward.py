@@ -86,20 +86,18 @@ def in_container() -> bool:
 
 def refusal_for(kind: Optional[str] = None) -> Optional[dict]:
     """Static refusal for a kind, or None when the kind can self-update."""
-    # Containers refuse FIRST, regardless of channel: the worker's
-    # stop -> install -> start cycle only works when nothing supervises the
-    # process; a container restarts it mid-update (and an in-container pip
-    # upgrade dies with the next image rebuild anyway).
-    if in_container():
+    kind = kind or detect_install_kind()
+    # Containers use the IN-PLACE pip channel (core/update/container.py):
+    # no detached worker, no stop phase — pip replaces the package while the
+    # server runs, then the process exits and the restart policy brings the
+    # new code up. git/source containers keep the rebuild-only contract.
+    if in_container() and kind != "pip":
         return {
             "code": "container-unsupported",
-            "message": "In-container online updates are unsupported: the container "
-                       "supervisor restarts the process mid-update and an in-container "
-                       "install is replaced by the next image rebuild. Update by "
-                       "rebuilding the image instead.",
-            "update_command": "docker compose -f docker-compose.pypi.yml up -d --build",
+            "message": "In-container online updates support the pip channel only; "
+                       "update a git/source container by rebuilding its image.",
+            "update_command": "docker compose up -d --build",
         }
-    kind = kind or detect_install_kind()
     if kind in ("pip", "git", "source"):
         return None
     return {

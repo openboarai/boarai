@@ -25,11 +25,15 @@ Self-update subsystem for the pip / git / source channels. Principle: **the serv
 ## Guards (refusal contract)
 
 - The `update.enabled` config flag.
-- Container environments → 400: rebuild the image instead (the worker cannot own the stop→install→start cycle under a container supervisor, and an in-container install dies with the next image rebuild).
+- Container environments: the pip channel updates IN PLACE (see below); git/source containers → 400 (rebuild the image instead).
 - Per-channel precheck: git checks binary/remote/dirty-tree, source checks tree completeness — failures return 400 with a refusal naming the fix.
 - A live worker (lock held) → 409: follow it instead of starting another.
 - Active runs → 409: never replace the package under a working agent.
 - A finished attempt never blocks a retry — the worker lock is the only serialization (the retry cooldown was removed).
+
+## In-container pip updates (core/update/container.py)
+
+The detached stop→install→start worker cannot work in a container (the worker dies with the container when the server process exits). The pip channel therefore updates INSIDE the server process: `pip install --upgrade` while running (POSIX does not lock loaded module files), verify in a fresh interpreter, mark `restarting`, then exit — the restart policy (`restart: unless-stopped` in every shipped compose file) brings the SAME writable layer back up, so the upgrade survives. The next process flips the status file to `done` once it reports the target version. Failures never exit the process: the old version is reinstalled when needed and `failed` is reported with the server left running. A container without a restart policy would simply stay stopped after a successful install — start it again manually.
 
 ## Worker stop phase
 

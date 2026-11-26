@@ -40,6 +40,16 @@ async def initialize_system(project_root: Path):
     project_root = Path(project_root)
     data_dir = get_data_dir()
 
+    # A container-channel update finalizes HERE: the previous process pip-
+    # upgraded in place and exited; the restart policy brought us back on the
+    # new code, so the status file can now flip to done.
+    try:
+        from boarai.core.update.container import finalize_restart
+
+        finalize_restart()
+    except Exception as e:  # noqa: BLE001 — a stale status file must not block startup
+        logger.warning("container update finalize failed: %s", e)
+
     # Order matters: the bus takes its audit-trail path at construction and
     # ignores it on every later call, so it must be created with events.log
     # FIRST — otherwise the audit trail stays empty for the whole process.
