@@ -35,6 +35,7 @@ Extension discovery, loading, the manifest contract, the capability facade, hook
 
 - System layer `boar/extensions/<type>/<name>/` (shipped, read-only); user layer `<data>/extensions/<type>/<name>/` (installable/removable); fixed type dir names: channels / plugins / tools / skills / mcp; same name: user overrides system.
 - An extension must have a manifest (`manifest.yaml` canonical, `extension.yaml` legacy alias) plus an entry `extension.py`; missing either means it is not discovered.
+- `pip_dependencies` auto-install **never blocks startup**: missing deps first pass the policy gate (`plugin.pip_auto_install`; refusals stay synchronous errors), then get a 10 s inline grace — if they finish, the classic install-then-load path proceeds; otherwise the load aborts fast (`deps.installing`) while the install continues in the background (600 s cap), and the file watcher bypasses its failure backoff to hot-load the extension once the install succeeds.
 - The skills type is not loaded by the manifest loader; SkillStore manages it.
 
 ## Manifest and contributes

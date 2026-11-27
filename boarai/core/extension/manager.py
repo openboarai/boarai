@@ -300,6 +300,13 @@ class ExtensionManager:
                         self._clear_failure(name)
                         continue
 
+                # A finished background dependency install bypasses the
+                # failure backoff once, so the extension hot-loads within
+                # one watcher tick instead of waiting out the exponential
+                # delay earned by earlier deps.installing failures.
+                if self._loader is not None and self._loader.consume_deps_ready(name):
+                    known_failures.pop(str(ext_path), None)
+
                 # Back-off retry after a previous load failure
                 previous = known_failures.get(str(ext_path))
                 if previous:
@@ -377,8 +384,12 @@ class ExtensionManager:
                     loaded_names.append(extension.name)
 
                 except Exception as e:
-
-                    logger.error(f"Failed to load extension from {ext_path}: {e}")
+                    # deps.installing is an expected transient state while
+                    # the background pip install runs — warning, not error.
+                    log_fn = (logger.warning
+                              if getattr(e, "code", "") == "deps.installing"
+                              else logger.error)
+                    log_fn(f"Failed to load extension from {ext_path}: {e}")
                     try:
                         await self._record_load_failure(
                             ext_path.name, ext_path, e,
@@ -638,6 +649,13 @@ class ExtensionManager:
                 "pip; the pip package name may differ from the module name "
                 "(cv2 -> opencv-python). Static import report: GET "
                 "/api/extensions/verify?name=<name>."
+            )
+        elif code == "deps.installing":
+            hint = (
+                "pip dependencies are installing in the background; the "
+                "extension loads automatically once they are ready. On slow "
+                "networks this can take minutes — watch the server log for "
+                "the install result."
             )
         elif code == "loader.error":
             hint = (

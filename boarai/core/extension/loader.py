@@ -55,6 +55,18 @@ logger = logging.getLogger(__name__)
 # (letters/digits/._-) — stdlib-only, avoids importing `packaging`.
 _PKG_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*")
 
+# Pip dependency installs: a brief inline grace keeps the classic
+# install-then-load behavior on fast networks; anything slower detaches to
+# the background so one extension can never hold startup hostage (the
+# unified server binds only after every extension was attempted). The file
+# watcher hot-loads the extension once its background install succeeds.
+_DEPS_INSTALL_GRACE_S = 10.0
+
+# Background pip budget: container rebuilds wipe site-packages while user
+# extensions persist in the data dir, so every rebuild re-installs; slow
+# networks need more headroom than the old inline 120 s cap allowed.
+_PIP_INSTALL_TIMEOUT_S = 600.0
+
 
 def _per_extension_trusted(name: str, source: str) -> bool:
     """state.json per-extension trust list (operator grant via WebUI/API)."""
@@ -83,6 +95,16 @@ class ExtensionLoader:
         # tracked per extension so unload drops them from sys.modules.
         self._loaded_handler_modules: Dict[str, Set[str]] = {}
         self._strict_import_check = strict_import_check
+        # Background pip dependency installs: ext name -> running task, and
+        # one-shot readiness flags consumed by the manager's file watcher to
+        # bypass the failure backoff after a background install succeeds.
+        self._deps_install_tasks: Dict[str, asyncio.Task] = {}
+        self._deps_ready: Set[str] = set()
+        # Installs are serialized: concurrent pip processes writing the same
+        # site-packages target are unsafe. Last failure per extension is kept
+        # so the next deps.installing error can surface the real reason.
+        self._deps_install_lock = asyncio.Lock()
+        self._deps_last_error: Dict[str, str] = {}
 
     async def load_extension_from_path(
 
@@ -153,7 +175,7 @@ class ExtensionLoader:
 
             if manifest.pip_dependencies:
 
-                await self._install_pip_deps(manifest)
+                await self._ensure_pip_deps(manifest)
 
             # 4. Resolve config: manifest defaults, overridden by the
             # caller-supplied config, then by the persisted config.json
@@ -291,7 +313,12 @@ class ExtensionLoader:
                     f"name (e.g. cv2 -> opencv-python)."
                 )
 
-            logger.error(error_msg)
+            # deps.installing is an expected transient state (background pip
+            # still running), not a malfunction — keep it out of ERROR.
+            if code == "deps.installing":
+                logger.warning(error_msg)
+            else:
+                logger.error(error_msg)
 
             await publish_event(EventType.EXTENSION_ERROR,
 
@@ -439,15 +466,17 @@ class ExtensionLoader:
             pass
         logger.info(f"pip install audit (security unavailable): {record}")
 
-    async def _install_pip_deps(self, manifest: ExtensionManifest) -> None:
-        """Install missing pip dependencies for an extension (supply-chain guard)."""
-        missing = [
+    def _missing_pip_deps(self, manifest: ExtensionManifest) -> List[str]:
+        """Declared pip requirements that are not installed yet."""
+        return [
             dep for dep in manifest.pip_dependencies
             if not self._is_package_installed(self._extract_pkg_name(dep))
         ]
-        if not missing:
-            return
 
+    def _authorize_pip_install(
+        self, manifest: ExtensionManifest, missing: List[str],
+    ) -> None:
+        """Policy gate for dependency auto-install; raises when refused."""
         policy = self._resolve_pip_policy()
         # "system" historically meant "system layer only". But the trust
         # gate (load step 0) already refused UNTRUSTED user extensions
@@ -475,6 +504,13 @@ class ExtensionLoader:
                 f"'system', or set plugin.pip_auto_install to 'all'."
             )
 
+    async def _install_pip_deps(self, manifest: ExtensionManifest) -> None:
+        """Install missing pip dependencies for an extension (supply-chain guard)."""
+        missing = self._missing_pip_deps(manifest)
+        if not missing:
+            return
+        self._authorize_pip_install(manifest, missing)
+
         logger.info(f"Installing pip dependencies for '{manifest.name}': {missing}")
         self._audit_pip_install(manifest, missing, ok=True, detail="attempt")
 
@@ -492,7 +528,7 @@ class ExtensionLoader:
             result = await asyncio.to_thread(
                 subprocess.run,
                 cmd,
-                capture_output=True, text=True, timeout=120,
+                capture_output=True, text=True, timeout=_PIP_INSTALL_TIMEOUT_S,
             )
         except subprocess.TimeoutExpired:
             self._audit_pip_install(manifest, missing, ok=False, detail="timeout")
@@ -516,6 +552,65 @@ class ExtensionLoader:
             )
         self._audit_pip_install(manifest, missing, ok=True, detail="installed")
         logger.info(f"pip dependencies installed for '{manifest.name}'")
+
+    async def _ensure_pip_deps(self, manifest: ExtensionManifest) -> None:
+        """Fail-fast dependency gate: brief inline grace, then background."""
+        missing = self._missing_pip_deps(manifest)
+        if not missing:
+            return
+        # Policy refusals are cheap and deterministic: keep them inline so an
+        # unauthorized extension never spawns a background install.
+        self._authorize_pip_install(manifest, missing)
+        name = manifest.name
+        task = self._deps_install_tasks.get(name)
+        if task is None or task.done():
+            task = asyncio.create_task(self._install_pip_deps_bg(manifest))
+            self._deps_install_tasks[name] = task
+        done, _pending = await asyncio.wait(
+            {task}, timeout=_DEPS_INSTALL_GRACE_S)
+        if done:
+            # Background tasks return failures as VALUES (never raise), so an
+            # unobserved background failure can never produce an asyncio
+            # "Task exception was never retrieved" warning.
+            error = task.result()
+            if error is not None:
+                raise error
+            # Finished inside the grace window: classic install-then-load.
+            self._deps_ready.discard(name)
+            return
+        msg = (
+            f"pip dependencies for '{name}' are installing in the background "
+            f"({', '.join(missing)}); this load aborts and the extension "
+            f"loads automatically once the install finishes"
+        )
+        last = self._deps_last_error.get(name)
+        if last:
+            msg += f". Previous attempt failed: {last}"
+        raise ExtensionError(msg, code="deps.installing")
+
+    async def _install_pip_deps_bg(
+        self, manifest: ExtensionManifest,
+    ) -> Optional[BaseException]:
+        """Serialized background install; returns failure instead of raising."""
+        name = manifest.name
+        async with self._deps_install_lock:
+            try:
+                await self._install_pip_deps(manifest)
+            except Exception as e:  # noqa: BLE001 — handed to load attempts
+                self._deps_last_error[name] = str(e)
+                logger.warning(
+                    f"Background pip dependency install failed for '{name}': {e}")
+                return e
+        self._deps_last_error.pop(name, None)
+        self._deps_ready.add(name)
+        return None
+
+    def consume_deps_ready(self, name: str) -> bool:
+        """One-shot True after a finished background install of `name`."""
+        if name in self._deps_ready:
+            self._deps_ready.discard(name)
+            return True
+        return False
 
     @staticmethod
     def _in_virtualenv() -> bool:

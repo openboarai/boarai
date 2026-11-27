@@ -17,5 +17,5 @@ Installation and verification of the Python packages declared by extensions (man
 ## Boundaries
 
 - **Core dependencies are not installed here**: entry modules never reach the network at import time; core dependencies have exactly one explicit install path, `--ensure-deps` (in the runtime bootstrap module).
-- This module serves the extension loading chain: before loading an extension that declares `pip_dependencies`, the loader checks/installs through here.
+- The extension loading chain checks/installs declared `pip_dependencies` **outside this module**, via its own path in `extension/loader.py` (`_ensure_pip_deps`: a 10 s inline grace, then background install with a fail-fast `deps.installing` load error; the watcher bypasses its backoff and hot-loads the extension once the install succeeds).
 - The task system's script executor handles its own runtime environment and does not share this cache.

@@ -58,6 +58,8 @@ Three images mirror the three install/update channels — an install only ever u
 
 `docker-compose.pypi.yml` and `docker-compose.github.yml` are **self-contained**: the Dockerfile is inlined, so you can copy that single file to any machine (or paste it into a NAS compose UI) and build — nothing else is read from the build context. Requires Docker Compose >= 2.17. The source variant builds from the tree next to it; an unpacked PyPI sdist works as that tree.
 
+PyPI-variant rebuilds are **incremental**: the base image and dependency layers stay cached, and a PyPI freshness probe busts only the boarai layer — a routine `up -d --build` reinstalls just the boarai wheel, never re-resolving or re-downloading dependencies.
+
 Pin releases with `BOARAI_VERSION=0.1.1` (PyPI variant), `BOARAI_GIT_REF=v0.1.1` (GitHub variant), or `BOARAI_GIT_REPO=<your-fork>`; map a different host port with `BOARAI_HOST_PORT=8080`.
 
 **Data persistence.** Inside the container everything lands under `BOARAI_DATA_DIR=/data`, bind-mounted to **`./.boarai` next to the compose file** — the folder you picked in the NAS UI when creating the project, named like a bare-metal `~/.boarai`. It survives `down`, `down -v`, image rebuilds and NAS reboots. Note: a dot-folder is hidden by default in some NAS file managers — enable "show hidden files". Set `BOARAI_DATA_HOST_DIR` to an absolute path to share one directory across variants or move it elsewhere.

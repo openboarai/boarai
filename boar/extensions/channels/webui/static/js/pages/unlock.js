@@ -209,6 +209,8 @@ const UnlockPage = {
           this.error = this.t('unlock.invalid') || 'That access key is not correct.';
         } else if (code === 'auth_not_configured') {
           this.keyConfigured = false;
+        } else if (code === 'origin_not_allowed') {
+          this.error = this.t('unlock.originBlocked') || error.message || 'Origin not allowed.';
         } else {
           this.error = (error && error.message) || (this.t('unlock.failed') || 'Unlock failed.');
         }

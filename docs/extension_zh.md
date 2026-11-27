@@ -35,6 +35,7 @@
 
 - system 层 `boar/extensions/<type>/<name>/`（随包只读），user 层 `<数据目录>/extensions/<type>/<name>/`（可装卸启停）；type 目录名固定：channels / plugins / tools / skills / mcp；同名 user 覆盖 system。
 - 一个扩展必须有 manifest（`manifest.yaml` 正名，`extension.yaml` legacy 别名）+ 入口 `extension.py`，缺任一不发现。
+- `pip_dependencies` 自动安装**不阻塞启动**：缺失依赖先经策略门（`plugin.pip_auto_install`，拒绝仍同步报错），随后内联宽限 10s——装完即按经典路径加载；装不完则本次加载快速失败（`deps.installing`），安装转后台继续（超时上限 600s），成功后文件监视器绕过失败退避、当拍自动热载。
 - skills 类型不走 manifest 加载器，由 SkillStore 管理。
 
 ## manifest 与 contributes

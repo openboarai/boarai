@@ -14,7 +14,7 @@ import platform
 import re
 import sys
 import time
-from typing import Any, Callable, Dict, Optional, Set
+from typing import Any, Callable, Dict, Optional, Set, Tuple
 from urllib.parse import urlsplit
 
 from aiohttp import web
@@ -451,7 +451,19 @@ class UnifiedServer:
 
             if not self._origin_allowed(request):
                 return web.json_response(
-                    {"error": "Origin is not allowed"}, status=403
+                    {
+                        "success": False,
+                        "error": {
+                            "code": "origin_not_allowed",
+                            "message": (
+                                "This page's origin is not allowed. Behind a "
+                                "reverse proxy, forward the public host "
+                                "(e.g. proxy_set_header Host $host) or list "
+                                "the public origin in BOARAI_ALLOWED_ORIGINS."
+                            ),
+                        },
+                    },
+                    status=403,
                 )
 
             response = await handler(request)
@@ -511,16 +523,90 @@ class UnifiedServer:
             parsed = urlsplit(origin)
             if not parsed.scheme or not parsed.netloc or parsed.path not in ("", "/"):
                 return False
-            normalized = f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
+            origin_scheme = parsed.scheme.lower()
+            origin_host = parsed.netloc.lower()
         except (TypeError, ValueError):
             return False
-        expected = f"{request.scheme.lower()}://{request.host.lower()}"
+        if origin_scheme not in ("http", "https"):
+            return False
+        normalized = f"{origin_scheme}://{origin_host}"
         allowed = {
             item.strip().rstrip("/").lower()
             for item in os.getenv("BOARAI_ALLOWED_ORIGINS", "").split(",")
             if item.strip()
         }
-        return normalized == expected or normalized in allowed
+        if normalized in allowed:
+            return True
+        # Host-only comparison: a TLS-terminating proxy makes the socket
+        # scheme (http) differ from the public one (https), and the public
+        # host is only recoverable from Host / X-Forwarded-Host. The same
+        # host under either scheme is the same operator; a *foreign* host is
+        # what CSRF actually needs, and a cross-site browser request can
+        # never forge Host or X-Forwarded-Host (forbidden / non-safelisted
+        # headers — and a CORS preflight would die before the real request).
+        return self._same_public_host(
+            origin_host, origin_scheme, self._public_hosts(request)
+        )
+
+    @staticmethod
+    def _same_public_host(
+        origin_host: str, origin_scheme: str, candidates: Set[str]
+    ) -> bool:
+        """Host equality with default-port normalisation.
+
+        Ports STAY part of the comparison: cookies ignore ports, so a
+        malicious page on the SAME host but a different port is same-site
+        (SameSite=Strict still sends the session cookie) — the port is the
+        only thing stopping that page's POST. A missing port means the
+        scheme's default on either side, so ``https://host`` matches
+        ``host:443`` while ``https://host:8443`` does not match ``host``.
+        """
+        default_port = 443 if origin_scheme == "https" else 80
+
+        def split(value: str) -> Tuple[str, int]:
+            try:
+                parsed = urlsplit(f"//{value}")
+                hostname = (parsed.hostname or "").lower()
+                port = parsed.port
+            except ValueError:
+                return "", -1
+            return hostname, port if port is not None else default_port
+
+        origin_hostname, origin_port = split(origin_host)
+        if not origin_hostname:
+            return False
+        for candidate in candidates:
+            hostname, port = split(candidate)
+            if hostname and hostname == origin_hostname and port == origin_port:
+                return True
+        return False
+
+    @staticmethod
+    def _public_hosts(request: web.Request) -> Set[str]:
+        """Hostnames this instance is publicly reachable under.
+
+        Behind a reverse proxy aiohttp only sees the internal hop: a plain
+        http scheme and, with a bare ``proxy_pass``, even a ``Host`` header
+        holding the upstream address. ``X-Forwarded-Host`` carries the
+        public name; proxies append to it, so the LAST comma-separated
+        entry is the hop closest to us and a client-supplied first entry
+        cannot masquerade as the public host.
+
+        When no proxy touches the header at all, the single client-supplied
+        value IS trusted — harmless here: the only attacker model of this
+        check is a cross-site BROWSER request (browsers cannot set
+        X-Forwarded-Host), and a non-browser caller still needs the gate's
+        credential, plus the console setup code for remote first-run setup.
+        """
+        hosts = {(request.host or "").lower()}
+        forwarded = request.headers.get("X-Forwarded-Host", "")
+        for chunk in reversed(forwarded.split(",")):
+            chunk = chunk.strip().lower()
+            if chunk:
+                hosts.add(chunk)
+                break
+        hosts.discard("")
+        return hosts
 
     @staticmethod
     def _peer_is_loopback(request: web.Request) -> bool:

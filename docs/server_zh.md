@@ -39,3 +39,11 @@ Windows proactor 在客户端断连（页面刷新）时会向事件循环抛 ER
 ## 关停
 
 `stop()` 关闭全部 WS 连接（快照迭代，close 可能触发 discard）、卸载 runner；扩展中间件与路由的热清理归扩展加载器负责。
+
+## 反向代理与 Origin 校验
+
+- 带 `Origin` 头的请求（浏览器发出的一切 POST）必须与实例的**公网主机名**同源；比较只认主机名，http/https 差异被容忍（TLS 通常在反代终结，服务端 socket 看到的是 http）。
+- **端口仍在比较中**：Cookie 不区分端口，同主机异端口的恶意页面属于同站（SameSite=Strict 照样带会话 Cookie），端口是唯一能挡它 POST 的东西；省略端口按 scheme 默认归一（`https://host` 匹配 `host:443`，`https://host:8443` 不匹配裸 `host`）。
+- 公网主机名零配置推导：`Host` 头 + `X-Forwarded-Host` 的**最后一个**逗号分量（代理追加链中离服务端最近的一跳；客户端伪造的首分量不作数）。Caddy / Traefik / Cloudflare / 配了 `proxy_set_header Host $host` 的 nginx 开箱即用。
+- 裸 `proxy_pass`（nginx 默认把 Host 写成内部 upstream、又不加 X-Forwarded-Host）时服务端无从得知公网域名：用环境变量 `BOARAI_ALLOWED_ORIGINS=https://你的域名` 显式声明，逗号分隔多个。
+- 拒绝返回 403 + `error.code = origin_not_allowed`，文案直接给出上面两条出路；前端 setup/unlock 页有对应翻译。

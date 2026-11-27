@@ -17,5 +17,5 @@
 ## 边界
 
 - **核心依赖不归这里装**：入口 import 期绝不触网，核心依赖只有显式 `--ensure-deps` 一条安装路径（在运行时引导模块）。
-- 本模块服务的是扩展加载链路：loader 在装载声明了 `pip_dependencies` 的扩展前经这里检查/安装。
+- 扩展加载链路的 `pip_dependencies` 检查/安装**不经本模块**，由 `extension/loader.py` 自有实现（`_ensure_pip_deps`：10s 内联宽限 + 后台安装 + `deps.installing` 快速失败，装好后监视器绕过退避热载）。
 - 任务系统的脚本执行器有独立的运行环境处理，不共用本缓存。

@@ -53,6 +53,7 @@ FETCH_TIMEOUT = 20.0
 READER_TIMEOUT = 35.0  # relay renders server-side; allow more headroom
 DNS_TIMEOUT = 5.0
 MAX_RESPONSE_BYTES = 10 * 1024 * 1024
+WARMUP_MAX_BYTES = 256 * 1024  # the warm-up only needs the Set-Cookie headers
 MAX_REDIRECTS = 5
 HOST_MIN_INTERVAL = 1.0  # seconds between chain starts per target host
 RETRY_DELAY = (0.8, 1.6)  # jittered backoff for the single retry
@@ -126,9 +127,13 @@ _CHALLENGE_MARKERS = (
 try:  # pragma: no cover - import side effect only
     from curl_cffi.requests import AsyncSession as _CCSession  # type: ignore
     from curl_cffi import CurlOpt as _CurlOpt  # type: ignore
+    from curl_cffi.curl import (  # type: ignore
+        CURL_WRITEFUNC_ERROR as _CC_WRITE_ERROR,
+    )
 except Exception:  # pragma: no cover
     _CCSession = None
     _CurlOpt = None
+    _CC_WRITE_ERROR = 0xFFFFFFFF  # libcurl's CURL_WRITEFUNC_ERROR sentinel
 
 
 def _detect_cc_curl_options_mode() -> Optional[str]:
@@ -522,8 +527,48 @@ async def _tier_direct(url: str) -> TierResult:
     return last
 
 
+class _BodySink:
+    """curl_cffi write callback that accumulates a body up to a byte cap."""
+
+    __slots__ = ("limit", "parts", "size", "overflow")
+
+    def __init__(self, limit: int) -> None:
+        self.limit = limit
+        self.parts: List[bytes] = []
+        self.size = 0
+        self.overflow = False
+
+    def __call__(self, chunk: bytes) -> int:
+        self.size += len(chunk)
+        if self.size > self.limit:
+            # Returning anything but ``len(chunk)`` makes libcurl abort the
+            # transfer with CURLE_WRITE_ERROR — that is how the byte cap stops
+            # the download instead of merely truncating it in memory.
+            self.overflow = True
+            return _CC_WRITE_ERROR
+        self.parts.append(chunk)
+        return len(chunk)
+
+    def text(self, content_type: str) -> Optional[str]:
+        """Decoded body, or None when the cap aborted the transfer."""
+        if self.overflow:
+            return None
+        return _decode_body(b"".join(self.parts), content_type)
+
+
 async def _tier_impersonate(url: str) -> TierResult:
     """Tier 1: curl_cffi browser impersonation (TLS/JA3/HTTP2) + cookies."""
+    # Non-stream requests ONLY. ``stream=True`` makes curl_cffi 0.15 hand the
+    # curl handle to a background task whose done-callback releases it, and on
+    # the header-error path ``_request_once`` releases that same handle a
+    # second time: the pool ends up holding one handle twice, the late callback
+    # removes the NEXT request's handle from curl_multi (killing an unrelated
+    # in-flight fetch with CancelledError), and stopping a stream early needs
+    # the sync ``Response.close()``, which frees the handle underneath that
+    # callback — logging "TypeError: initializer for ctype 'void *' must be a
+    # cdata pointer, not NoneType" both as an asyncio callback error and out of
+    # ``AsyncSession.close()``. ``content_callback`` enforces the same byte cap
+    # with a single synchronous release inside ``_request_once``.
     if _CCSession is None or _CurlOpt is None or _CC_CURL_OPTIONS_MODE is None:
         return TierResult(False, skipped=True, error={
             "error": "impersonate tier skipped (safe DNS pinning unavailable)"})
@@ -531,7 +576,9 @@ async def _tier_impersonate(url: str) -> TierResult:
     home = "{}://{}/".format(parsed.scheme, parsed.netloc)
     last = TierResult(False, error={"error": "not attempted"})
 
-    async def pinned_get(session, target: str, headers: Dict[str, str], timeout: float):
+    async def pinned_get(session, target: str, headers: Dict[str, str],
+                         timeout: float, limit: int = MAX_RESPONSE_BYTES):
+        """GET with per-hop validation, manual redirects and a response byte cap."""
         current = target
         for redirect_index in range(MAX_REDIRECTS + 1):
             addresses = await validate_fetch_url(current)
@@ -552,20 +599,29 @@ async def _tier_impersonate(url: str) -> TierResult:
                 # pinned to its own validated addresses and stale pinning
                 # never leaks into the next request.
                 session.curl_options = curl_options or {}
-            response = await session.get(
-                current,
-                timeout=timeout,
-                headers=headers,
-                allow_redirects=False,
-                stream=True,
-                **extra_kwargs,
-            )
+            sink = _BodySink(limit)
+            try:
+                response = await session.get(
+                    current,
+                    timeout=timeout,
+                    headers=headers,
+                    allow_redirects=False,
+                    content_callback=sink,
+                    **extra_kwargs,
+                )
+            except Exception as exc:
+                # Hitting the cap aborts the transfer, so the body surfaces as
+                # an error; the parsed status/headers ride along on it.
+                if not sink.overflow:
+                    raise
+                response = getattr(exc, "response", None)
+                if response is None:
+                    raise
             if response.status_code not in (301, 302, 303, 307, 308):
-                return response, current
+                return response, current, sink
             location = response.headers.get("Location")
             if not location:
-                return response, current
-            response.close()
+                return response, current, sink
             if redirect_index >= MAX_REDIRECTS:
                 raise UnsafeFetchTarget("Too many redirects")
             current = urljoin(current, location)
@@ -573,16 +629,19 @@ async def _tier_impersonate(url: str) -> TierResult:
 
     # One session for warm-up + both attempts: the retry must keep the
     # homepage cookies, otherwise it degrades back to a cold request.
-    async with _CCSession(
+    # Not ``async with``: a curl_cffi teardown hiccup must never fail the tool.
+    session = _CCSession(
         impersonate="chrome", proxy=WEB_PROXY, trust_env=True
-    ) as session:
+    )
+    try:
         # Cookie warm-up + referer chain: browsers rarely deep-link cold,
-        # and session cookies defuse lightweight bot checks.
+        # and session cookies defuse lightweight bot checks. Only the response
+        # headers matter here, so the homepage body is capped hard.
         try:
-            warmup_response, _ = await pinned_get(
-                session, home, {"Accept": "text/html,*/*;q=0.8"}, 10
+            await pinned_get(
+                session, home, {"Accept": "text/html,*/*;q=0.8"}, 10,
+                limit=WARMUP_MAX_BYTES,
             )
-            warmup_response.close()
         except UnsafeFetchTarget as exc:
             return TierResult(False, terminal=True, error={
                 "error": str(exc), "blocked": "true"})
@@ -590,7 +649,7 @@ async def _tier_impersonate(url: str) -> TierResult:
             logger.debug("Homepage warm-up failed for %s", home)
         for attempt in (0, 1):
             try:
-                resp, final_url = await pinned_get(
+                resp, final_url, sink = await pinned_get(
                     session,
                     url,
                     {"Referer": home,
@@ -612,25 +671,17 @@ async def _tier_impersonate(url: str) -> TierResult:
                 content_type = resp.headers.get("Content-Type", "") or ""
             except Exception:
                 content_type = ""
-            body_parts = []
-            body_size = 0
-            async for part in resp.aiter_content():
-                body_size += len(part)
-                if body_size > MAX_RESPONSE_BYTES:
-                    resp.close()
-                    body_parts = []
-                    break
-                body_parts.append(part)
-            body = (
-                _decode_body(b"".join(body_parts), content_type)
-                if body_size <= MAX_RESPONSE_BYTES
-                else None
-            )
-            last = _evaluate_response(final_url, status, content_type, body)
+            last = _evaluate_response(
+                final_url, status, content_type, sink.text(content_type))
             if last.ok or status not in BLOCK_STATUSES:
                 return last
             if attempt == 0:
                 await asyncio.sleep(random.uniform(*RETRY_DELAY))
+    finally:
+        try:
+            await session.close()
+        except Exception as exc:  # noqa: BLE001 - teardown only
+            logger.debug("curl_cffi session close failed: %s", exc)
     return last
 
 

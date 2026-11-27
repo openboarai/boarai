@@ -36,10 +36,10 @@ services:
   boarai:
     build:
       context: .
-      # Full rebuild every time, so `up -d --build` picks up the newest PyPI
-      # release instead of a cached pip layer. For reproducible builds pin
-      # BOARAI_VERSION and drop this line.
-      no_cache: true
+      # Incremental rebuilds: base image + dependency layers stay cached; a
+      # PyPI freshness probe busts ONLY the boarai layer, so `up -d --build`
+      # still picks up the newest release while reinstalling just the boarai
+      # wheel. Pin BOARAI_VERSION for a reproducible build.
       args:
         BOARAI_VERSION: "${BOARAI_VERSION:-}"
       dockerfile_inline: |
@@ -55,18 +55,33 @@ services:
             BOARAI_DATA_DIR=/data \
             TIKTOKEN_CACHE_DIR=/data/.tiktoken \
             TZ=CST-8
+        # Dependency layer - CACHED across rebuilds: an ordinary rebuild never
+        # resolves, downloads or reinstalls these. Keep the list in sync with
+        # the dependencies table in pyproject.toml; editing it here is what
+        # intentionally busts this layer.
+        RUN --mount=type=cache,target=/root/.cache/pip \
+            pip install "aiohttp>=3.8.0" "pyyaml>=6.0" "aiofiles>=23.0.0" "tiktoken>=0.5.0"
+        # Freshness probe: BuildKit re-checksums this URL on every build, so a
+        # new PyPI release invalidates ONLY the layers below - base image and
+        # the dependency layer above stay cached.
+        ADD https://pypi.org/pypi/boarai/json /tmp/boarai-index.json
         ARG BOARAI_VERSION=
-        # Layer cache stays OFF (no_cache above) so every build re-resolves the
-        # newest release; the cache MOUNT keeps pip's downloaded wheels between
-        # builds, so unchanged dependencies are not re-downloaded — repeat
-        # builds only fetch metadata plus the new boarai wheel.
+        # boarai only (--no-deps, dependencies already satisfied above): one
+        # small wheel is the entire cost of a routine rebuild. --no-deps also
+        # skips pip's constraint resolution, so two guards run afterwards:
+        # the smoke import catches missing modules, and pip check catches a
+        # stale cached dependency layer that no longer satisfies the new
+        # boarai requirement bounds. Either failure triggers the fallback
+        # full-resolution reinstall.
         RUN --mount=type=cache,target=/root/.cache/pip \
             set -eu; \
-            if [ -n "$$BOARAI_VERSION" ]; then \
-              pip install "boarai==$$BOARAI_VERSION"; \
-            else \
-              pip install boarai; \
-            fi
+            if [ -n "$$BOARAI_VERSION" ]; then spec="boarai==$$BOARAI_VERSION"; else spec=boarai; fi; \
+            pip install --no-deps --upgrade "$$spec"; \
+            if ! python -c "import boarai.core, boarai.core.server.unified_server" >/dev/null 2>&1 \
+               || ! pip check >/dev/null 2>&1; then \
+              pip install --upgrade "$$spec"; \
+            fi; \
+            rm -f /tmp/boarai-index.json
         CMD ["python", "-m", "boarai"]
     image: boarai-pypi:local
     container_name: boarai

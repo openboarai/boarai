@@ -347,6 +347,8 @@ const SetupPage = {
             || 'Remote setup needs the setup code from the server startup log.';
         } else if (code === 'auth_setup_code_invalid') {
           this.error = this.t('setup.codeInvalid') || 'That setup code is not correct.';
+        } else if (code === 'origin_not_allowed') {
+          this.error = this.t('setup.originBlocked') || error.message || 'Origin not allowed.';
         } else if (code === 'auth_key_weak') {
           this.error = error.message || 'Key does not meet strength requirements.';
         } else if (code === 'auth_already_configured') {

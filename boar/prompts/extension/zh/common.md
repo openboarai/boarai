@@ -46,7 +46,7 @@ my_ext/
 | `author` | ❌ | 作者 |
 | `enabled` | ❌ | 默认 true |
 | `dependencies` | ❌ | 依赖的其他扩展名列表 |
-| `pip_dependencies` | ❌ | 自带 pip 依赖（如 `- aiohttp>=3.8.0`） |
+| `pip_dependencies` | ❌ | 自带 pip 依赖（如 `- aiohttp>=3.8.0`）；加载时自动安装——慢装转后台继续，装好扩展自动热载 |
 | `min_boarai_version` | ❌ | 最低核心版本 |
 | `config_defaults` | ❌ | `_config` 的默认值种子（低于调用方配置与持久化 config.json；运行时经 `api.get_config`/`set_config` 读写，持久化 `.boarai/extensions/data/<id>/config.json`，重启/热重载自动合并） |
 | `config_schema` | ⛔ 已移除 | 声明式表单已删除——设置为自定义 iframe 面板（`contributes.ui`）；遗留键被忽略并记 verifier 警告 |

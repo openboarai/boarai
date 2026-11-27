@@ -51,7 +51,7 @@ new extensions).
 | `author` | ❌ | author |
 | `enabled` | ❌ | default true |
 | `dependencies` | ❌ | other extension names this depends on |
-| `pip_dependencies` | ❌ | own pip deps (e.g. `- aiohttp>=3.8.0`) |
+| `pip_dependencies` | ❌ | own pip deps (e.g. `- aiohttp>=3.8.0`); auto-installed on load — slow installs continue in the background and the extension hot-loads when ready |
 | `min_boarai_version` | ❌ | minimum core version |
 | `config_defaults` | ❌ | default-value seed for `_config` (below caller config and below the persisted config.json; runtime via `api.get_config`/`set_config`, persisted to `.boarai/extensions/data/<id>/config.json`, auto-merged across restarts/hot-reloads) |
 | `config_schema` | ⛔ removed | the declarative form is gone — settings are a custom iframe panel (`contributes.ui`); a legacy key is ignored with a verifier warning |

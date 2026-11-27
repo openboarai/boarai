@@ -58,6 +58,8 @@ pip install -r requirements.txt     # 或：pip install -e .
 
 `docker-compose.pypi.yml` 与 `docker-compose.github.yml` 是**自带全部内容的单文件**：Dockerfile 已内联，把这一个文件拷到任何机器（或直接粘进 NAS 的 compose 界面）就能构建，构建上下文里不需要任何东西。要求 Docker Compose >= 2.17。源码变体则必须在其旁边的源码树里构建——解包 PyPI 的 sdist 即可当作那棵树。
 
+PyPI 变体的重建是**增量**的：基础镜像与依赖层走构建缓存，靠一个 PyPI 探针只在新版本发布时击穿 boarai 那一层——日常 `up -d --build` 只重装一个 boarai wheel，依赖不重新解析、不重新下载。
+
 锁定版本：`BOARAI_VERSION=0.1.1`（PyPI 变体）、`BOARAI_GIT_REF=v0.1.1`（GitHub 变体）、`BOARAI_GIT_REPO=<你的 fork>`；换宿主端口用 `BOARAI_HOST_PORT=8080`。
 
 **数据持久化**：容器内数据全部落在 `BOARAI_DATA_DIR=/data`，绑定挂载到 **compose 文件旁边的 `./.boarai`**——也就是你在 NAS 界面创建项目时选的那个文件夹，目录名与裸机的 `~/.boarai` 对齐。`down`、`down -v`、重建镜像、重启 NAS 都不会丢。注意：点开头文件夹在部分 NAS 文件管理器里默认隐藏，需开启「显示隐藏文件」；想让多个变体共用一个目录或换个位置，用 `BOARAI_DATA_HOST_DIR` 覆盖成绝对路径。
