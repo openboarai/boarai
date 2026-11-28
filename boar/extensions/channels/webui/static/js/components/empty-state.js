@@ -74,12 +74,12 @@ const EmptyStateComponent = {
     
     iconContainerClasses() {
       return this.compact 
-        ? 'w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-3'
-        : 'w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4';
+        ? 'w-12 h-12 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-3'
+        : 'w-16 h-16 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-4';
     },
     
     iconClasses() {
-      return this.compact ? 'w-6 h-6 text-gray-400' : 'w-8 h-8 text-gray-400';
+      return this.compact ? 'w-6 h-6 text-primary' : 'w-8 h-8 text-primary';
     },
     
     titleClasses() {

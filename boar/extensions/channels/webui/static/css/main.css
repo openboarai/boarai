@@ -55,33 +55,6 @@ body {
   bottom: var(--statusbar-height);
 }
 
-/* Status Dot with Pulse Animation */
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--text-hint);
-}
-
-.status-dot.connected {
-  background: var(--success-color);
-  animation: pulse-dot 2s infinite;
-}
-
-.status-dot.disconnected {
-  background: var(--error-color);
-}
-
-.status-dot.connecting {
-  background: var(--warning-color);
-  animation: pulse-dot 1s infinite;
-}
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
 /* Scrollbar Styles - Hidden but functional */
 ::-webkit-scrollbar {
   width: 0px;
@@ -201,15 +174,6 @@ body {
   transition-duration: 250ms !important;
 }
 
-/* Color theme specific styles */
-[data-color="purple"] .loading-screen {
-  background: linear-gradient(135deg, #5b21b6 0%, #8b5cf6 50%, #a78bfa 100%);
-}
-
-[data-color="purple"] .status-dot.connected {
-  background: var(--primary-color);
-}
-
 /* Print Styles */
 @media print {
   .navbar,
@@ -225,11 +189,11 @@ body {
    sessions.js after sanitization; code keeps a dark canvas in both themes
    with GitHub-Dark token colours. */
 .markdown-body {
-  --md-border: #e5e7eb;
-  --md-border-strong: #d1d5db;
-  --md-head: #111827;
-  --md-muted: #57606a;
-  --md-surface: #f6f8fa;
+  --md-border: #e4e7ec;
+  --md-border-strong: #d0d5dd;
+  --md-head: #182230;
+  --md-muted: #667085;
+  --md-surface: #f7f8fa;
   font-size: 0.875rem;
   line-height: 1.7;
   word-wrap: break-word;
@@ -410,14 +374,14 @@ body {
   background-color: rgb(var(--primary-rgb) / 0.08);
   border: 1px solid rgb(var(--primary-rgb) / 0.2);
   border-radius: 5px;
-  color: #4338ca;
+  color: #1d4ed8;
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 }
 
 .dark .markdown-body code {
   background-color: rgb(var(--primary-rgb) / 0.16);
   border-color: rgb(var(--primary-rgb) / 0.32);
-  color: #c4b5fd;
+  color: #93c5fd;
 }
 
 /* Inline-code tint must not leak into code blocks: this reset needs one more

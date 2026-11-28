@@ -159,7 +159,7 @@ const LineChartComponent = {
 
   computed: {
     resolvedColor() {
-      return this.color || (window.UiKit ? window.UiKit.primaryHex() : '#6366f1');
+      return this.color || (window.UiKit ? window.UiKit.primaryHex() : '#2563eb');
     },
 
     pad() {
@@ -364,7 +364,7 @@ const BarChartComponent = {
   
   computed: {
     resolvedColor() {
-      return this.color || (window.UiKit ? window.UiKit.primaryHex() : '#6366f1');
+      return this.color || (window.UiKit ? window.UiKit.primaryHex() : '#2563eb');
     },
 
     chartWidth() {
@@ -590,7 +590,7 @@ const SparklineComponent = {
   
   computed: {
     resolvedColor() {
-      return this.color || (window.UiKit ? window.UiKit.primaryHex() : '#6366f1');
+      return this.color || (window.UiKit ? window.UiKit.primaryHex() : '#2563eb');
     },
 
     points() {

@@ -659,22 +659,22 @@ const ToolCallCard = {
     <div class="my-0.5 rounded-r-md border-l-2 text-xs font-mono transition-all"
          :class="{
            'border-neutral-400 bg-neutral-50/60 dark:bg-neutral-800/40': resolvedStatus === 'rejected',
-           'border-amber-500 bg-amber-50/50 dark:bg-amber-950/20': resolvedStatus === 'error',
-           'border-blue-500 bg-blue-50/30 dark:bg-blue-950/20': resolvedStatus === 'running',
-           'border-emerald-500 bg-gray-50 dark:bg-gray-900/60': resolvedStatus === 'success',
+           'border-sun-500 bg-sun-50/50 dark:bg-sun-950/20': resolvedStatus === 'error',
+           'border-primary-500 bg-primary-50/30 dark:bg-primary-950/20': resolvedStatus === 'running',
+           'border-mint-500 bg-gray-50 dark:bg-gray-900/60': resolvedStatus === 'success',
          }">
       <!-- Header -->
       <div @click="toggleOpen"
            class="flex items-center justify-between px-3 py-1.5 cursor-pointer select-none rounded-r-md hover:bg-black/[0.03] dark:hover:bg-white/[0.03]">
         <div class="flex items-center gap-2 min-w-0 flex-1">
           <i v-if="resolvedStatus === 'rejected'" data-lucide="ban" class="w-3.5 h-3.5 text-neutral-500 shrink-0"></i>
-          <i v-else-if="resolvedStatus === 'error'" data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-500 shrink-0"></i>
-          <i v-else-if="resolvedStatus === 'running'" data-lucide="loader" class="w-3.5 h-3.5 text-blue-500 animate-spin shrink-0"></i>
-          <i v-else data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-500 shrink-0"></i>
+          <i v-else-if="resolvedStatus === 'error'" data-lucide="alert-triangle" class="w-3.5 h-3.5 text-sun-500 shrink-0"></i>
+          <i v-else-if="resolvedStatus === 'running'" data-lucide="loader" class="w-3.5 h-3.5 text-primary-500 animate-spin shrink-0"></i>
+          <i v-else data-lucide="check-circle" class="w-3.5 h-3.5 text-mint-500 shrink-0"></i>
           <span class="font-semibold text-gray-700 dark:text-gray-300 shrink-0">{{ toolName }}</span>
           <!-- Show command/args while running so user sees what is executing -->
           <span v-if="toolArgs"
-                class="text-gray-500 dark:text-gray-500 truncate min-w-0"
+                class="text-gray-500 dark:text-gray-400 truncate min-w-0"
                 :class="resolvedStatus === 'running' ? 'max-w-[min(420px,55vw)]' : 'max-w-[200px]'"
                 :title="shortArgs">{{ shortArgs }}</span>
         </div>
@@ -686,14 +686,14 @@ const ToolCallCard = {
            params / reason / live output / result. The header icon alone carries
            the failure status while collapsed, keeping every card one row tall. -->
       <div v-if="bodyVisible"
-           class="border-t border-gray-200/50 dark:border-gray-700/50 text-gray-600 dark:text-gray-500">
+           class="border-t border-gray-200/50 dark:border-gray-700/50 text-gray-600 dark:text-gray-400">
         <!-- Failure reason (permission denied / policy / timeout / execution) -->
         <div v-if="resolvedStatus === 'error' || resolvedStatus === 'rejected'"
              class="px-3 pt-2">
           <div class="text-xs font-sans mb-0.5"
                :class="resolvedStatus === 'rejected'
                  ? 'text-neutral-500 dark:text-neutral-400'
-                 : 'text-amber-600 dark:text-amber-400'">
+                 : 'text-sun-600 dark:text-sun-400'">
             <i :data-lucide="resolvedStatus === 'rejected' ? 'ban' : 'shield-alert'"
                class="w-3 h-3 inline mr-1"></i>
             {{ t('sessions.toolReason') || 'Reason' }}:
@@ -809,7 +809,7 @@ const FileChangeCard = {
       // on the black canvas looked broken. Fixed dark palette everywhere.
       if (!line) return 'text-gray-500';
       if (line.startsWith('+++') || line.startsWith('---')) return 'text-gray-500 font-semibold';
-      if (line.startsWith('+')) return 'text-emerald-300 bg-emerald-500/15';
+      if (line.startsWith('+')) return 'text-mint-300 bg-mint-500/15';
       if (line.startsWith('-')) return 'text-red-300 bg-red-500/15';
       if (line.startsWith('@@')) return 'text-sky-400';
       return 'text-gray-300';
@@ -822,11 +822,11 @@ const FileChangeCard = {
         <span class="truncate text-gray-700 dark:text-gray-300 min-w-0" :title="fullPath">{{ path }}</span>
         <span class="shrink-0 px-1.5 py-0.5 rounded leading-none font-semibold"
               :class="{
-                'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300': ctype === 'added',
+                'bg-mint-100 dark:bg-mint-900/50 text-mint-700 dark:text-mint-300': ctype === 'added',
                 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300': ctype === 'deleted',
-                'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300': ctype === 'modified',
+                'bg-sun-100 dark:bg-sun-900/50 text-sun-700 dark:text-sun-300': ctype === 'modified',
               }">{{ typeLabel }}</span>
-        <span class="shrink-0 text-emerald-600 dark:text-emerald-400">+{{ additions }}</span>
+        <span class="shrink-0 text-mint-600 dark:text-mint-400">+{{ additions }}</span>
         <span class="shrink-0 text-red-600 dark:text-red-400">-{{ deletions }}</span>
         <button v-if="hasDiff" type="button" @click="open = !open"
                 class="ml-auto shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded text-primary hover:bg-primary/10 transition-colors">
@@ -847,7 +847,7 @@ const FileChangeCard = {
              inside an overflow box paints scrolled content, which sliced the
              16th row in half. 270px = 15 rows x 18px, so a view is whole. -->
         <div class="bg-[#0d1117] py-2">
-          <pre class="diff-scroll text-[11px] leading-[18px] overflow-auto max-h-[270px] font-mono"><span v-for="(row, i) in diffRows" :key="i" :class="lineClass(row.text)" class="flex w-max min-w-full whitespace-pre"><span class="sticky left-0 z-10 flex shrink-0 select-none bg-[#0d1117]"><span class="w-10 pl-3 pr-2 text-right text-[10px] text-gray-600">{{ row.oldNo }}</span><span class="w-10 pr-3 text-right text-[10px] text-gray-500">{{ row.newNo }}</span></span><span class="shrink-0 whitespace-pre pr-4">{{ row.text }}</span></span></pre>
+          <pre class="scroll-thin on-dark text-[11px] leading-[18px] overflow-auto max-h-[270px] font-mono"><span v-for="(row, i) in diffRows" :key="i" :class="lineClass(row.text)" class="flex w-max min-w-full whitespace-pre"><span class="sticky left-0 z-10 flex shrink-0 select-none bg-[#0d1117]"><span class="w-10 pl-3 pr-2 text-right text-[10px] text-gray-600">{{ row.oldNo }}</span><span class="w-10 pr-3 text-right text-[10px] text-gray-500">{{ row.newNo }}</span></span><span class="shrink-0 whitespace-pre pr-4">{{ row.text }}</span></span></pre>
         </div>
       </div>
     </div>
@@ -861,7 +861,7 @@ const FileChangeCard = {
 const SESSION_TOOLBAR_SNIPPET = `
          <!-- 1. Status. The dot keeps its colour meaning on phones, where the
               text label is dropped (see .session-toolbar-label in polish.css). -->
-         <div v-if="activeSession" class="session-toolbar-pill flex items-center gap-1.5 px-2 py-0.5 rounded text-xs bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-500 whitespace-nowrap shrink-0"
+         <div v-if="activeSession" class="session-toolbar-pill flex items-center gap-1.5 px-2 py-0.5 rounded text-xs bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 whitespace-nowrap shrink-0"
               :title="statusLabel" :aria-label="statusLabel">
            <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass"></span>
            <span class="session-toolbar-label">{{ statusLabel }}</span>
@@ -932,7 +932,7 @@ const SESSION_TOOLBAR_SNIPPET = `
              <!-- Icon-only on phones: the shield colour is the only cue left, so
                   red/amber/emerald must stay untouched. -->
              <i data-lucide="shield" class="w-3 h-3 shrink-0"
-                :class="approvalMode === 'deny' ? 'text-red-500' : approvalMode === 'allow' ? 'text-emerald-500' : 'text-amber-500'"></i>
+                :class="approvalMode === 'deny' ? 'text-red-500' : approvalMode === 'allow' ? 'text-mint-500' : 'text-sun-500'"></i>
              <span class="session-toolbar-label" :class="approvalModeColor">{{ approvalModeLabel }}</span>
              <i data-lucide="chevron-up" class="w-3 h-3 shrink-0 opacity-50 session-toolbar-caret"></i>
            </button>
@@ -965,7 +965,7 @@ const SESSION_TOOLBAR_SNIPPET = `
                       @click="currentAgentName = a.name; changeAgent(); showAgentPopover = false"
                       class="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors truncate flex items-center gap-1.5"
                       :class="(currentAgentName === a.name) ? 'text-primary font-semibold' : 'text-gray-700 dark:text-gray-300'">
-                <i data-lucide="bot" class="w-3 h-3 shrink-0" :class="a.is_default ? 'text-amber-500' : 'text-gray-500'"></i>
+                <i data-lucide="bot" class="w-3 h-3 shrink-0" :class="a.is_default ? 'text-sun-500' : 'text-gray-500'"></i>
                 {{ a.name }}
               </button>
             </div>
@@ -1001,7 +1001,7 @@ const SESSION_TOOLBAR_SNIPPET = `
                         <!-- Level 2: Models (separate floating panel) -->
                         <div v-if="hoveredProvider && groupedModels[hoveredProvider]"
                              class="session-model-models absolute left-[109px] bottom-0 w-[250px] shrink-0 py-1 max-h-[240px] overflow-y-auto bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
-                <div class="px-3 py-1 text-xs text-gray-500 dark:text-gray-500 font-medium uppercase tracking-wide">
+                <div class="px-3 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">
                   {{ hoveredProvider }}
                 </div>
                 <button v-for="m in groupedModels[hoveredProvider]" :key="m.name"
@@ -1026,7 +1026,7 @@ const SESSION_TOOLBAR_SNIPPET = `
           </div>
           <!-- 4. Token (total, hover for detail). Dropped on phones (the
                session info panel still shows the numbers) so the row fits. -->
-          <div v-if="activeSession" class="session-toolbar-pill session-toolbar-optional relative flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-500 cursor-default group shrink-0"
+          <div v-if="activeSession" class="session-toolbar-pill session-toolbar-optional relative flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-default group shrink-0"
                @click.self.stop
                :title="t('sessions.tokensIn') + ' / ' + t('sessions.tokensOut')">
             <i data-lucide="database" class="w-2.5 h-2.5"></i>
@@ -1034,12 +1034,12 @@ const SESSION_TOOLBAR_SNIPPET = `
             <!-- Hover tooltip (desktop only: hidden on mobile so its
                  nowrap width never widens the page horizontally) -->
             <div class="hidden md:block absolute bottom-full left-0 mb-1.5 px-2 py-1.5 rounded-md bg-gray-900 dark:bg-gray-600 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
-              <div class="flex items-center gap-1.5"><i data-lucide="arrow-up" class="w-2.5 h-2.5 text-emerald-400"></i>{{ t('sessions.tokensIn') }}: <span class="font-mono tabular-nums">{{ formatTokens(sessionStats.tokenInput || 0) }}</span></div>
-              <div class="flex items-center gap-1.5"><i data-lucide="arrow-down" class="w-2.5 h-2.5 text-blue-400"></i>{{ t('sessions.tokensOut') }}: <span class="font-mono tabular-nums">{{ formatTokens(sessionStats.tokenOutput || 0) }}</span></div>
+              <div class="flex items-center gap-1.5"><i data-lucide="arrow-up" class="w-2.5 h-2.5 text-mint-400"></i>{{ t('sessions.tokensIn') }}: <span class="font-mono tabular-nums">{{ formatTokens(sessionStats.tokenInput || 0) }}</span></div>
+              <div class="flex items-center gap-1.5"><i data-lucide="arrow-down" class="w-2.5 h-2.5 text-primary-400"></i>{{ t('sessions.tokensOut') }}: <span class="font-mono tabular-nums">{{ formatTokens(sessionStats.tokenOutput || 0) }}</span></div>
             </div>
           </div>
           <!-- 5. Context Usage Rate -->
-          <div v-if="activeSession" class="session-toolbar-pill relative flex items-center gap-1.5 px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-500 cursor-default group shrink-0"
+          <div v-if="activeSession" class="session-toolbar-pill relative flex items-center gap-1.5 px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-default group shrink-0"
                @click.self.stop>
             <div class="w-10 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden session-toolbar-context-bar">
               <div class="h-full rounded-full transition-all duration-300" :style="{ width: contextPercent + '%' }" :class="contextBarColor"></div>
@@ -1100,12 +1100,12 @@ const SessionsPage = {
         <div class="flex items-center justify-between px-3 h-12 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
           <button @click="toggleSidebar" 
                   class="flex items-center justify-center w-6 h-6 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-            <i :data-lucide="sidebarExpanded ? 'panel-left-close' : 'panel-left-open'" class="w-3.5 h-3.5 text-gray-500 dark:text-gray-500"></i>
+            <i :data-lucide="sidebarExpanded ? 'panel-left-close' : 'panel-left-open'" class="w-3.5 h-3.5 text-gray-500 dark:text-gray-400"></i>
           </button>
           <template v-if="sidebarExpanded">
             <!-- Select mode bar -->
             <div v-if="selectMode" class="flex items-center gap-2">
-              <span class="text-xs text-gray-500 dark:text-gray-500">
+              <span class="text-xs text-gray-500 dark:text-gray-400">
                 {{ selectedCount > 0 ? selectedCount + ' ' + (t('common.selected') || 'selected') : (t('common.selectSessions') || 'Select sessions') }}
               </span>
               <button @click="exitSelectMode"
@@ -1115,7 +1115,7 @@ const SessionsPage = {
             </div>
             <div v-else class="flex items-center gap-2">
               <button @click="toggleSelectMode"
-                      class="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
+                      class="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
                 <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
               </button>
               <button @click="createSession"
@@ -1131,11 +1131,11 @@ const SessionsPage = {
         <div v-if="sidebarExpanded" class="session-list-scroll overflow-y-auto flex-1 min-h-0">
           <div v-if="isLoadingSessions && sessions.length === 0" class="p-4 text-center">
             <i data-lucide="loader" class="w-6 h-6 text-gray-300 dark:text-gray-600 mx-auto mb-2 animate-spin"></i>
-            <p class="text-xs text-gray-500 dark:text-gray-500">{{ t('common.loading') || 'Loading...' }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('common.loading') || 'Loading...' }}</p>
           </div>
           <div v-else-if="sessions.length === 0" class="p-4 text-center">
             <i data-lucide="message-square" class="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2"></i>
-            <p class="text-xs text-gray-500 dark:text-gray-500">{{ t('sessions.noSessions') }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('sessions.noSessions') }}</p>
           </div>
           
           <div v-else class="py-2">
@@ -1164,7 +1164,7 @@ const SessionsPage = {
             </div>
             <template v-for="group in groupedSessions" :key="group.id">
               <!-- Group Header -->
-              <div class="px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
+              <div class="px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 {{ group.label }}
               </div>
               
@@ -1193,14 +1193,14 @@ const SessionsPage = {
                 <!-- Left focus bar: shown only when selected; color reflects state -->
                 <span v-show="!selectMode && activeSession?.id === session.id"
                       class="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-full z-10 transition-colors"
-                      :class="session.hasError ? 'bg-red-500' : (session.isRunning ? 'bg-emerald-500' : 'bg-primary')"></span>
+                      :class="session.hasError ? 'bg-red-500' : (session.isRunning ? 'bg-mint-500' : 'bg-primary')"></span>
                 <!-- Normal View (always rendered for stable height) -->
                 <div class="w-full h-full flex flex-col justify-center"
                      :class="{ 'invisible': editingSessionId === session.id || deletingSessionId === session.id }">
                   <div class="flex items-center justify-between">
                     <div class="text-sm font-medium truncate flex-1 flex items-center gap-1.5">
                       <i v-if="session.hasError" data-lucide="alert-circle" class="w-3.5 h-3.5 text-red-500 dark:text-red-400 shrink-0"></i>
-                      <span class="truncate" :class="{ 'italic text-gray-400 dark:text-gray-500': sessionTitleDisplay(session) !== session.title }">{{ sessionTitleDisplay(session) }}</span>
+                      <span class="truncate" :class="{ 'italic text-gray-400 dark:text-gray-400': sessionTitleDisplay(session) !== session.title }">{{ sessionTitleDisplay(session) }}</span>
                     </div>
                     <!-- Row actions. Desktop reveals them on hover; touch
                          devices have no hover, so they are always visible
@@ -1209,21 +1209,21 @@ const SessionsPage = {
                          :class="selectMode ? '!hidden' : (isTouch ? 'flex' : 'hidden group-hover:flex')">
                       <button @click.stop="togglePin(session)"
                               class="p-1.5 md:p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                              :class="session.isPinned ? 'text-primary' : 'text-gray-500 dark:text-gray-500'">
+                              :class="session.isPinned ? 'text-primary' : 'text-gray-500 dark:text-gray-400'">
                         <i data-lucide="pin" class="w-3.5 h-3.5 md:w-3 md:h-3"></i>
                       </button>
                       <button @click.stop="startRename(session)"
-                              class="p-1.5 md:p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-500 dark:text-gray-500">
+                              class="p-1.5 md:p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-500 dark:text-gray-400">
                         <i data-lucide="pencil" class="w-3.5 h-3.5 md:w-3 md:h-3"></i>
                       </button>
                       <button @click.stop="startDelete(session)"
-                              class="p-1.5 md:p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-gray-500 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400">
+                              class="p-1.5 md:p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5 md:w-3 md:h-3"></i>
                       </button>
                     </div>
                   </div>
                   <div class="flex items-center justify-between mt-0.5">
-                    <span class="text-xs text-gray-500 dark:text-gray-500">{{ session.time }}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ session.time }}</span>
                     <div class="flex items-center gap-1.5 shrink-0">
                       <span v-if="session.isPinned" class="text-xs text-primary/60">{{ t('sessions.pinned') || 'Pinned' }}</span>
                       <span v-if="sourceBadge(session)"
@@ -1248,7 +1248,7 @@ const SessionsPage = {
                            @blur="confirmRename(session)"
                            class="flex-1 px-2 py-1.5 text-sm bg-white dark:bg-gray-700 border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-900 dark:text-white">
                     <button @click.stop="confirmRename(session)"
-                            class="p-1.5 rounded hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-green-500">
+                            class="p-1.5 rounded hover:bg-mint-100 dark:hover:bg-mint-900/30 transition-colors text-mint-500">
                       <i data-lucide="check" class="w-3.5 h-3.5"></i>
                     </button>
                     <button @click.stop="cancelRename"
@@ -1263,7 +1263,7 @@ const SessionsPage = {
                      @click.stop 
                      class="absolute inset-0 w-full h-full flex flex-col justify-center px-3 bg-inherit">
                   <div class="flex items-center gap-2 w-full">
-                    <span class="text-xs text-gray-600 dark:text-gray-500 flex-1 truncate">{{ t('delete.deleteTitle') || 'Delete session?' }}</span>
+                    <span class="text-xs text-gray-600 dark:text-gray-400 flex-1 truncate">{{ t('delete.deleteTitle') || 'Delete session?' }}</span>
                     <button @click.stop="confirmDelete(session, false)"
                             class="px-2.5 py-1.5 text-xs font-medium bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-500"
                             :title="t('delete.normalDesc')">
@@ -1305,9 +1305,9 @@ const SessionsPage = {
           <button v-if="!fmTreeOpen" type="button" class="fm-collapsed-bar"
                   @click="fmTreeOpen = true; fmPersist()"
                   :title="t('files.expand') || 'Expand file tree'">
-            <i data-lucide="chevron-up" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500"></i>
-            <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500"></i>
-            <span class="text-xs text-gray-500 dark:text-gray-500">{{ t('files.title') || 'Files' }}</span>
+            <i data-lucide="chevron-up" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-400"></i>
+            <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-400"></i>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('files.title') || 'Files' }}</span>
           </button>
         </div>
       </div>
@@ -1319,7 +1319,7 @@ const SessionsPage = {
           <div class="flex items-center gap-2 min-w-0">
             <button v-if="isMobile" @click="toggleSidebar" 
                     class="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mr-1 shrink-0">
-              <i data-lucide="menu" class="w-4 h-4 text-gray-500 dark:text-gray-500"></i>
+              <i data-lucide="menu" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
             </button>
             <i data-lucide="message-square" class="w-5 h-5 text-primary shrink-0"></i>
             <span class="font-medium text-gray-900 dark:text-white truncate">
@@ -1331,7 +1331,7 @@ const SessionsPage = {
                  it is hidden on phones where the header needs the width for
                  the title (desktop keeps the original chrome). -->
             <button class="hidden md:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <i data-lucide="search" class="w-4 h-4 text-gray-500 dark:text-gray-500"></i>
+              <i data-lucide="search" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
             </button>
             <!-- File viewer pane toggle (desktop only; the pane itself is
                  hidden below lg together with the tree). -->
@@ -1340,12 +1340,12 @@ const SessionsPage = {
                     :class="{ 'bg-primary/10': fmViewerOpen }"
                     :title="t('files.viewerToggle') || 'Toggle file viewer'">
               <i data-lucide="folder-open" class="w-4 h-4"
-                 :class="fmViewerOpen ? 'text-primary' : 'text-gray-500 dark:text-gray-500'"></i>
+                 :class="fmViewerOpen ? 'text-primary' : 'text-gray-500 dark:text-gray-400'"></i>
             </button>
             <button @click="toggleRightSidebar" 
                     class="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     :class="{ 'bg-primary/10 text-primary': rightSidebarExpanded }">
-              <i data-lucide="panel-right" class="w-4 h-4 text-gray-500 dark:text-gray-500"></i>
+              <i data-lucide="panel-right" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
             </button>
           </div>
         </div>
@@ -1367,18 +1367,18 @@ const SessionsPage = {
           <div class="flex-1 flex flex-col min-w-0">
         <!-- Messages Area -->
         <div class="relative flex-1 min-h-0 flex flex-col">
-        <div class="session-messages flex-1 overflow-y-scroll px-4 pt-4 pb-6 relative" ref="messagesContainer"
+        <div class="session-messages scroll-thin flex-1 overflow-y-scroll px-4 pt-4 pb-6 relative" ref="messagesContainer"
              @scroll="onMessagesScroll">
           <!-- Welcome pane (no active session): title + hint + centered input.
                Typing here auto-creates a session and sends (see sendMessage). -->
           <div v-if="!activeSession" class="session-welcome flex flex-col items-center justify-center h-full px-4 pb-20">
-            <div class="session-welcome-icon w-16 h-16 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-4">
+            <div class="session-welcome-icon w-16 h-16 flex items-center justify-center mb-4">
               <i data-lucide="bot" class="w-8 h-8 text-primary"></i>
             </div>
-            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2 text-center">
+            <h3 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-2 text-center">
               {{ sessions.length > 0 ? t('sessions.welcomeBackTitle') : t('sessions.welcomeTitle') }}
             </h3>
-            <p class="text-sm text-gray-500 dark:text-gray-500 text-center px-4 mb-6">
+            <p class="text-sm leading-6 text-gray-500 dark:text-gray-400 text-center px-4 mb-6">
               {{ sessions.length > 0 ? t('sessions.welcomeBackHint') : t('sessions.welcomeHint') }}
             </p>
             <!-- Pre-session toolbar: same selectors as the bottom toolbar, so
@@ -1501,7 +1501,7 @@ const SessionsPage = {
                    below, so skip this one to avoid two stacked toggles. -->
               <div v-if="showUserMetaLine(message)" class="w-full flex justify-center">
                 <button @click="message._metaOpen = !message._metaOpen"
-                        class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                   <!-- Same lucide-swap caveat as the thinking toggle: rotate
                        a wrapper instead of rebinding the icon name. -->
                   <span class="inline-flex items-center transition-transform duration-150"
@@ -1512,7 +1512,7 @@ const SessionsPage = {
                 </button>
               </div>
               <div v-if="message._metaOpen && showUserMetaLine(message)" class="w-full flex justify-center">
-                <div class="max-w-[85%] px-2.5 py-1.5 rounded-lg bg-gray-100/80 dark:bg-gray-800/60 text-[11px] font-mono text-gray-400 dark:text-gray-500 whitespace-pre-wrap break-all text-center">{{ userMetaLine(message) }}</div>
+                <div class="max-w-[85%] px-2.5 py-1.5 rounded-lg bg-gray-100/80 dark:bg-gray-800/60 text-[11px] font-mono text-gray-400 dark:text-gray-400 whitespace-pre-wrap break-all text-center">{{ userMetaLine(message) }}</div>
               </div>
               <!-- Round header: avatar + name are one unit and own their div.
                    Kept OUTSIDE the message width wrapper (max-w-[75%]) so the
@@ -1550,7 +1550,7 @@ const SessionsPage = {
                    message rows re-render their process blocks in place. -->
               <div v-if="planAt(index).foldRow" :class="msgWidthClass(message)">
                 <button @click="toggleFoldSeg(index)"
-                        class="-ml-1 inline-flex items-center gap-1 px-1 py-0.5 rounded cursor-pointer select-none text-[11px] text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors max-w-full"
+                        class="-ml-1 inline-flex items-center gap-1 px-1 py-0.5 rounded cursor-pointer select-none text-[11px] text-gray-400 dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors max-w-full"
                         :title="planAt(index).segOpen ? (t('sessions.collapseProcess') || 'Collapse process') : (t('sessions.expandProcess') || 'Expand process')"
                         :aria-expanded="planAt(index).segOpen ? 'true' : 'false'">
                   <!-- Rotate a WRAPPER, not the <i> (lucide swaps it for an svg). -->
@@ -1561,7 +1561,7 @@ const SessionsPage = {
                   <i data-lucide="layers" class="w-3 h-3 opacity-70 shrink-0"></i>
                   <span class="shrink-0">{{ processFoldLabel(planAt(index).seg) }}</span>
                   <span v-if="planAt(index).seg && planAt(index).seg.failCount > 0"
-                        class="shrink-0 text-amber-500 dark:text-amber-400">
+                        class="shrink-0 text-sun-500 dark:text-sun-400">
                     · {{ t('sessions.processFoldFailed', { count: planAt(index).seg.failCount }) }}
                   </span>
                   <span v-if="!planAt(index).segOpen && displayPolicy.thinkingPreview && planAt(index).seg && planAt(index).seg.preview"
@@ -1585,7 +1585,7 @@ const SessionsPage = {
                        line instead of a user bubble full of English prompt -->
                   <div v-else-if="message.skill_authoring" class="w-full flex flex-col items-center gap-1">
                     <button @click="message._metaOpen = !message._metaOpen"
-                            class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                            class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                       <i data-lucide="sparkles" class="w-3 h-3"></i>
                       {{ t('sessions.skillAuthoring') || '技能提炼任务' }}
                       <span class="inline-flex items-center transition-transform duration-150"
@@ -1594,7 +1594,7 @@ const SessionsPage = {
                       </span>
                     </button>
                     <div v-if="message._metaOpen"
-                         class="max-w-[85%] px-2.5 py-1.5 rounded-lg bg-gray-100/80 dark:bg-gray-800/60 text-[11px] font-mono text-gray-400 dark:text-gray-500 whitespace-pre-wrap break-all">{{ userBubbleContent(message) }}</div>
+                         class="max-w-[85%] px-2.5 py-1.5 rounded-lg bg-gray-100/80 dark:bg-gray-800/60 text-[11px] font-mono text-gray-400 dark:text-gray-400 whitespace-pre-wrap break-all">{{ userBubbleContent(message) }}</div>
                   </div>
                   <template v-else>
                   <!-- Edit mode: bubble -> editor panel -->
@@ -1607,7 +1607,7 @@ const SessionsPage = {
                           {{ t('sessions.editingLabel') || 'Editing message' }}
                         </span>
                         <button @click="cancelEditMessage"
-                                class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                                 :title="t('sessions.cancelEdit') || 'Cancel'">
                           <i data-lucide="x" class="w-3.5 h-3.5"></i>
                         </button>
@@ -1625,7 +1625,7 @@ const SessionsPage = {
                         @keydown.escape.prevent="cancelEditMessage"></textarea>
                       <!-- Editor footer -->
                       <div class="flex items-center justify-between px-3 py-2 border-t border-gray-200/70 dark:border-gray-700/60 bg-white/60 dark:bg-gray-900/40">
-                        <span class="text-[11px] text-gray-400 dark:text-gray-500 hidden sm:inline whitespace-nowrap">
+                        <span class="text-[11px] text-gray-400 dark:text-gray-400 hidden sm:inline whitespace-nowrap">
                           {{ t('sessions.editShortcutHint') || 'Enter to send · Esc to cancel' }}
                         </span>
                         <div class="flex items-center gap-2 ml-auto shrink-0">
@@ -1676,13 +1676,13 @@ const SessionsPage = {
                       <!-- Send time sits left of the copy button; the same
                            row keeps edit right after it. -->
                       <span v-if="messageTimeLabel(message)"
-                            class="px-1 text-[11px] tabular-nums text-gray-400/90 dark:text-gray-500 select-none"
+                            class="px-1 text-[11px] tabular-nums text-gray-400/90 dark:text-gray-400 select-none"
                             :title="messageTimeTitle(message)">{{ messageTimeLabel(message) }}</span>
-                      <button @click="copyMessage(message)" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" :title="t('common.copy') || 'Copy'">
+                      <button @click="copyMessage(message)" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" :title="t('common.copy') || 'Copy'">
                         <i :data-lucide="message._copied ? 'check' : 'copy'" class="w-3 h-3"></i>
                       </button>
                       <button v-if="isLatestUserMessage(message)" @click="startEditMessage(message)"
-                              class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                              class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                               :title="t('sessions.editMessage') || 'Edit'">
                         <i data-lucide="pencil" class="w-3 h-3"></i>
                       </button>
@@ -1724,7 +1724,7 @@ const SessionsPage = {
                        the reply body stays the visual focus. -->
                   <div v-if="message.thinking && planAt(index).showProcess" class="overflow-hidden">
                     <div @click="message._thinkOpen = !message._thinkOpen"
-                         class="-ml-1 inline-flex items-center gap-1 px-1 py-0.5 rounded cursor-pointer select-none text-[11px] text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors">
+                         class="-ml-1 inline-flex items-center gap-1 px-1 py-0.5 rounded cursor-pointer select-none text-[11px] text-gray-400 dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors">
                       <i data-lucide="brain" class="w-3 h-3 opacity-70 shrink-0"></i>
                       <span>{{ t('sessions.thinking') }}</span>
                       <span v-if="message._thinkingComplete" class="opacity-70">
@@ -1747,7 +1747,7 @@ const SessionsPage = {
                          :style="{ maxHeight: message._thinkOpen ? '320px' : '0px', opacity: message._thinkOpen ? 1 : 0 }">
                       <div data-thinking-body
                            @scroll="onThinkingBodyScroll($event, message)"
-                           class="ml-0.5 mt-1 pl-2.5 pb-1 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500 font-mono whitespace-pre-wrap max-h-[300px] max-w-[72ch] overflow-y-auto border-l border-gray-200/80 dark:border-gray-700/60">
+                           class="ml-0.5 mt-1 pl-2.5 pb-1 text-[11px] leading-relaxed text-gray-400 dark:text-gray-400 font-mono whitespace-pre-wrap max-h-[300px] max-w-[72ch] overflow-y-auto border-l border-gray-200/80 dark:border-gray-700/60">
                         {{ message.thinking }}
                         <span v-if="!message._thinkingComplete" class="inline-block w-1.5 h-3 bg-primary/40 ml-0.5 animate-pulse"></span>
                       </div>
@@ -1777,8 +1777,8 @@ const SessionsPage = {
                   </div>
                   <!-- Provider auto-retry progress on the live assistant bubble -->
                   <div v-if="message._retryAttempt && !message._error && !message.content"
-                       class="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50/80 dark:bg-amber-950/25 px-3 py-2 mb-1">
-                    <div class="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
+                       class="rounded-lg border border-sun-200 dark:border-sun-800/50 bg-sun-50/80 dark:bg-sun-950/25 px-3 py-2 mb-1">
+                    <div class="flex items-center gap-2 text-xs text-sun-700 dark:text-sun-300">
                       <i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin shrink-0"></i>
                       <span>
                         {{ t('sessions.retryingHint', { attempt: message._retryAttempt, max: message._retryMax || '?' })
@@ -1786,7 +1786,7 @@ const SessionsPage = {
                       </span>
                     </div>
                     <div v-if="message._retryError"
-                         class="mt-1 text-xs text-amber-600/80 dark:text-amber-400/70 whitespace-pre-wrap break-words line-clamp-3">
+                         class="mt-1 text-xs text-sun-600/80 dark:text-sun-400/70 whitespace-pre-wrap break-words line-clamp-3">
                       {{ message._retryError }}
                     </div>
                   </div>
@@ -1831,7 +1831,7 @@ const SessionsPage = {
                        :class="message._error
                          ? 'bg-red-50 text-red-600 border border-red-200'
                          : message._interrupt
-                           ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                           ? 'bg-sun-50 text-sun-700 border border-sun-200'
                            : 'bg-gray-100 text-gray-500 border border-gray-200'">
                     {{ message.content }}
                   </div>
@@ -1843,7 +1843,7 @@ const SessionsPage = {
                 <div v-else-if="message.role === 'assistant'" class="hidden"></div>
                 <!-- Fallback (shouldn't happen) -->
                 <div v-else 
-                     class="text-sm rounded-lg p-3 break-words text-gray-500 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 italic">
+                     class="text-sm rounded-lg p-3 break-words text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 italic">
                   [{{ message.role }}] {{ message.content || '(empty)' }}
                 </div>
               <!-- Round footer: completion chip + copy + consumption pills.
@@ -1861,16 +1861,16 @@ const SessionsPage = {
                 <!-- Run completion time, left of the round copy button.
                        Hidden while the round's run is still in flight. -->
                   <span v-if="roundFinishedLabel(index)"
-                        class="px-1 text-[11px] tabular-nums text-gray-400 dark:text-gray-500 select-none"
+                        class="px-1 text-[11px] tabular-nums text-gray-400 dark:text-gray-400 select-none"
                         :title="roundFinishedTitle(index)">{{ roundFinishedLabel(index) }}</span>
-                  <button @click="copyRound(index)" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" :title="t('sessions.copyRound') || 'Copy round'">
+                  <button @click="copyRound(index)" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" :title="t('sessions.copyRound') || 'Copy round'">
                     <i :data-lucide="message._copied ? 'check' : 'copy'" class="w-3 h-3"></i>
                   </button>
                   <!-- Per-round consumption pills (tokens + wall-clock),
                        styled for both themes (visible on dark canvas) -->
                   <span v-if="!isSessionRunning && roundStats(index) && roundStats(index).hasTokens"
                         class="relative group inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full
-                               text-[11px] text-gray-400 dark:text-gray-500
+                               text-[11px] text-gray-400 dark:text-gray-400
                                select-none cursor-default">
                     <i data-lucide="database" class="w-3 h-3 opacity-70"></i>
                     <span>Tokens:</span>
@@ -1888,11 +1888,11 @@ const SessionsPage = {
                         </span>
                       </div>
                       <div class="flex items-center justify-between py-0.5">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-[2px] bg-blue-500"></span>{{ t('sessions.tokensIn') }}</span>
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-[2px] bg-primary-500"></span>{{ t('sessions.tokensIn') }}</span>
                         <span class="font-semibold tabular-nums">{{ roundStats(index).input.toLocaleString() }}</span>
                       </div>
                       <div class="flex items-center justify-between py-0.5 pl-4 opacity-90">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-[2px] bg-emerald-500"></span>{{ t('sessions.cacheHit') || 'Cache hit' }}</span>
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-[2px] bg-mint-500"></span>{{ t('sessions.cacheHit') || 'Cache hit' }}</span>
                         <span class="tabular-nums">{{ roundStats(index).cacheRead.toLocaleString() }}</span>
                       </div>
                       <div class="flex items-center justify-between py-0.5 pl-4 opacity-90">
@@ -1900,12 +1900,12 @@ const SessionsPage = {
                         <span class="tabular-nums">{{ roundStats(index).cacheMiss.toLocaleString() }}</span>
                       </div>
                       <div class="flex items-center justify-between py-0.5 pl-4 opacity-90">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-[2px] bg-yellow-400"></span>{{ t('sessions.cacheWrite') || 'Cache write' }}</span>
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-[2px] bg-sun-400"></span>{{ t('sessions.cacheWrite') || 'Cache write' }}</span>
                         <span class="tabular-nums">{{ roundStats(index).cacheCreation.toLocaleString() }}</span>
                       </div>
                       <div class="border-t border-gray-200 dark:border-gray-700/60 my-1.5"></div>
                       <div class="flex items-center justify-between py-0.5">
-                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-[2px] bg-purple-500"></span>{{ t('sessions.tokensOut') }}</span>
+                        <span class="flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-[2px] bg-primary-500"></span>{{ t('sessions.tokensOut') }}</span>
                         <span class="font-semibold tabular-nums">{{ roundStats(index).output.toLocaleString() }}</span>
                       </div>
                       <div class="flex items-center justify-between py-0.5 pl-4 opacity-90">
@@ -1918,24 +1918,24 @@ const SessionsPage = {
                       </div>
                       <div class="border-t border-gray-200 dark:border-gray-700/60 my-1.5"></div>
                       <div class="flex items-center justify-between py-0.5">
-                        <span class="flex items-center gap-1.5"><i data-lucide="zap" class="w-3 h-3 text-yellow-500 dark:text-yellow-400"></i>{{ t('sessions.hitRate') }}</span>
-                        <span class="font-semibold tabular-nums" :class="roundHitRate(roundStats(index)) > 50 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'">{{ roundHitRate(roundStats(index)) }}%</span>
+                        <span class="flex items-center gap-1.5"><i data-lucide="zap" class="w-3 h-3 text-sun-500 dark:text-sun-400"></i>{{ t('sessions.hitRate') }}</span>
+                        <span class="font-semibold tabular-nums" :class="roundHitRate(roundStats(index)) > 50 ? 'text-mint-600 dark:text-mint-400' : 'text-red-500 dark:text-red-400'">{{ roundHitRate(roundStats(index)) }}%</span>
                       </div>
                       <div class="flex h-1.5 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700/60 mt-1">
-                        <div class="h-full bg-emerald-500" :style="{ width: roundHitRate(roundStats(index)) + '%' }"></div>
-                        <div class="h-full bg-yellow-400" :style="{ width: roundWriteRate(roundStats(index)) + '%' }"></div>
+                        <div class="h-full bg-mint-500" :style="{ width: roundHitRate(roundStats(index)) + '%' }"></div>
+                        <div class="h-full bg-sun-400" :style="{ width: roundWriteRate(roundStats(index)) + '%' }"></div>
                         <div class="h-full bg-red-400 flex-1"></div>
                       </div>
                       <div class="flex items-center gap-3 mt-1.5 opacity-80">
-                        <span class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-[2px] bg-emerald-500"></span>{{ t('sessions.legendHit') || 'Hit' }}</span>
-                        <span class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-[2px] bg-yellow-400"></span>{{ t('sessions.legendWrite') || 'Write' }}</span>
+                        <span class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-[2px] bg-mint-500"></span>{{ t('sessions.legendHit') || 'Hit' }}</span>
+                        <span class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-[2px] bg-sun-400"></span>{{ t('sessions.legendWrite') || 'Write' }}</span>
                         <span class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-[2px] bg-red-400"></span>{{ t('sessions.legendMiss') || 'Miss' }}</span>
                       </div>
                     </div>
                   </span>
                   <span v-if="!isSessionRunning && roundStats(index)"
                         class="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full
-                               text-[11px] text-gray-400 dark:text-gray-500
+                               text-[11px] text-gray-400 dark:text-gray-400
                                select-none cursor-default"
                         :title="t('sessions.roundStatsTitle') || 'Tokens and wall-clock time for this round'">
                     <i data-lucide="clock" class="w-3 h-3 opacity-70"></i>
@@ -1965,15 +1965,15 @@ const SessionsPage = {
               <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium
                            shadow-sm backdrop-blur-sm"
                     :class="liveRetryInfo
-                      ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40'
+                      ? 'bg-sun-50 text-sun-700 dark:bg-sun-900/30 dark:text-sun-300 border border-sun-200/60 dark:border-sun-800/40'
                       : 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-light'">
                 <span class="flex items-center gap-0.5">
                   <span class="w-1 h-1 rounded-full animate-bounce [animation-delay:0ms]"
-                        :class="liveRetryInfo ? 'bg-amber-500' : 'bg-primary'"></span>
+                        :class="liveRetryInfo ? 'bg-sun-500' : 'bg-primary'"></span>
                   <span class="w-1 h-1 rounded-full animate-bounce [animation-delay:150ms]"
-                        :class="liveRetryInfo ? 'bg-amber-500' : 'bg-primary'"></span>
+                        :class="liveRetryInfo ? 'bg-sun-500' : 'bg-primary'"></span>
                   <span class="w-1 h-1 rounded-full animate-bounce [animation-delay:300ms]"
-                        :class="liveRetryInfo ? 'bg-amber-500' : 'bg-primary'"></span>
+                        :class="liveRetryInfo ? 'bg-sun-500' : 'bg-primary'"></span>
                 </span>
                 <span>{{ liveRetryLabel || t('sessions.runPillRunning') }}</span>
               </span>
@@ -2005,11 +2005,11 @@ const SessionsPage = {
 
         <!-- Tool Confirmation Overlay -->
         <div v-if="pendingTools && pendingTools.length > 0"
-             class="border-t border-gray-200 dark:border-gray-700 px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20">
+             class="border-t border-gray-200 dark:border-gray-700 px-4 py-3 bg-sun-50 dark:bg-sun-900/20">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2 text-sm">
-              <i data-lucide="shield-alert" class="w-4 h-4 text-yellow-600 dark:text-yellow-400"></i>
-              <span class="text-yellow-800 dark:text-yellow-200 font-medium">{{ t('common.toolConfirm') || 'Tool Execution Required' }}</span>
+              <i data-lucide="shield-alert" class="w-4 h-4 text-sun-600 dark:text-sun-400"></i>
+              <span class="text-sun-800 dark:text-sun-200 font-medium">{{ t('common.toolConfirm') || 'Tool Execution Required' }}</span>
             </div>
             <div class="flex items-center gap-2">
               <button @click="rejectTools"
@@ -2017,12 +2017,12 @@ const SessionsPage = {
                 {{ t('common.reject') || 'Reject' }}
               </button>
               <button @click="approveTools"
-                      class="px-3 py-1.5 text-xs font-medium bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
+                      class="px-3 py-1.5 text-xs font-medium bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
                 {{ t('common.approve') || 'Allow Once' }}
               </button>
               <button v-if="pendingGrantable"
                       @click="approveToolsAlways"
-                      class="px-3 py-1.5 text-xs font-medium bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                      class="px-3 py-1.5 text-xs font-medium bg-sun-100 text-sun-900 rounded-lg hover:bg-sun-200 transition-colors"
                       :title="t('common.approveAlwaysTip') || 'Allow for this session'">
                 {{ t('common.approveAlways') || 'Allow for Session' }}
               </button>
@@ -2031,13 +2031,13 @@ const SessionsPage = {
                    stick. Only offered when the call names a directory. -->
               <button v-if="pendingFolderGrant"
                       @click="approveToolsFolder"
-                      class="px-3 py-1.5 text-xs font-medium bg-yellow-700 text-white rounded-lg hover:bg-yellow-800 transition-colors"
+                      class="px-3 py-1.5 text-xs font-medium bg-sun-700 text-white rounded-lg hover:bg-sun-800 transition-colors"
                       :title="(t('common.approveFolderTip') || 'Allow every operation under this folder for the session') + ': ' + pendingFolderGrant">
                 {{ t('common.approveFolder') || 'Allow Folder' }}
               </button>
             </div>
           </div>
-          <div class="mt-1.5 text-xs text-yellow-700 dark:text-yellow-300">
+          <div class="mt-1.5 text-xs text-sun-700 dark:text-sun-300">
             <span v-for="(t, i) in pendingTools" :key="t.id">
               {{ i > 0 ? ', ' : '' }}{{ t.name || t.id }}
             </span>
@@ -2056,7 +2056,7 @@ const SessionsPage = {
                     class="flex-1 min-w-0 flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors select-none"
                     :title="changesPanelOpen ? (t('sessions.collapseChanges') || 'Collapse file changes') : (t('sessions.expandChanges') || 'Expand file changes')">
               <i :data-lucide="changesPanelOpen ? 'chevron-down' : 'chevron-right'" class="w-3.5 h-3.5 shrink-0"></i>
-              <i data-lucide="git-compare-arrows" class="w-3.5 h-3.5 shrink-0 text-gray-400 dark:text-gray-500"></i>
+              <i data-lucide="git-compare-arrows" class="w-3.5 h-3.5 shrink-0 text-gray-400 dark:text-gray-400"></i>
               <span class="tabular-nums">{{ flatChangedFiles.length }}</span>
               <span>{{ t('sessions.filesChanged') || 'files' }}</span>
             </button>
@@ -2091,14 +2091,14 @@ const SessionsPage = {
                 </span>
                 <span class="flex-1 min-w-0 truncate text-gray-700 dark:text-gray-300" :title="absFilePath(f.path)">{{ f.path }}</span>
                 <span class="flex-shrink-0 tabular-nums whitespace-nowrap">
-                  <span class="text-emerald-600 dark:text-emerald-400">+{{ f.additions || 0 }}</span>
+                  <span class="text-mint-600 dark:text-mint-400">+{{ f.additions || 0 }}</span>
                   <span class="text-red-500 dark:text-red-400 ml-0.5">-{{ f.deletions || 0 }}</span>
                 </span>
                 <!-- Per-row Keep (accept just this file) / Undo (revert just
                      this file to before the conversation). Keep always
                      available; Undo needs a revert source. -->
                 <button type="button" @click="keepOne(f.path)" :disabled="changesBusy"
-                        class="p-0.5 rounded text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors flex-shrink-0"
+                        class="p-0.5 rounded text-gray-400 hover:text-mint-600 hover:bg-mint-50 dark:hover:bg-mint-900/20 transition-colors flex-shrink-0"
                         :title="t('sessions.keepFileBtn') || 'Keep this file'">
                   <i data-lucide="check" class="w-3 h-3"></i>
                 </button>
@@ -2137,11 +2137,11 @@ ${SESSION_TOOLBAR_SNIPPET}
                    :class="ci === slashSelectedIndex ? 'bg-primary/10' : 'hover:bg-gray-100 dark:hover:bg-gray-700/60'">
                 <span class="font-mono text-primary shrink-0">/{{ cmd.name }}</span>
                 <span v-if="cmd.kind === 'prompt'"
-                      class="shrink-0 px-1 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-[10px]">{{ t('sessions.promptCommandBadge') || 'prompt' }}</span>
+                      class="shrink-0 px-1 rounded bg-sun-100 dark:bg-sun-900/40 text-sun-600 dark:text-sun-400 text-[10px]">{{ t('sessions.promptCommandBadge') || 'prompt' }}</span>
                 <span class="truncate text-gray-500 dark:text-gray-400 min-w-0">{{ cmd.description }}</span>
               </div>
             </div>
-            <div class="px-3 py-1 border-t border-gray-100 dark:border-gray-700 text-[10px] text-gray-400 dark:text-gray-500">
+            <div class="px-3 py-1 border-t border-gray-100 dark:border-gray-700 text-[10px] text-gray-400 dark:text-gray-400">
               {{ t('sessions.slashPopupHint') || 'Enter/Tab to complete · Esc to dismiss' }}
             </div>
           </div>
@@ -2149,20 +2149,20 @@ ${SESSION_TOOLBAR_SNIPPET}
           <div v-if="visionRoute"
                class="flex items-center gap-1.5 mb-2 px-2.5 py-1 rounded-full text-[11px] w-max border"
                :class="visionRoute === 'native'
-                 ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                 ? 'bg-mint-50 dark:bg-mint-900/30 text-mint-700 dark:text-mint-300 border-mint-200 dark:border-mint-800'
                  : visionRoute === 'vision_sidecar'
-                   ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
-                   : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'">
+                   ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border-primary-200 dark:border-primary-800'
+                   : 'bg-sun-50 dark:bg-sun-900/30 text-sun-700 dark:text-sun-300 border-sun-200 dark:border-sun-800'">
             <i :data-lucide="visionRoute === 'native' ? 'image' : visionRoute === 'vision_sidecar' ? 'eye' : 'eye-off'"
                class="w-3 h-3 shrink-0"></i>
             <span>{{ visionRouteLabel }}</span>
           </div>
           <!-- Vision model / downgrade notice (input-driven capability routing) -->
           <div v-if="visionNotice"
-               class="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+               class="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg text-xs bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
             <i data-lucide="eye" class="w-3.5 h-3.5 mt-0.5 shrink-0"></i>
             <span class="flex-1">{{ visionNotice.message }}</span>
-            <button @click="visionNotice = null" class="shrink-0 text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-200"
+            <button @click="visionNotice = null" class="shrink-0 text-primary-400 hover:text-primary-600 dark:hover:text-primary-200"
                     :title="t('common.close') || 'Close'">
               <i data-lucide="x" class="w-3.5 h-3.5"></i>
             </button>
@@ -2178,7 +2178,7 @@ ${SESSION_TOOLBAR_SNIPPET}
                    :title="t('sessions.previewImage') || 'Preview image'">
               <i v-else data-lucide="file-text" class="w-4 h-4 text-primary shrink-0"></i>
               <span class="max-w-[130px] truncate">{{ att.name }}</span>
-              <span class="text-gray-400 dark:text-gray-500 shrink-0">{{ formatBytes(att.size) }}</span>
+              <span class="text-gray-400 dark:text-gray-400 shrink-0">{{ formatBytes(att.size) }}</span>
               <button @click="removePendingAttachment(i)"
                       class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0"
                       :title="t('common.remove') || 'Remove'">
@@ -2240,42 +2240,42 @@ ${SESSION_TOOLBAR_SNIPPET}
           <h3 class="font-medium text-gray-900 dark:text-white text-sm">{{ t('sessions.sessionInfo') }}</h3>
           <button @click="toggleRightSidebar"
                   class="flex items-center justify-center w-6 h-6 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-            <i data-lucide="x" class="w-4 h-4 text-gray-500 dark:text-gray-500"></i>
+            <i data-lucide="x" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
           </button>
         </div>
         <div class="p-4 space-y-5 overflow-y-auto h-[calc(100%-56px)] text-xs">
 
           <!-- Overview -->
           <div>
-            <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-500 mb-2 uppercase tracking-wider text-xs font-semibold">
+            <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider text-xs font-semibold">
               <i data-lucide="info" class="w-3 h-3"></i>
               {{ t('sessions.overview') }}
             </div>
             <div class="space-y-2 bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3">
               <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-gray-500">{{ t('sessions.rounds') || 'Rounds' }}</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ t('sessions.rounds') || 'Rounds' }}</span>
                 <span class="font-medium text-gray-900 dark:text-white tabular-nums">{{ userMessages.length }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-gray-500">{{ t('sessions.apiCalls') || 'API Calls' }}</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ t('sessions.apiCalls') || 'API Calls' }}</span>
                 <span class="font-medium text-gray-900 dark:text-white tabular-nums">{{ sessionStats.apiCalls || 0 }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-gray-500">{{ t('sessions.toolCalls') || 'Tool Calls' }}</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ t('sessions.toolCalls') || 'Tool Calls' }}</span>
                 <span class="font-medium text-gray-900 dark:text-white tabular-nums">
                   {{ sessionStats.toolCallsCount || 0 }}
                   <span v-if="sessionStats.toolErrorsCount > 0" 
-                        class="ml-1 text-xs px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300">
+                        class="ml-1 text-xs px-1 py-0.5 rounded bg-sun-100 dark:bg-sun-900/50 text-sun-700 dark:text-sun-300">
                     {{ sessionStats.toolErrorsCount }} {{ t('sessions.errors') || 'errors' }}
                   </span>
                 </span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-gray-500">{{ t('sessions.created') }}</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ t('sessions.created') }}</span>
                 <span class="text-gray-900 dark:text-white">{{ formatDate(sessionStats.createdAt) }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-gray-500">{{ t('sessions.updated') }}</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ t('sessions.updated') }}</span>
                 <span class="text-gray-900 dark:text-white">{{ formatDate(sessionStats.updatedAt) }}</span>
               </div>
             </div>
@@ -2283,34 +2283,34 @@ ${SESSION_TOOLBAR_SNIPPET}
 
           <!-- Token Cache Stats -->
           <div>
-            <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-500 mb-2 uppercase tracking-wider text-xs font-semibold">
+            <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider text-xs font-semibold">
               <i data-lucide="database" class="w-3 h-3"></i>
               {{ t('sessions.cacheStats') }}
             </div>
             <div class="space-y-2 bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3">
               <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-gray-500">{{ t('sessions.tokensIn') }}</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ t('sessions.tokensIn') }}</span>
                 <span class="font-medium text-gray-900 dark:text-white tabular-nums">{{ formatTokens(sessionStats.tokenInput) }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-gray-500">{{ t('sessions.tokensOut') }}</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ t('sessions.tokensOut') }}</span>
                 <span class="font-medium text-gray-900 dark:text-white tabular-nums">{{ formatTokens(sessionStats.tokenOutput) }}</span>
               </div>
               <div class="border-t border-gray-200 dark:border-gray-600 my-1.5"></div>
               <div class="flex justify-between">
-                <span class="text-emerald-600 dark:text-emerald-400">{{ t('sessions.cacheHitInput') }}</span>
-                <span class="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">{{ formatTokens(sessionStats.cacheHit) }}</span>
+                <span class="text-mint-600 dark:text-mint-400">{{ t('sessions.cacheHitInput') }}</span>
+                <span class="font-medium text-mint-600 dark:text-mint-400 tabular-nums">{{ formatTokens(sessionStats.cacheHit) }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-amber-600 dark:text-amber-400">{{ t('sessions.cacheMissInput') }}</span>
-                <span class="font-medium text-amber-600 dark:text-amber-400 tabular-nums">{{ formatTokens(sessionStats.cacheMiss) }}</span>
+                <span class="text-sun-600 dark:text-sun-400">{{ t('sessions.cacheMissInput') }}</span>
+                <span class="font-medium text-sun-600 dark:text-sun-400 tabular-nums">{{ formatTokens(sessionStats.cacheMiss) }}</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-gray-500 dark:text-gray-500">{{ t('sessions.hitRate') }}</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ t('sessions.hitRate') }}</span>
                 <div class="flex items-center gap-2">
                   <div class="w-14 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                     <div class="h-full rounded-full transition-all duration-300"
-                         :class="sessionStats.hitRate > 50 ? 'bg-emerald-500' : 'bg-amber-500'"
+                         :class="sessionStats.hitRate > 50 ? 'bg-mint-500' : 'bg-sun-500'"
                          :style="{ width: sessionStats.hitRate + '%' }"></div>
                   </div>
                   <span class="font-medium text-gray-900 dark:text-white tabular-nums w-9 text-right">{{ sessionStats.hitRate.toFixed(0) }}%</span>
@@ -2321,7 +2321,7 @@ ${SESSION_TOOLBAR_SNIPPET}
 
           <!-- Compression -->
           <div>
-            <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-500 mb-2 uppercase tracking-wider text-xs font-semibold">
+            <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider text-xs font-semibold">
               <i data-lucide="layers" class="w-3 h-3"></i>
               {{ t('sessions.compression') }}
             </div>
@@ -2336,7 +2336,7 @@ ${SESSION_TOOLBAR_SNIPPET}
               <!-- Compression stats (only if compressed) -->
               <div v-if="sessionStats.compressionCount > 0" class="pt-1 border-t border-gray-200 dark:border-gray-600">
                 <div class="flex justify-between text-xs">
-                  <span class="text-gray-500 dark:text-gray-500">{{ t('sessions.compressedTimes', { count: sessionStats.compressionCount }) }}</span>
+                  <span class="text-gray-500 dark:text-gray-400">{{ t('sessions.compressedTimes', { count: sessionStats.compressionCount }) }}</span>
                   <span class="font-medium text-gray-900 dark:text-white">{{ sessionStats.compressionCount }}</span>
                 </div>
                 <button v-if="sessionStats.compressedSummary"
@@ -2346,7 +2346,7 @@ ${SESSION_TOOLBAR_SNIPPET}
                   <i :data-lucide="showCompressedSummary ? 'chevron-up' : 'chevron-down'" class="w-2.5 h-2.5"></i>
                 </button>
                 <div v-if="showCompressedSummary && sessionStats.compressedSummary"
-                     class="mt-1 px-2 py-1.5 text-xs text-gray-500 dark:text-gray-500 bg-white dark:bg-gray-700/50 rounded border border-gray-100 dark:border-gray-700 max-h-32 overflow-y-auto whitespace-pre-wrap">
+                     class="mt-1 px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700/50 rounded border border-gray-100 dark:border-gray-700 max-h-32 overflow-y-auto whitespace-pre-wrap">
                   {{ sessionStats.compressedSummary }}
                 </div>
               </div>
@@ -2355,7 +2355,7 @@ ${SESSION_TOOLBAR_SNIPPET}
 
           <!-- Export -->
           <div>
-            <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-500 mb-2 uppercase tracking-wider text-xs font-semibold">
+            <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider text-xs font-semibold">
               <i data-lucide="download" class="w-3 h-3"></i>
               {{ t('sessions.export') }}
             </div>
@@ -3020,9 +3020,9 @@ ${SESSION_TOOLBAR_SNIPPET}
     },
     statusDotClass() {
       if (this.sessionError) return 'bg-red-500';
-      if (this.liveRetryInfo) return 'bg-amber-500';
-      if (this.pendingTools) return 'bg-amber-500 animate-pulse';
-      if (this.isSessionRunning) return 'bg-green-500';
+      if (this.liveRetryInfo) return 'bg-sun-500';
+      if (this.pendingTools) return 'bg-sun-500 animate-pulse';
+      if (this.isSessionRunning) return 'bg-mint-500';
       return 'bg-gray-400';
     },
     totalTokens() {
@@ -3051,9 +3051,9 @@ ${SESSION_TOOLBAR_SNIPPET}
     contextBarColor() {
       const pct = this.contextPercent;
       if (pct >= 90) return 'bg-red-500';
-      if (pct >= 70) return 'bg-amber-500';
-      if (pct >= 40) return 'bg-blue-500';
-      return 'bg-emerald-500';
+      if (pct >= 70) return 'bg-sun-500';
+      if (pct >= 40) return 'bg-primary-500';
+      return 'bg-mint-500';
     },
     contextDetail() {
       return `${this.formatTokens(this.sessionStats.contextUsage || 0)} / ${this.contextLimitFormatted} (${this.contextPercent}%)`;
@@ -3095,7 +3095,7 @@ ${SESSION_TOOLBAR_SNIPPET}
       const denom = total || 1;
       const pct = (n) => Math.round((n || 0) / denom * 100);
       return layers
-        .map(ly => ({ ...ly, pct: pct(ly.tokens), tokensFmt: fmt(ly.tokens), tokenClass: ly.tokens > 0 ? 'text-gray-800 dark:text-white' : 'text-gray-400 dark:text-gray-500' }))
+        .map(ly => ({ ...ly, pct: pct(ly.tokens), tokensFmt: fmt(ly.tokens), tokenClass: ly.tokens > 0 ? 'text-gray-800 dark:text-white' : 'text-gray-400 dark:text-gray-400' }))
         .filter(ly => ly.tokens > 0);
     },
     groupedModels() {
@@ -3169,8 +3169,8 @@ ${SESSION_TOOLBAR_SNIPPET}
     approvalModeOptions() {
       return [
         { v: 'deny', l: this.t('sessions.approvalDeny'), c: 'text-red-600 dark:text-red-400' },
-        { v: 'ask', l: this.t('sessions.approvalAsk'), c: 'text-amber-600 dark:text-amber-400' },
-        { v: 'allow', l: this.t('sessions.approvalAllow'), c: 'text-emerald-600 dark:text-emerald-400' },
+        { v: 'ask', l: this.t('sessions.approvalAsk'), c: 'text-sun-600 dark:text-sun-400' },
+        { v: 'allow', l: this.t('sessions.approvalAllow'), c: 'text-mint-600 dark:text-mint-400' },
       ];
     },
     approvalModeLabel() {
@@ -6017,6 +6017,8 @@ ${SESSION_TOOLBAR_SNIPPET}
           }
         }, 1500);
         window.BoarAiStore.actions.success(this.t('notifications.sessionCreated'));
+        // Lazy update discovery on user activity (2h TTL bounds the network rate).
+        window.BoarAiStore.actions.refreshUpdateStatus();
       } catch (error) {
         console.error('Failed to create session:', error);
         this._pendingCreateId = null;
@@ -6931,9 +6933,9 @@ ${SESSION_TOOLBAR_SNIPPET}
 
     // ── File-change traceability helpers ──
     changeBadgeClass(type) {
-      if (type === 'added') return 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300';
+      if (type === 'added') return 'bg-mint-100 dark:bg-mint-900/50 text-mint-700 dark:text-mint-300';
       if (type === 'deleted') return 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300';
-      return 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300';
+      return 'bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300';
     },
 
     changeTypeLabel(type) {

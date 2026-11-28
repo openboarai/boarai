@@ -16,7 +16,6 @@ from boarai.core.session.usage_ledger import get_usage_ledger
 logger = logging.getLogger(__name__)
 
 
-
 class TurnUsageMixin:
     """Usage accounting phase of RunExecutor (mixed in via multiple inheritance)."""
 
@@ -85,14 +84,17 @@ class TurnUsageMixin:
                 token_estimates=token_estimates,
                 run_id=run.run_id,
             )
-            # Global append-only ledger: token history must survive session
-            # deletion (monitoring stats aggregate from the ledger).
-            if session.cache_requests:
+            # Per-turn entries are ledgered LIVE while streaming (turn_stream
+            # usage chunk); finalize only keeps the no-snapshot fallback so a
+            # run whose usage chunk never arrived still books its consumption.
+            if not getattr(run, "_turn_usages", None) and session.cache_requests:
+                # No per-turn snapshots (usage chunk never arrived): keep the
+                # run-level fallback so the consumption is not lost.
                 last = session.cache_requests[-1]
                 await get_usage_ledger().record(
                     {
                         "ts": last.get("ts", ""),
-                        "run_id": run.run_id,
+                        "run_id": f"{run.run_id}#t0",
                         "session_id": run.session_id,
                         "session_title": getattr(session, "title", "") or "",
                         "agent_name": getattr(session, "agent_name", "") or "default",
@@ -104,10 +106,11 @@ class TurnUsageMixin:
                             "cache_creation_tokens", 0
                         ),
                         "context_tokens": last.get("context_tokens", 0),
+                        "turns": int(agg.get("turns", 0) or 0),
                         "status": status,
                     }
                 )
-                run._usage_recorded = True
+            run._usage_recorded = True
             # Per-round UI stats: stamp this run's consumption + wall-clock
             # span onto its last assistant message so the WebUI can render
             # "tokens · duration" chips per round without extra API calls.

@@ -11,10 +11,10 @@ const NavbarComponent = {
   name: 'Navbar',
   
   template: `
-    <nav class="fixed top-0 left-0 right-0 h-navbar bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 flex items-center px-4 md:px-6 z-[1030] shadow-sm transition-all duration-300"
-         :class="{ 'shadow-md bg-white/98 dark:bg-gray-900/98': isScrolled }">
+    <nav class="fixed top-0 left-0 right-0 h-navbar bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center px-4 md:px-6 z-[1030] shadow-sm transition-all duration-200"
+         :class="{ 'shadow-md': isScrolled }">
       
-      <!-- Logo (matches favicon: indigo/violet rounded square + white boar-head silhouette) -->
+      <!-- Logo (matches favicon: cobalt rounded square + white boar-head silhouette) -->
       <div class="flex items-center gap-2 cursor-pointer select-none group" @click="goToHome">
         <svg class="w-7 h-7 text-primary group-hover:scale-110 transition-transform duration-200"
              viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -29,7 +29,7 @@ const NavbarComponent = {
           <ellipse cx="64" cy="43" rx="4" ry="2" fill="white" transform="rotate(25 64 43)"/>
         </svg>
         <span class="text-lg font-bold text-primary tracking-tight hidden sm:inline">BoarAi</span>
-        <span class="text-gray-500 dark:text-gray-500 text-sm hidden sm:inline">|</span>
+        <span class="text-gray-500 dark:text-gray-400 text-sm hidden sm:inline">|</span>
       </div>
       
       <!-- Navigation Tabs (Desktop) -->
@@ -41,11 +41,18 @@ const NavbarComponent = {
           class="relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap"
           :class="currentTab === tab.name 
             ? 'bg-primary text-white shadow-sm shadow-primary/30 hover:bg-primary-dark' 
-            : 'text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-primary/10 dark:hover:bg-primary/20'"
+            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-primary/10 dark:hover:bg-primary/20'"
           @click="handleTabClick(tab)"
         >
           <i :data-lucide="tab.icon" class="w-4 h-4"></i>
           <span>{{ tab.label }}</span>
+          <!-- Update badge: a newer release is known. The badge ITSELF is the
+               jump-to-About target; clicking the Settings tab elsewhere
+               behaves exactly as before. -->
+          <span v-if="tab.name === 'settings' && showUpdateBadge"
+                class="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none ring-2 ring-white dark:ring-gray-900 cursor-pointer"
+                :title="updateBadgeTitle"
+                @click.stop.prevent="goToAboutUpdate">↑</span>
         </router-link>
       </div>
       
@@ -59,11 +66,11 @@ const NavbarComponent = {
         <button v-if="pendingApprovalCount > 0"
                 type="button"
                 @click="goToPendingApproval"
-                class="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-yellow-800 dark:text-yellow-200 bg-yellow-100 dark:bg-yellow-900/40 hover:bg-yellow-200 dark:hover:bg-yellow-900/60 transition-colors"
+                class="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-sun-800 dark:text-sun-200 bg-sun-100 dark:bg-sun-900/40 hover:bg-sun-200 dark:hover:bg-sun-900/60 transition-colors"
                 :title="t('common.toolConfirm') || 'Tool Execution Required'">
           <i data-lucide="shield-alert" class="w-4 h-4"></i>
           <span class="hidden sm:inline">{{ pendingApprovalCount }}</span>
-          <span class="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-yellow-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+          <span class="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-sun-400 text-sun-900 text-[10px] font-bold flex items-center justify-center leading-none">
             {{ pendingApprovalCount }}
           </span>
         </button>
@@ -124,16 +131,11 @@ const NavbarComponent = {
       isScrolled: false,
       showLanguageMenu: false,
       currentTab: 'dashboard',
-      theme: localStorage.getItem('boarai-theme') || 'light',
-      resolvedThemeState: window.BoarTheme ? window.BoarTheme.getResolved() : (localStorage.getItem('boarai-theme') === 'dark' ? 'dark' : 'light'),
-      colorTheme: localStorage.getItem('boarai-color') || 'cyan',
+      theme: window.BoarTheme.getPreference(),
+      resolvedThemeState: window.BoarTheme.getResolved(),
       languages: [
         { code: 'en', label: 'English', icon: 'languages' },
         { code: 'zh', label: '中文', icon: 'languages' }
-      ],
-      colorThemes: [
-        { code: 'cyan', name: this.t('settings.colorCyan'), hex: '#6366f1' },
-        { code: 'purple', name: this.t('settings.colorPurple'), hex: '#8b5cf6' }
       ]
     };
   },
@@ -212,19 +214,21 @@ const NavbarComponent = {
       return this.resolvedTheme === 'dark' ? this.t('common.dark') : this.t('common.light');
     },
     
-    colorThemeHex() {
-      const ct = this.colorThemes.find(c => c.code === this.colorTheme);
-      return ct ? ct.hex : '#6366f1';
-    },
-    
-    colorThemeLabel() {
-      const ct = this.colorThemes.find(c => c.code === this.colorTheme);
-      return ct ? ct.name : 'Cyan';
-    },
-
     pendingApprovalCount() {
       const pa = window.BoarAiStore ? window.BoarAiStore.state.pendingApprovals : {};
       return Object.keys(pa).length;
+    },
+
+    // A newer release is known (lit until the server actually updates).
+    showUpdateBadge() {
+      const s = window.BoarAiStore ? window.BoarAiStore.state : null;
+      return !!(s && s.updateAvailable);
+    },
+
+    updateBadgeTitle() {
+      const s = window.BoarAiStore ? window.BoarAiStore.state : null;
+      const version = (s && s.updateAvailable) || '';
+      return this.t('notifications.updateAvailable', { version }) || 'New version available';
     }
   },
   
@@ -238,24 +242,19 @@ const NavbarComponent = {
     this.currentTab = this.activeTab;
     
     // Theme is owned by BoarTheme (applied early); just sync local state
-    if (window.BoarTheme) {
-      this.theme = window.BoarTheme.getPreference();
-      window.BoarTheme.apply(this.theme);
-    } else {
-      const savedTheme = localStorage.getItem('boarai-theme') || 'light';
-      this.theme = savedTheme;
-      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
+    this.theme = window.BoarTheme.getPreference();
+    window.BoarTheme.apply(this.theme);
     
     window.addEventListener('scroll', this.handleScroll);
     document.addEventListener('click', this.handleClickOutside);
     window.addEventListener('theme-changed', this.handleThemeChange);
+    // Lazy update discovery on every shell load (page refresh / post-unlock):
+    // the server's 2h checker TTL bounds the real network rate.
+    if (window.BoarAiStore) window.BoarAiStore.actions.refreshUpdateStatus();
     // language-changed listener + currentLanguage provided by global I18nMixin
   },
   
   // Icons hydrate automatically via app.js MutationObserver.
-  updated() {},
 
   beforeUnmount() {
     window.removeEventListener('scroll', this.handleScroll);
@@ -266,8 +265,8 @@ const NavbarComponent = {
   methods: {
     handleThemeChange(event) {
       const detail = event.detail || {};
-      this.theme = detail.theme || (window.BoarTheme ? window.BoarTheme.getPreference() : this.theme);
-      this.resolvedThemeState = detail.resolved || (window.BoarTheme ? window.BoarTheme.getResolved() : (this.theme === 'dark' ? 'dark' : 'light'));
+      this.theme = detail.theme || window.BoarTheme.getPreference();
+      this.resolvedThemeState = detail.resolved || window.BoarTheme.getResolved();
     },
     
     handleScroll() {
@@ -302,6 +301,12 @@ const NavbarComponent = {
       this.currentTab = tab.name;
       this.showLanguageMenu = false;
     },
+
+    // The update badge's own click: straight to Settings → About. The badge
+    // stays lit until the server actually updates.
+    goToAboutUpdate() {
+      this.$router.push({ path: '/settings', query: { tab: 'about' } });
+    },
     
     toggleLanguageMenu() {
       const next = !this.showLanguageMenu;
@@ -328,46 +333,11 @@ const NavbarComponent = {
     },
     
     toggleTheme() {
-      let preference = this.theme;
-      let resolved = preference === 'dark' ? 'dark' : 'light';
-
-      if (window.BoarTheme) {
-        const result = window.BoarTheme.toggle();
-        preference = result.preference;
-        resolved = result.resolved;
-        this.theme = preference;
-      } else {
-        const newTheme = this.theme === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('boarai-theme', newTheme);
-        document.documentElement.classList.toggle('dark', newTheme === 'dark');
-        document.documentElement.setAttribute('data-theme', newTheme);
-        document.documentElement.setAttribute('data-theme-resolved', newTheme);
-        this.theme = newTheme;
-        preference = newTheme;
-        resolved = newTheme;
-        window.dispatchEvent(new CustomEvent('theme-changed', {
-          detail: { theme: newTheme, resolved: newTheme },
-        }));
-      }
-
+      const result = window.BoarTheme.toggle();
+      this.theme = result.preference;
+      this.resolvedThemeState = result.resolved;
       // Defensive re-apply in case another listener raced
-      if (window.BoarTheme) {
-        window.BoarTheme.apply(preference);
-      }
-    },
-    
-    toggleColorTheme() {
-      // Cycle through color themes: cyan -> purple -> cyan
-      const currentIndex = this.colorThemes.findIndex(c => c.code === this.colorTheme);
-      const nextIndex = (currentIndex + 1) % this.colorThemes.length;
-      this.colorTheme = this.colorThemes[nextIndex].code;
-      if (window.BoarTheme) {
-        window.BoarTheme.setColor(this.colorTheme);
-      } else {
-        localStorage.setItem('boarai-color', this.colorTheme);
-        document.documentElement.setAttribute('data-color', this.colorTheme);
-        window.dispatchEvent(new CustomEvent('color-changed', { detail: { color: this.colorTheme } }));
-      }
+      window.BoarTheme.apply(result.preference);
     }
   }
 };

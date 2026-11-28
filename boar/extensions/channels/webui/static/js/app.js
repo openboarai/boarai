@@ -311,15 +311,6 @@ const app = createApp({
       state.theme = theme;
     };
 
-    const setColorTheme = (color) => {
-      if (window.BoarTheme) {
-        window.BoarTheme.setColor(color);
-      } else {
-        localStorage.setItem('boarai-color', color);
-        document.documentElement.setAttribute('data-color', color);
-      }
-    };
-
     const toggleTheme = () => {
       if (window.BoarTheme) {
         const result = window.BoarTheme.toggle();
@@ -370,7 +361,6 @@ const app = createApp({
       state,
       api,
       setTheme,
-      setColorTheme,
       toggleTheme
     };
   },
@@ -384,7 +374,7 @@ const app = createApp({
   },
 
   template: `
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+    <div class="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-200">
       <!-- Navbar (hidden on full-screen routes) -->
       <navbar-component v-if="!isBare"></navbar-component>
 
@@ -435,6 +425,10 @@ const I18nMixin = {
     },
     handleLanguageChange() {
       this.currentLanguage = window.i18n ? window.i18n.getCurrentLanguage() : 'en';
+      // Pages with language-dependent derived state (tab labels, filter
+      // options) implement onLanguageChanged() instead of re-overriding the
+      // whole listener handler.
+      if (typeof this.onLanguageChanged === 'function') this.onLanguageChanged();
     },
   },
 };
@@ -529,7 +523,6 @@ const BottomNavComponent = {
 
   // Icons hydrate automatically via app.js MutationObserver (childList +
   // data-lucide attribute changes). No manual createIcons calls needed.
-  updated() {},
 
   methods: {
     handleTabClick(tab) {

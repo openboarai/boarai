@@ -34,7 +34,7 @@ const ExtensionsPage = {
             
             <!-- Empty State -->
             <div v-if="getExtensionsByType(tab.id).length === 0" 
-                 class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                 class="${UiClasses.card} overflow-hidden">
               <empty-state-component 
                 :icon="getTabIcon(tab.id)"
                 :title="t('extensions.noExtensions')"
@@ -65,19 +65,19 @@ const ExtensionsPage = {
                         <div class="flex items-center gap-2">
                           <h3 class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ ext.name }}</h3>
                           <span v-if="ext.status === 'failed'"
-                                class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300">
+                                class="${UiClasses.badgeSm} bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300">
                             {{ t('extensions.loadFailed') }}
                           </span>
                         </div>
-                        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">{{ ext.description }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{{ ext.description }}</p>
                         <div class="flex items-center gap-2 mt-2">
-                          <span v-if="ext.version" class="text-xs text-gray-500 dark:text-gray-500">v{{ ext.version }}</span>
-                          <span v-if="ext.source === 'system'" class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">{{ t('extensions.sourceSystem') }}</span>
-                          <span v-else-if="ext.source === 'agent'" class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">{{ t('extensions.sourceLocal') }}</span>
-                          <span v-else-if="ext.source === 'local'" class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">{{ t('extensions.sourceLocal') }}</span>
-                          <span v-else-if="ext.source === 'user'" class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">{{ t('extensions.sourceUser') }}</span>
+                          <span v-if="ext.version" class="text-xs text-gray-500 dark:text-gray-400">v{{ ext.version }}</span>
+                          <span v-if="ext.source === 'system'" class="${UiClasses.badgeSm} bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300">{{ t('extensions.sourceSystem') }}</span>
+                          <span v-else-if="ext.source === 'agent'" class="${UiClasses.badgeSm} bg-sun-100 dark:bg-sun-900/40 text-sun-700 dark:text-sun-300">{{ t('extensions.sourceLocal') }}</span>
+                          <span v-else-if="ext.source === 'local'" class="${UiClasses.badgeSm} bg-sun-100 dark:bg-sun-900/40 text-sun-700 dark:text-sun-300">{{ t('extensions.sourceLocal') }}</span>
+                          <span v-else-if="ext.source === 'user'" class="${UiClasses.badgeSm} bg-mint-100 dark:bg-mint-900/40 text-mint-700 dark:text-mint-300">{{ t('extensions.sourceUser') }}</span>
                           <span v-if="ext.trusted && ext.source !== 'system'" :title="t('extensions.trustedHint')"
-                                class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                                class="${UiClasses.badgeSm} bg-sun-100 dark:bg-sun-900/40 text-sun-700 dark:text-sun-300">
                             <i data-lucide="shield-check" class="w-3 h-3 mr-0.5"></i>{{ t('extensions.trustedBadge') }}
                           </span>
                         </div>
@@ -85,7 +85,7 @@ const ExtensionsPage = {
                         <div v-if="hasContributions(ext)" class="flex flex-wrap gap-1 mt-2">
                           <span v-for="(c, ci) in contributionBadges(ext)" :key="ci"
                                 :title="c.title"
-                                class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                class="${UiClasses.badgeSm} bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                             {{ c.label }}
                           </span>
                         </div>
@@ -120,12 +120,12 @@ const ExtensionsPage = {
                     <template v-if="ext.status === 'failed'">
                       <button v-if="ext.failure_code === 'gate.inprocess_untrusted'"
                               @click="trustExtension(tab.id, ext.id)"
-                              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-300 rounded-lg bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800 transition-colors">
+                              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-sun-700 dark:text-sun-300 rounded-lg bg-sun-50 dark:bg-sun-900/20 hover:bg-sun-100 dark:hover:bg-sun-900/40 border border-sun-200 dark:border-sun-800 transition-colors">
                         <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
                         {{ t('extensions.trustAndLoad') }}
                       </button>
                       <button @click="openSettings(ext)"
-                              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                         <i data-lucide="settings" class="w-3.5 h-3.5"></i>
                         {{ t('extensions.settings') }}
                       </button>
@@ -137,14 +137,14 @@ const ExtensionsPage = {
                     </template>
                     <template v-else>
                       <button v-if="ext.source !== 'system' && ext.trusted" @click="untrustExtension(tab.id, ext.id)"
-                              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">
+                              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-sun-700 dark:text-sun-300 hover:text-sun-800 dark:hover:text-sun-200 rounded-lg hover:bg-sun-50 dark:hover:bg-sun-900/20 transition-colors">
                         <i data-lucide="shield-off" class="w-3.5 h-3.5"></i>
                         {{ t('extensions.revokeTrust') }}
                       </button>
                       <!-- Hidden when the extension declares nothing to
                            configure: an empty dialog is worse than no button. -->
                       <button v-if="ext.has_settings" @click="openSettings(ext)"
-                              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                         <i data-lucide="settings" class="w-3.5 h-3.5"></i>
                         {{ t('extensions.settings') }}
                       </button>
@@ -212,7 +212,6 @@ const ExtensionsPage = {
   },
   
   // Icons hydrate automatically via app.js MutationObserver.
-  updated() {},
 
   watch: {
     // deep: store may mutate entries in place (toggle en/disable) without
@@ -226,10 +225,8 @@ const ExtensionsPage = {
   },
 
   methods: {
-    // handleLanguageChange overrides global I18nMixin: update currentLanguage
-    // (kept by mixin listener) and also refresh tab labels.
-    handleLanguageChange() {
-      this.currentLanguage = window.i18n ? window.i18n.getCurrentLanguage() : 'en';
+    // I18nMixin updates currentLanguage; only the tab labels differ here.
+    onLanguageChanged() {
       this.updateTabLabels();
     },
     

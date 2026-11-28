@@ -21,6 +21,11 @@ const BoarAiStore = {
     // navbar can surface a persistent badge even when the user is on another
     // page. Each entry: { runId, tools: [], count }.
     pendingApprovals: {},
+
+    // Online update: latest available version when one is known (null = up to
+    // date / unknown). The navbar badge stays lit while this is set — it only
+    // clears when a status refresh finds the server up to date again.
+    updateAvailable: null,
     
     // Confirm dialog state
     confirmDialog: {
@@ -364,13 +369,16 @@ const BoarAiStore = {
           if (msg.type && msg.type.startsWith('update.')) {
             const updatePayload = msg.payload?.data || msg.payload || {};
             if (this.onUpdateEvent) this.onUpdateEvent(msg.type, updatePayload);
-            if (msg.type === 'update.available' && updatePayload.latest && !this.onUpdateEvent) {
-              // No page is listening (settings closed): surface a toast so the
-              // finding is never silent.
-              this.actions.info(
-                window.i18n.t('notifications.updateAvailable', { version: updatePayload.latest }),
-                8000
-              );
+            if (msg.type === 'update.available' && updatePayload.latest) {
+              this.state.updateAvailable = updatePayload.latest;
+              if (!this.onUpdateEvent) {
+                // No page is listening (settings closed): surface a toast so the
+                // finding is never silent.
+                this.actions.info(
+                  window.i18n.t('notifications.updateAvailable', { version: updatePayload.latest }),
+                  8000
+                );
+              }
             }
           }
           // Session events: forward to registered callbacks
@@ -1584,6 +1592,21 @@ const BoarAiStore = {
       BoarAiStore.state.loadingText = text;
     },
     
+    // ── Online update badge (navbar) ──────────────────────────────────
+    // Lazy, UI-triggered update discovery: the server bounds real network
+    // checks to one per 2h (checker TTL), so calling this from navbar load /
+    // session creation never hammers the registry.
+    async refreshUpdateStatus() {
+      try {
+        const res = await fetch('/api/update/status');
+        if (!res.ok) return;
+        const data = await res.json();
+        const check = data.check || {};
+        BoarAiStore.state.updateAvailable =
+          (check.update_available && check.latest) ? check.latest : null;
+      } catch (_) { /* best effort: the badge simply stays dark */ }
+    },
+
     hideLoading() {
       BoarAiStore.state.isLoading = false;
       BoarAiStore.state.loadingText = '';

@@ -78,19 +78,18 @@
   }
 
   function getColor() {
-    return localStorage.getItem(COLOR_KEY) || 'cyan';
+    return 'cobalt';
   }
 
-  function setColor(color) {
-    const value = color || 'cyan';
-    localStorage.setItem(COLOR_KEY, value);
-    document.documentElement.setAttribute('data-color', value);
-    window.dispatchEvent(new CustomEvent('color-changed', { detail: { color: value } }));
-    return value;
+  function setColor() {
+    localStorage.setItem(COLOR_KEY, 'cobalt');
+    applyColor();
+    window.dispatchEvent(new CustomEvent('color-changed', { detail: { color: 'cobalt' } }));
+    return 'cobalt';
   }
 
-  function applyColor(color) {
-    document.documentElement.setAttribute('data-color', color || getColor());
+  function applyColor() {
+    document.documentElement.setAttribute('data-color', 'cobalt');
   }
 
   function _bindSystemListener(pref) {

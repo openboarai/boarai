@@ -57,6 +57,10 @@ _WATCH_DEADLINE_S = 40 * 60
 # First auto-check delay after startup (the codex INITIAL_UPDATE_DELAY idea:
 # never compete with boot), then every check_interval_hours.
 _AUTO_CHECK_INITIAL_DELAY_S = 5 * 60
+# Cache TTL for lazy (UI-triggered) checks: opening the settings page, navbar
+# load, session creation all hit get_status(); this bounds their network rate
+# to 1 per 2h regardless of how often the UI asks.
+_LAZY_CHECK_TTL_HOURS = 2.0
 
 
 class UpdateError(Exception):
@@ -105,7 +109,7 @@ async def get_status() -> Dict[str, Any]:
     kind = detect_install_kind()
     cached = None
     try:
-        cached = await check_latest(force=False)
+        cached = await check_latest(force=False, ttl_hours=_LAZY_CHECK_TTL_HOURS)
     except Exception as e:  # noqa: BLE001
         cached = {"error": str(e)}
     return {
@@ -167,7 +171,7 @@ async def trigger_apply(target: Optional[str] = None, rollback: bool = False) ->
         kind_label = "rollback"
     else:
         if not target:
-            check = await check_latest(force=False)
+            check = await check_latest(force=False, ttl_hours=_LAZY_CHECK_TTL_HOURS)
             target = check.get("latest")
         if not target:
             raise UpdateError("no_target", "No target version available (check failed or up to date)", 400)

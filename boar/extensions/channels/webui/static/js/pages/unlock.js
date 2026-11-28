@@ -12,7 +12,7 @@ const UnlockPage = {
   name: 'UnlockPage',
 
   template: `
-    <div class="min-h-screen flex items-center justify-center px-4 py-10 bg-gray-50 dark:bg-gray-950">
+    <div class="min-h-screen flex items-center justify-center px-4 py-10 bg-white dark:bg-gray-950">
       <div class="w-full max-w-md">
         <!-- No navbar on this route, so the language switch has to live here. -->
         <div class="flex justify-end mb-3">
@@ -33,7 +33,7 @@ const UnlockPage = {
         </div>
 
         <form @submit.prevent="submit"
-              class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 space-y-4">
+              class="${UiClasses.card} shadow-sm p-5 space-y-4">
           <!-- Key -->
           <form-field :label="t('unlock.keyLabel') || 'Access key'"
                       :hint="t('unlock.keyHint') || 'Starts with boarai_. Ask the person running the server.'"
@@ -67,7 +67,7 @@ const UnlockPage = {
                    class="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50" />
             <span>
               {{ t('unlock.remember') || 'Remember this device' }}
-              <span class="block text-xs text-gray-400 dark:text-gray-500">
+              <span class="block text-xs text-gray-400 dark:text-gray-400">
                 {{ t('unlock.rememberHint') || 'Off = signed out when the browser closes.' }}
               </span>
             </span>
@@ -78,15 +78,15 @@ const UnlockPage = {
             {{ t('unlock.submit') || 'Unlock' }}
           </base-button>
 
-          <p v-if="retryAfter > 0" class="text-xs text-amber-600 dark:text-amber-400 text-center">
+          <p v-if="retryAfter > 0" class="text-xs text-sun-600 dark:text-sun-400 text-center">
             {{ (t('unlock.throttled') || 'Too many attempts — retry in {seconds}s.').replace('{seconds}', retryAfter) }}
           </p>
         </form>
 
         <!-- Not configured yet: first run creates the key on the setup page -->
         <div v-if="statusLoaded && !keyConfigured"
-             class="mt-4 rounded-lg border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/40 p-3">
-          <p class="text-xs text-amber-800 dark:text-amber-200">
+             class="mt-4 rounded-lg border border-sun-200 dark:border-sun-900/60 bg-sun-50 dark:bg-sun-950/40 p-3">
+          <p class="text-xs text-sun-800 dark:text-sun-200">
             {{ t('unlock.notConfigured') || 'No access key exists yet — this looks like a first run.' }}
           </p>
           <base-button size="sm" class="mt-2" icon="key-round"
@@ -95,7 +95,7 @@ const UnlockPage = {
           </base-button>
         </div>
 
-        <p class="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
+        <p class="mt-4 text-center text-xs text-gray-400 dark:text-gray-400">
           {{ t('unlock.footer') || 'The key is only stored as a hash on the server and never leaves it.' }}
         </p>
       </div>

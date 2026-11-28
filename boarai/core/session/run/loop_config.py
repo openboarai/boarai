@@ -214,6 +214,9 @@ class TurnFrame:
     thinking_kwargs: Dict[str, Any] = field(default_factory=dict)
     finish_reason: Optional[str] = None
     usage_counted: bool = False
+    # Latest usage block of this turn's stream; some relays emit several
+    # (zero-filled first, real totals last), so counting waits for stream end.
+    pending_turn_usage: Optional[Dict[str, Any]] = None
     chunks_since_save: int = 0
     last_stream_save: float = 0.0
     assistant_msg_idx: int = -1

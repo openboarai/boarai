@@ -19,11 +19,11 @@
   // ---------------------------------------------------------------------------
   const UiButtonVariants = {
     primary: 'bg-primary text-white hover:bg-primary-dark shadow-sm',
-    secondary: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600',
-    ghost: 'text-gray-600 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700',
-    danger: 'bg-red-500 text-white hover:bg-red-600 shadow-sm',
-    success: 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm',
-    warning: 'bg-amber-500 text-white hover:bg-amber-600 shadow-sm',
+    secondary: 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-primary/5 hover:border-primary/30',
+    ghost: 'text-gray-600 dark:text-gray-400 hover:bg-primary/10 hover:text-primary',
+    danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
+    success: 'bg-mint-700 text-white hover:bg-mint-800 shadow-sm',
+    warning: 'bg-sun-100 text-sun-800 border border-sun-200 hover:bg-sun-200',
   };
   const UiButtonSizes = {
     xs: 'px-2 py-1 text-xs rounded',
@@ -31,6 +31,19 @@
     md: 'px-4 py-2 text-sm rounded-lg',
     lg: 'px-5 py-2.5 text-base rounded-lg',
   };
+
+  // Shared template class strings. Page templates are JS template literals
+  // loaded after this file, so they interpolate `${UiClasses.card}` etc. and a
+  // visual tweak lands in one place instead of dozens of copies.
+  const UiClasses = {
+    card: 'bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700',
+    input: 'w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors',
+    inputCompact: 'px-3 py-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50',
+    inputSm: 'w-full px-2.5 py-1.5 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary',
+    badge: 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+    badgeSm: 'inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded',
+  };
+  global.UiClasses = UiClasses;
 
   const BaseButton = {
     name: 'BaseButton',
@@ -97,11 +110,11 @@
     computed: {
       colorClass() {
         const map = {
-          default: 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300',
-          green: 'text-gray-500 hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-500',
-          blue: 'text-gray-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-500',
-          red: 'text-gray-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-500',
-          amber: 'text-gray-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-500',
+          default: 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200',
+          green: 'text-gray-500 hover:bg-mint-100 dark:hover:bg-mint-900/30 hover:text-mint-700 dark:hover:text-mint-300',
+          blue: 'text-gray-500 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary dark:hover:text-primary-300',
+          red: 'text-gray-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-300',
+          amber: 'text-gray-500 hover:bg-sun-100 dark:hover:bg-sun-900/30 hover:text-sun-700 dark:hover:text-sun-300',
         };
         return map[this.color] || map.default;
       },
@@ -228,12 +241,12 @@
                 class="shrink-0 whitespace-nowrap px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
                 :class="modelValue === tab.id
                   ? 'bg-white dark:bg-gray-700 text-primary shadow-sm'
-                  : 'text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200'">
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
           <i v-if="tab.icon" :data-lucide="tab.icon" class="w-4 h-4"></i>
           {{ tab.label }}
           <span v-if="tab.count !== undefined"
                 class="px-1.5 py-0.5 text-xs rounded-full"
-                :class="modelValue === tab.id ? 'bg-primary/10 text-primary' : 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-500'">
+                :class="modelValue === tab.id ? 'bg-primary/10 text-primary' : 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400'">
             {{ tab.count }}
           </span>
         </button>
@@ -252,7 +265,7 @@
   const CardSection = {
     name: 'CardSection',
     template: `
-      <section class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <section class="${UiClasses.card} overflow-hidden">
         <div class="px-4 py-3 bg-gray-50 dark:bg-gray-750 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">
           <h3 class="font-medium text-sm text-gray-800 dark:text-gray-200 flex items-center gap-2 min-w-0">
             <i v-if="icon" :data-lucide="icon" class="w-4 h-4 text-primary shrink-0"></i>
@@ -285,7 +298,7 @@
           {{ label }}<span v-if="required" class="text-red-500 ml-0.5">*</span>
         </label>
         <slot></slot>
-        <p v-if="hint" class="mt-1 text-xs text-gray-500 dark:text-gray-500">{{ hint }}</p>
+        <p v-if="hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ hint }}</p>
         <p v-if="error" class="mt-1 text-xs text-red-500">{{ error }}</p>
       </div>
     `,
@@ -301,18 +314,17 @@
   // StatusBadge — colored pill for status labels
   // ---------------------------------------------------------------------------
   const StatusBadgeColors = {
-    gray: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
-    green: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
+    gray: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200',
+    green: 'bg-mint-100 dark:bg-mint-900/40 text-mint-800 dark:text-mint-200',
     red: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
-    amber: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
-    blue: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
-    purple: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
+    amber: 'bg-sun-100 dark:bg-sun-900/40 text-sun-800 dark:text-sun-200',
+    blue: 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-200',
   };
 
   const StatusBadge = {
     name: 'StatusBadge',
     template: `
-      <span :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-medium', colorClass]">
+      <span class="${UiClasses.badge}" :class="colorClass">
         <i v-if="icon" :data-lucide="icon" class="w-3 h-3 mr-1"></i>
         <slot></slot>
       </span>
@@ -345,7 +357,7 @@
                   :class="modelValue === opt.value ? 'text-primary' : 'text-gray-800 dark:text-gray-200'">
               {{ opt.label }}
             </span>
-            <span v-if="opt.desc" class="block text-xs text-gray-500 dark:text-gray-500 leading-relaxed mt-0.5">
+            <span v-if="opt.desc" class="block text-xs text-gray-500 dark:text-gray-400 leading-relaxed mt-0.5">
               {{ opt.desc }}
             </span>
           </span>
@@ -371,7 +383,7 @@
             'px-3 py-1.5 border-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5',
             this.modelValue === opt.value
               ? 'border-primary bg-primary/5 ring-1 ring-primary/30 text-primary'
-              : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-500 hover:border-primary/50',
+              : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-primary/50',
           ].join(' ');
         }
         if (this.layout === 'card') {
@@ -386,7 +398,7 @@
           'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5',
           this.modelValue === opt.value
             ? 'border-primary bg-primary/5 ring-1 ring-primary/30 text-primary'
-            : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-500 hover:border-primary/50',
+            : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-primary/50',
         ].join(' ');
       },
     },
@@ -499,7 +511,7 @@
                           selected === e.path ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300'
                         ]">
                   <i :data-lucide="e.is_dir ? 'folder' : 'file'"
-                     :class="['w-3.5 h-3.5 shrink-0', e.is_dir ? 'text-amber-500' : '']"></i>
+                     :class="['w-3.5 h-3.5 shrink-0', e.is_dir ? 'text-sun-600 dark:text-sun-300' : '']"></i>
                   <span class="truncate flex-1">{{ e.name }}</span>
                 </button>
               </div>
@@ -507,7 +519,7 @@
             <!-- Footer -->
             <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">
               <slot name="footer-left">
-                <div class="text-xs text-gray-500 dark:text-gray-500 font-mono truncate flex-1">
+                <div class="text-xs text-gray-500 dark:text-gray-400 font-mono truncate flex-1">
                   {{ selected || path || '' }}
                 </div>
               </slot>
@@ -671,6 +683,15 @@
     buttonVariants: UiButtonVariants,
     buttonSizes: UiButtonSizes,
     statusBadgeColors: StatusBadgeColors,
+    cls: UiClasses,
+
+    /** Compact large counts (1.2K / 3.4M); single implementation for pages. */
+    formatNumber(num) {
+      const n = Number(num) || 0;
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+      if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+      return String(n);
+    },
 
     /** Relativize an ISO timestamp ("just now", "5m ago", "2h ago", "3d ago"),
      *  falling back to locale date string for dates older than 7 days. */
@@ -722,13 +743,13 @@
     primaryHex() {
       try {
         const rgb = getComputedStyle(document.documentElement).getPropertyValue('--primary-rgb').trim();
-        // Variable is a space-separated triplet: "99 102 241"
+        // Variable is a space-separated triplet: "37 99 235"
         const parts = (rgb || '').split(/\s+/).map((s) => parseInt(s, 10));
         if (parts.length === 3 && parts.every((n) => !isNaN(n))) {
           return '#' + parts.map((n) => n.toString(16).padStart(2, '0')).join('');
         }
       } catch (e) { /* fall through */ }
-      return '#6366f1'; // indigo-500 default
+      return '#2563eb'; // cobalt default
     },
 
     /** Copy text to clipboard with legacy fallback. */

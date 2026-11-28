@@ -46,10 +46,10 @@ const NotificationComponent = {
     notificationClasses(type) {
       const base = 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700';
       const typeClasses = {
-        success: 'border-l-4 border-l-green-500 text-green-700 dark:text-green-400',
-        error: 'border-l-4 border-l-red-500 text-red-700 dark:text-red-400',
-        warning: 'border-l-4 border-l-yellow-500 text-yellow-700 dark:text-yellow-400',
-        info: 'border-l-4 border-l-blue-500 text-blue-700 dark:text-blue-400'
+        success: 'border-l-4 border-l-mint-500 text-mint-800 dark:text-mint-200',
+        error: 'border-l-4 border-l-red-500 text-red-700 dark:text-red-300',
+        warning: 'border-l-4 border-l-sun-400 text-sun-800 dark:text-sun-200',
+        info: 'border-l-4 border-l-primary text-primary-700 dark:text-primary-200'
       };
       return `${base} ${typeClasses[type] || typeClasses.info}`;
     },

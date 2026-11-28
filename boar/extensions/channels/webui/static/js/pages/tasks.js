@@ -32,7 +32,7 @@ const TasksPage = {
        wrapped to two lines and the subtitle to three. -->
   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
     <div class="min-w-0">
-      <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('tasks.title') }}</h1>
+      <h1 class="text-[22px] leading-7 font-bold tracking-tight text-gray-900 dark:text-white">{{ t('tasks.title') }}</h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t('tasks.subtitle') }}</p>
     </div>
     <div class="flex flex-wrap items-center gap-3 sm:shrink-0">
@@ -47,7 +47,7 @@ const TasksPage = {
     </div>
   </div>
 
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
+  <div class="${UiClasses.card} p-4 mb-6">
     <div class="flex flex-col sm:flex-row gap-4">
       <div class="flex-1">
         <div class="relative">
@@ -76,22 +76,22 @@ const TasksPage = {
 
   <div v-else class="space-y-2">
     <div v-for="task in filteredTasks" :key="task.task_id"
-      class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
+      class="${UiClasses.card} overflow-hidden hover:shadow-md transition-shadow">
       <div class="px-4 py-3 flex items-center gap-3">
         <div class="flex-shrink-0">
-          <div :class="task.kind==='ai'?'bg-purple-100 dark:bg-purple-900/30':'bg-cyan-100 dark:bg-cyan-900/30'" class="w-8 h-8 rounded-lg flex items-center justify-center">
-            <i :data-lucide="task.kind==='ai'?'bot':'terminal'" class="w-4 h-4" :class="task.kind==='ai'?'text-purple-500':'text-cyan-500'"></i>
+          <div :class="task.kind==='ai'?'bg-primary-100 dark:bg-primary-900/30':'bg-sun-100 dark:bg-sun-900/30'" class="w-8 h-8 rounded-lg flex items-center justify-center">
+            <i :data-lucide="task.kind==='ai'?'bot':'terminal'" class="w-4 h-4" :class="task.kind==='ai'?'text-primary-600 dark:text-primary-300':'text-sun-700 dark:text-sun-300'"></i>
           </div>
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <span class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ task.title }}</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-              :class="task.kind==='ai'?'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300':'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300'">{{ task.kind==='ai'?'AI':'Script' }}</span>
-            <span v-if="task.parent_task_id" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+            <span class="${UiClasses.badge}"
+              :class="task.kind==='ai'?'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300':'bg-sun-100 dark:bg-sun-900/30 text-sun-700 dark:text-sun-300'">{{ task.kind==='ai'?'AI':'Script' }}</span>
+            <span v-if="task.parent_task_id" class="${UiClasses.badge} bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
               <i data-lucide="git-branch" class="w-3 h-3 mr-1"></i>{{ t('tasks.sub') }}</span>
             <span v-if="task.schedule && task.schedule.next_run_at"
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+              class="${UiClasses.badge} bg-sun-100 dark:bg-sun-900/30 text-sun-700 dark:text-sun-300">
               <i data-lucide="clock" class="w-3 h-3 mr-1"></i>{{ formatTime(task.schedule.next_run_at) }}</span>
           </div>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{{ task.description||'-' }}</p>
@@ -99,22 +99,22 @@ const TasksPage = {
         <div v-if="task.success_count>0||task.failure_count>0" class="w-28 flex-shrink-0">
           <div class="text-xs text-center">
             <span class="inline-flex items-center gap-2 text-xs">
-              <span v-if="task.success_count" class="text-green-600 dark:text-green-400 font-medium">{{ task.success_count }} {{ t('tasks.successCount') }}</span>
+              <span v-if="task.success_count" class="text-mint-600 dark:text-mint-400 font-medium">{{ task.success_count }} {{ t('tasks.successCount') }}</span>
               <span v-if="task.failure_count" class="text-red-500 dark:text-red-400 font-medium">{{ task.failure_count }} {{ t('tasks.failureCount') }}</span>
             </span>
           </div>
         </div>
         <div class="flex items-center gap-1">
           <button v-if="canExecute(task)" @click.stop="executeTask(task)" :disabled="isTaskBusy(task)" :title="t('tasks.run')"
-            class="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 disabled:opacity-40 disabled:cursor-not-allowed"><i data-lucide="play" class="w-4 h-4"></i></button>
+            class="p-2 rounded-lg hover:bg-mint-100 dark:hover:bg-mint-900/30 text-mint-600 dark:text-mint-400 disabled:opacity-40 disabled:cursor-not-allowed"><i data-lucide="play" class="w-4 h-4"></i></button>
           <button v-if="canCancel(task)" @click.stop="cancelTask(task)" :disabled="isTaskBusy(task)" :title="t('tasks.cancel')"
             class="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed"><i data-lucide="square" class="w-4 h-4"></i></button>
           <button v-if="canPause(task)" @click.stop="pauseTask(task)" :disabled="isTaskBusy(task)" :title="t('tasks.pause')"
-            class="p-2 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-500 disabled:opacity-40 disabled:cursor-not-allowed"><i data-lucide="pause" class="w-4 h-4"></i></button>
+            class="p-2 rounded-lg hover:bg-sun-100 dark:hover:bg-sun-900/30 text-sun-500 disabled:opacity-40 disabled:cursor-not-allowed"><i data-lucide="pause" class="w-4 h-4"></i></button>
           <button v-if="canResume(task)" @click.stop="resumeTask(task)" :disabled="isTaskBusy(task)" :title="t('tasks.resume')"
-            class="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"><i data-lucide="play" class="w-4 h-4"></i></button>
+            class="p-2 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-500 disabled:opacity-40 disabled:cursor-not-allowed"><i data-lucide="play" class="w-4 h-4"></i></button>
           <button @click.stop="openEditModal(task)" :title="t('common.edit')"
-            class="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-500"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+            class="p-2 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-500"><i data-lucide="pencil" class="w-4 h-4"></i></button>
           <button @click.stop="toggleDetail(task)"
             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400"><i data-lucide="chevron-down" class="w-4 h-4" :class="{'rotate-180':detailTaskId===task.task_id}"></i></button>
           <button @click.stop="confirmDelete(task)" :disabled="isTaskBusy(task)"
@@ -142,14 +142,14 @@ const TasksPage = {
         </div>
         <div v-if="task.result&&task.result.output_files&&task.result.output_files.length>0" class="mt-2">
           <p class="text-xs font-medium text-gray-500 mb-1">{{ t('tasks.outputFiles') }}:</p>
-          <div v-for="f in task.result.output_files" :key="f" class="text-xs text-blue-600 font-mono">{{ f }}</div>
+          <div v-for="f in task.result.output_files" :key="f" class="text-xs text-primary-600 font-mono">{{ f }}</div>
         </div>
         <div v-if="task.run_history&&task.run_history.length>0" class="mt-2">
           <p class="text-xs font-medium text-gray-500 mb-1">{{ t('tasks.runHistory') || 'Run History' }} ({{ task.run_history.length }}):</p>
           <div v-for="(r,i) in task.run_history.slice(-8)" :key="i" class="text-xs py-1 flex items-center gap-2 text-gray-600 dark:text-gray-400">
-            <i :data-lucide="r.success?'check-circle':'alert-circle'" class="w-3 h-3" :class="r.success?'text-green-500':'text-red-500'"></i>
+            <i :data-lucide="r.success?'check-circle':'alert-circle'" class="w-3 h-3" :class="r.success?'text-mint-500':'text-red-500'"></i>
             <span class="font-mono">{{ formatTime(r.completed_at) }}</span>
-            <span class="px-1 py-0.5 rounded text-xs" :class="r.status==='completed'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'">{{ r.status }}</span>
+            <span class="px-1 py-0.5 rounded text-xs" :class="r.status==='completed'?'bg-mint-100 text-mint-700':'bg-red-100 text-red-700'">{{ r.status }}</span>
             <span v-if="r.error" class="truncate max-w-[140px] text-red-500">: {{ r.error }}</span>
             <span v-else-if="r.output_preview" class="truncate max-w-[140px] text-gray-400">: {{ r.output_preview }}</span>
           </div>
@@ -159,7 +159,7 @@ const TasksPage = {
           <div v-for="sub in task.sub_tasks" :key="sub.task_id" class="flex items-center gap-2 py-1 pl-4 border-l-2 border-gray-300 dark:border-gray-600 ml-2">
             <i :data-lucide="getStatusIcon(sub.status)" class="w-3 h-3" :class="getStatusIconColor(sub.status)"></i>
             <span class="text-xs text-gray-700 dark:text-gray-300">{{ sub.title }}</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" :class="getStatusBadge(sub.status)">{{ getStatusLabel(sub.status) }}</span>
+            <span class="${UiClasses.badge}" :class="getStatusBadge(sub.status)">{{ getStatusLabel(sub.status) }}</span>
           </div>
         </div>
       </div>
@@ -182,19 +182,19 @@ const TasksPage = {
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('tasks.taskTitle') }} *</label>
           <input type="text" v-model="formData.title" required
-            class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            class="${UiClasses.input}">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('tasks.description') }}</label>
           <textarea v-model="formData.description" rows="3"
-            class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"></textarea>
+            class="${UiClasses.input}"></textarea>
         </div>
 
         <!-- Kind-specific fields -->
         <div v-if="formData.kind==='ai'">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('tasks.prompt') }} *</label>
           <textarea v-model="formData.prompt" rows="6" required :placeholder="t('tasks.promptPlaceholder')"
-            class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"></textarea>
+            class="${UiClasses.input}"></textarea>
           <p class="text-xs text-gray-400 mt-1">{{ t('tasks.characters', {count: formData.prompt?.length||0}) }}</p>
         </div>
         <div v-if="formData.kind==='ai'">
@@ -205,7 +205,7 @@ const TasksPage = {
           </div>
           <div v-if="formData.model_mode==='specify'" class="relative">
             <select v-model="formData.model"
-              class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none pr-8">
+              class="${UiClasses.input} appearance-none pr-8">
               <option value="">{{ t('tasks.selectModel') }}</option>
               <option v-if="availableModels.length===0 && loadingModels" disabled>{{ t('common.loading') || 'Loading...' }}</option>
               <option v-for="m in availableModels" :key="m.id || m.name" :value="m.id || m.name">
@@ -221,13 +221,13 @@ const TasksPage = {
         <div v-if="formData.kind==='script'">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('tasks.scriptPath') }} *</label>
           <input type="text" v-model="formData.script_path" required :placeholder="t('tasks.scriptPathPlaceholder')"
-            class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            class="${UiClasses.input}">
           <p class="text-xs text-gray-400 mt-1">{{ t('tasks.scriptDirHint') }}</p>
         </div>
         <div v-if="formData.kind==='script'">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('tasks.scriptArgs') }}</label>
           <input type="text" v-model="formData.script_args" :placeholder="t('tasks.scriptArgsPlaceholder')"
-            class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            class="${UiClasses.input}">
         </div>
 
         <div v-if="formData.kind==='ai'">
@@ -238,7 +238,7 @@ const TasksPage = {
           </div>
           <div v-if="formData.session_mode==='manual'" class="relative">
             <select v-model="formData.session_id"
-              class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none pr-8">
+              class="${UiClasses.input} appearance-none pr-8">
               <option value="">{{ t('tasks.selectSession') || '-- Select session --' }}</option>
               <option v-if="loadingSessions" disabled>{{ t('common.loading') }}...</option>
               <option v-for="sess in sessions" :key="sess.session_id" :value="sess.session_id">
@@ -258,13 +258,13 @@ const TasksPage = {
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('tasks.maxRetries') }}</label>
             <input type="number" min="0" max="10" v-model.number="formData.max_retries"
-              class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+              class="${UiClasses.input}">
             <p class="text-xs text-gray-400 mt-1">{{ t('tasks.retryHint') }}</p>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('tasks.timeoutSeconds') }}</label>
             <input type="number" min="0" v-model.number="formData.timeout_seconds" :placeholder="t('tasks.timeoutPlaceholder')"
-              class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+              class="${UiClasses.input}">
             <p class="text-xs text-gray-400 mt-1">{{ t('tasks.timeoutHint') }}</p>
           </div>
         </div>
@@ -286,13 +286,13 @@ const TasksPage = {
         <div v-if="formData.schedule_type==='once'">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('tasks.runAt') }} *</label>
           <input type="datetime-local" v-model="formData.schedule_run_at" :min="getMinDateTime()"
-            class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            class="${UiClasses.input}">
         </div>
         
         <div v-if="formData.schedule_type==='periodic'">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t('tasks.periodicMode') || 'Periodic Mode' }} *</label>
           <select v-model="formData.periodic_mode"
-            class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary mb-3">
+            class="${UiClasses.input} mb-3">
             <option value="daily">{{ t('tasks.periodicDaily') || '每天 (Daily)' }}</option>
             <option value="ndays">{{ t('tasks.periodicNDays') || 'N天 (Every N Days)' }}</option>
             <option value="hourly">{{ t('tasks.periodicHourly') || '每小时 (Hourly)' }}</option>
@@ -437,14 +437,14 @@ const TasksPage = {
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('tasks.scheduleInterval') }} *</label>
           <input type="text" v-model="formData.schedule_interval" :placeholder="t('tasks.intervalPlaceholder')" @input="validateIntervalInput"
             :class="intervalValid===false?'border-red-500 focus:ring-red-500':''"
-            class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            class="${UiClasses.input}">
           <p class="text-xs mt-1" :class="intervalValid===false?'text-red-500':'text-gray-400'">{{ t('tasks.intervalExamples') }}</p>
         </div>
         <div v-if="formData.schedule_type==='cron'">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('tasks.cronLabel') }} *</label>
           <input type="text" v-model="formData.schedule_cron" :placeholder="t('tasks.cronPlaceholder')" @input="validateCronInput"
             :class="cronValid===false?'border-red-500 focus:ring-red-500':''"
-            class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            class="${UiClasses.input}">
           <p class="text-xs text-gray-400 mt-1">{{ t('tasks.cronHint') }}</p>
           <div class="mt-3 p-3 bg-gray-50 dark:bg-gray-750 rounded-lg">
             <div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t('tasks.cronExamples') }}</div>
@@ -460,7 +460,7 @@ const TasksPage = {
         <div v-if="formData.schedule_type">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('tasks.timezone') }}</label>
           <select v-model="formData.schedule_timezone"
-            class="w-full px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            class="${UiClasses.input}">
             <option value="UTC">UTC (GMT+0)</option>
             <option value="Asia/Shanghai">Asia/Shanghai (GMT+8)</option>
             <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
@@ -469,9 +469,9 @@ const TasksPage = {
             <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
           </select>
         </div>
-        <div v-if="formData.schedule_type && schedulePreview" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <div class="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">{{ t('tasks.schedulePreview') }}</div>
-          <div class="text-sm text-blue-600 dark:text-blue-400">{{ schedulePreview }}</div>
+        <div v-if="formData.schedule_type && schedulePreview" class="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+          <div class="text-xs font-medium text-primary-700 dark:text-primary-300 mb-1">{{ t('tasks.schedulePreview') }}</div>
+          <div class="text-sm text-primary-600 dark:text-primary-400">{{ schedulePreview }}</div>
         </div>
 
       </form>
@@ -534,9 +534,9 @@ const TasksPage = {
     scheduleTypeOptions() {
       return [
         { value: '', label: this.t('tasks.noSchedule'), icon: 'ban', color: 'text-gray-500' },
-        { value: 'once', label: this.t('tasks.scheduleOnce'), icon: 'clock', color: 'text-amber-500' },
-        { value: 'periodic', label: this.t('tasks.schedulePeriodic') || 'Periodic', icon: 'repeat', color: 'text-blue-500' },
-        { value: 'cron', label: this.t('tasks.scheduleCron'), icon: 'calendar', color: 'text-green-500' },
+        { value: 'once', label: this.t('tasks.scheduleOnce'), icon: 'clock', color: 'text-sun-500' },
+        { value: 'periodic', label: this.t('tasks.schedulePeriodic') || 'Periodic', icon: 'repeat', color: 'text-primary-500' },
+        { value: 'cron', label: this.t('tasks.scheduleCron'), icon: 'calendar', color: 'text-mint-500' },
       ];
     },
     filteredTasks() {
@@ -626,7 +626,6 @@ const TasksPage = {
     BoarAiStore._onTaskEvent = this._onTaskEventStore;
   },
   // Icons hydrate automatically via app.js MutationObserver (childList + attr).
-  updated() {},
   beforeUnmount() {
     this._isDestroyed = true;
     if (this._taskRefreshTimer) clearTimeout(this._taskRefreshTimer);
@@ -636,9 +635,8 @@ const TasksPage = {
   },
 
   methods: {
-    // handleLanguageChange overrides global I18nMixin: also re-init filters.
-    handleLanguageChange() {
-      this.currentLanguage = window.i18n ? window.i18n.getCurrentLanguage() : 'en';
+    // I18nMixin updates currentLanguage; only the derived labels differ here.
+    onLanguageChanged() {
       this.initFilters();
       this.initCronExamples();
     },
@@ -972,11 +970,11 @@ const TasksPage = {
     // Unified status meta: one map instead of 5 parallel getStatus* methods.
     getStatusMeta(s) {
       const meta = {
-        pending:    { icon: 'clock',        color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300', label: this.t('tasks.pending') },
+        pending:    { icon: 'clock',        color: 'text-sun-500', bg: 'bg-sun-100 dark:bg-sun-900/30 text-sun-800 dark:text-sun-300', label: this.t('tasks.pending') },
         queued:     { icon: 'hourglass',    color: 'text-gray-500',  bg: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300', label: this.t('tasks.queued') },
-        running:    { icon: 'loader-2',     color: 'text-blue-500 animate-spin', bg: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300', label: this.t('tasks.executing') },
-        paused:     { icon: 'pause-circle', color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300', label: this.t('tasks.paused') },
-        completed:  { icon: 'check-circle', color: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300', label: this.t('tasks.executionSuccess') },
+        running:    { icon: 'loader-2',     color: 'text-primary-500 animate-spin', bg: 'bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300', label: this.t('tasks.executing') },
+        paused:     { icon: 'pause-circle', color: 'text-sun-500', bg: 'bg-sun-100 dark:bg-sun-900/30 text-sun-800 dark:text-sun-300', label: this.t('tasks.paused') },
+        completed:  { icon: 'check-circle', color: 'text-mint-500', bg: 'bg-mint-100 dark:bg-mint-900/30 text-mint-800 dark:text-mint-300', label: this.t('tasks.executionSuccess') },
         failed:     { icon: 'alert-circle', color: 'text-red-500',   bg: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300', label: this.t('tasks.error') },
         cancelled:  { icon: 'x-circle',     color: 'text-gray-500',  bg: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300', label: this.t('tasks.cancelled') },
         skipped:    { icon: 'skip-forward', color: 'text-gray-500',  bg: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300', label: this.t('tasks.skipped') },

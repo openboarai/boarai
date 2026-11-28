@@ -17,42 +17,42 @@
 /* ext -> badge chip (text + tailwind classes). Mirrors the colored file-type
    chips of IDE explorers; tailwind play CDN generates classes on DOM insert. */
 const FM_BADGES = {
-  py: ['PY', 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-300'],
-  js: ['JS', 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-300'],
-  mjs: ['JS', 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-300'],
-  cjs: ['JS', 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-300'],
-  ts: ['TS', 'bg-blue-500/15 text-blue-600 dark:text-blue-300'],
-  tsx: ['TS', 'bg-blue-500/15 text-blue-600 dark:text-blue-300'],
-  jsx: ['JS', 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-300'],
-  json: ['{}', 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300'],
-  md: ['MD', 'bg-sky-500/15 text-sky-600 dark:text-sky-300'],
-  html: ['<>', 'bg-orange-500/15 text-orange-600 dark:text-orange-300'],
-  htm: ['<>', 'bg-orange-500/15 text-orange-600 dark:text-orange-300'],
-  vue: ['VU', 'bg-green-500/15 text-green-600 dark:text-green-300'],
-  css: ['#', 'bg-purple-500/15 text-purple-600 dark:text-purple-300'],
-  scss: ['#', 'bg-purple-500/15 text-purple-600 dark:text-purple-300'],
-  less: ['#', 'bg-purple-500/15 text-purple-600 dark:text-purple-300'],
-  yml: ['Y', 'bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300'],
-  yaml: ['Y', 'bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300'],
-  sh: ['$', 'bg-lime-500/15 text-lime-600 dark:text-lime-300'],
-  bash: ['$', 'bg-lime-500/15 text-lime-600 dark:text-lime-300'],
-  sql: ['SQ', 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300'],
-  c: ['C', 'bg-slate-500/15 text-slate-600 dark:text-slate-300'],
-  h: ['H', 'bg-slate-500/15 text-slate-600 dark:text-slate-300'],
-  cpp: ['C+', 'bg-pink-500/15 text-pink-600 dark:text-pink-300'],
-  hpp: ['C+', 'bg-pink-500/15 text-pink-600 dark:text-pink-300'],
-  go: ['GO', 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300'],
-  rs: ['RS', 'bg-orange-500/15 text-orange-600 dark:text-orange-300'],
-  java: ['JV', 'bg-red-500/15 text-red-600 dark:text-red-300'],
-  png: ['IMG', 'bg-violet-500/15 text-violet-600 dark:text-violet-300'],
-  jpg: ['IMG', 'bg-violet-500/15 text-violet-600 dark:text-violet-300'],
-  jpeg: ['IMG', 'bg-violet-500/15 text-violet-600 dark:text-violet-300'],
-  gif: ['IMG', 'bg-violet-500/15 text-violet-600 dark:text-violet-300'],
-  webp: ['IMG', 'bg-violet-500/15 text-violet-600 dark:text-violet-300'],
-  svg: ['IMG', 'bg-violet-500/15 text-violet-600 dark:text-violet-300'],
-  zip: ['ZIP', 'bg-amber-500/15 text-amber-600 dark:text-amber-300'],
-  pdf: ['PDF', 'bg-red-500/15 text-red-600 dark:text-red-300'],
-  txt: ['TX', 'bg-gray-500/15 text-gray-600 dark:text-gray-300'],
+  py: ['PY', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  js: ['JS', 'bg-sun-400/20 text-sun-800 dark:text-sun-300'],
+  mjs: ['JS', 'bg-sun-400/20 text-sun-800 dark:text-sun-300'],
+  cjs: ['JS', 'bg-sun-400/20 text-sun-800 dark:text-sun-300'],
+  ts: ['TS', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  tsx: ['TS', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  jsx: ['JS', 'bg-sun-400/20 text-sun-800 dark:text-sun-300'],
+  json: ['{}', 'bg-mint-500/10 text-mint-800 dark:text-mint-300'],
+  md: ['MD', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  html: ['<>', 'bg-sun-400/20 text-sun-800 dark:text-sun-300'],
+  htm: ['<>', 'bg-sun-400/20 text-sun-800 dark:text-sun-300'],
+  vue: ['VU', 'bg-mint-500/10 text-mint-800 dark:text-mint-300'],
+  css: ['#', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  scss: ['#', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  less: ['#', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  yml: ['Y', 'bg-sun-400/20 text-sun-800 dark:text-sun-300'],
+  yaml: ['Y', 'bg-sun-400/20 text-sun-800 dark:text-sun-300'],
+  sh: ['$', 'bg-mint-500/10 text-mint-800 dark:text-mint-300'],
+  bash: ['$', 'bg-mint-500/10 text-mint-800 dark:text-mint-300'],
+  sql: ['SQ', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  c: ['C', 'bg-gray-500/10 text-gray-700 dark:text-gray-300'],
+  h: ['H', 'bg-gray-500/10 text-gray-700 dark:text-gray-300'],
+  cpp: ['C+', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  hpp: ['C+', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  go: ['GO', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  rs: ['RS', 'bg-sun-400/20 text-sun-800 dark:text-sun-300'],
+  java: ['JV', 'bg-red-500/10 text-red-700 dark:text-red-300'],
+  png: ['IMG', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  jpg: ['IMG', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  jpeg: ['IMG', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  gif: ['IMG', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  webp: ['IMG', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  svg: ['IMG', 'bg-primary-500/10 text-primary-700 dark:text-primary-300'],
+  zip: ['ZIP', 'bg-sun-400/20 text-sun-800 dark:text-sun-300'],
+  pdf: ['PDF', 'bg-red-500/10 text-red-700 dark:text-red-300'],
+  txt: ['TX', 'bg-gray-500/10 text-gray-700 dark:text-gray-300'],
 };
 
 const FM_LANGS = {
@@ -271,27 +271,27 @@ const FileTreePanel = {
       <div class="flex items-center gap-1 px-2 h-8 flex-shrink-0">
         <button type="button" class="fm-icon-btn" @click="$emit('collapse')"
                 :title="t('files.collapse') || 'Collapse'">
-          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500"></i>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-400"></i>
         </button>
-        <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500"></i>
+        <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-400"></i>
         <span class="text-xs font-medium text-gray-600 dark:text-gray-300 truncate flex-1" :title="rootPath">
           {{ t('files.title') || 'Files' }}
         </span>
         <button type="button" class="fm-icon-btn" @click="refresh"
                 :title="t('files.refresh') || 'Refresh'">
-          <i data-lucide="refresh-cw" class="w-3 h-3 text-gray-400 dark:text-gray-500" :class="{ 'animate-spin': rootLoading }"></i>
+          <i data-lucide="refresh-cw" class="w-3 h-3 text-gray-400 dark:text-gray-400" :class="{ 'animate-spin': rootLoading }"></i>
         </button>
       </div>
       <div class="px-2 pb-1.5 flex-shrink-0">
         <div class="flex items-center gap-1.5 px-2 h-7 rounded-md bg-gray-100 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 focus-within:border-primary transition-colors">
-          <i data-lucide="search" class="w-3 h-3 text-gray-400 dark:text-gray-500 shrink-0"></i>
+          <i data-lucide="search" class="w-3 h-3 text-gray-400 dark:text-gray-400 shrink-0"></i>
           <input v-model="search" type="text"
                  class="flex-1 min-w-0 bg-transparent text-xs outline-none text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500"
                  :placeholder="t('files.searchPlaceholder') || 'Search files'">
         </div>
       </div>
-      <div class="fm-tree-body flex-1 min-h-0 overflow-y-auto px-1 pb-2">
-        <div v-if="!sessionId || !rootPath" class="p-4 text-center text-xs text-gray-400 dark:text-gray-500">
+      <div class="fm-tree-body scroll-thin flex-1 min-h-0 overflow-y-auto px-1 pb-2">
+        <div v-if="!sessionId || !rootPath" class="p-4 text-center text-xs text-gray-400 dark:text-gray-400">
           {{ t('files.noSession') || 'No session workspace' }}
         </div>
         <div v-else-if="rootLoading && !rootLoaded" class="p-4 text-center">
@@ -303,7 +303,7 @@ const FileTreePanel = {
             {{ t('files.retry') || 'Retry' }}
           </button>
         </div>
-        <div v-else-if="!visibleRows.length" class="p-4 text-center text-xs text-gray-400 dark:text-gray-500">
+        <div v-else-if="!visibleRows.length" class="p-4 text-center text-xs text-gray-400 dark:text-gray-400">
           {{ search ? (t('files.searchNoResult') || 'No matches') : (t('files.empty') || 'Empty directory') }}
         </div>
         <div v-else>
@@ -317,11 +317,11 @@ const FileTreePanel = {
                   @click="clickRow(row)">
             <i v-if="row.type === 'dir'"
                :data-lucide="row.expanded ? 'chevron-down' : 'chevron-right'"
-               class="w-3 h-3 shrink-0 text-gray-400 dark:text-gray-500"></i>
+               class="w-3 h-3 shrink-0 text-gray-400 dark:text-gray-400"></i>
             <span v-else class="w-3 shrink-0"></span>
             <i v-if="row.type === 'dir'"
                :data-lucide="row.expanded ? 'folder-open' : 'folder'"
-               class="w-3.5 h-3.5 shrink-0 text-amber-500/90"></i>
+               class="w-3.5 h-3.5 shrink-0 text-sun-500/90"></i>
             <i v-else-if="row.type === 'error'" data-lucide="alert-circle"
                class="w-3.5 h-3.5 shrink-0 text-red-400"></i>
             <span v-else class="fm-badge shrink-0" :class="badge(row.name).cls">{{ badge(row.name).text }}</span>
@@ -329,7 +329,7 @@ const FileTreePanel = {
             <i v-if="row.type === 'dir' && row.loading" data-lucide="loader-circle"
                class="w-3 h-3 animate-spin text-gray-300 dark:text-gray-600 shrink-0"></i>
             <span v-else-if="row.type === 'file' && row.size != null"
-                  class="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">{{ fmtSize(row.size) }}</span>
+                  class="text-[10px] text-gray-400 dark:text-gray-400 shrink-0">{{ fmtSize(row.size) }}</span>
           </button>
         </div>
       </div>
@@ -606,9 +606,9 @@ const FileViewerPane = {
                @click="activePath = tab.path; pendingClose = null">
             <span class="fm-badge shrink-0" :class="badge(tab.name).cls">{{ badge(tab.name).text }}</span>
             <span class="truncate max-w-[120px]">{{ tab.name }}</span>
-            <span v-if="tab.dirty" class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+            <span v-if="tab.dirty" class="w-1.5 h-1.5 rounded-full bg-sun-500 shrink-0"></span>
             <i v-if="tab.stale" data-lucide="alert-triangle"
-               class="w-3 h-3 text-amber-500 shrink-0"
+               class="w-3 h-3 text-sun-500 shrink-0"
                :title="t('files.diskChanged') || 'File changed on disk'"></i>
             <button type="button" class="fm-tab-close shrink-0"
                     :title="t('files.closeTab') || 'Close tab'"
@@ -616,7 +616,7 @@ const FileViewerPane = {
               <i data-lucide="x" class="w-3 h-3"></i>
             </button>
           </div>
-          <div v-if="!tabs.length" class="px-3 flex items-center text-xs text-gray-400 dark:text-gray-500">
+          <div v-if="!tabs.length" class="px-3 flex items-center text-xs text-gray-400 dark:text-gray-400">
             {{ t('files.viewerEmpty') || 'No file open' }}
           </div>
         </div>
@@ -624,17 +624,17 @@ const FileViewerPane = {
           <button v-if="activeTab && activeTab.content != null && !activeTab.binary" type="button"
                   class="fm-icon-btn" :title="t('files.wrap') || 'Wrap'"
                   :class="{ 'text-primary': wrap }" @click="wrap = !wrap">
-            <i data-lucide="wrap-text" class="w-3.5 h-3.5" :class="wrap ? 'text-primary' : 'text-gray-400 dark:text-gray-500'"></i>
+            <i data-lucide="wrap-text" class="w-3.5 h-3.5" :class="wrap ? 'text-primary' : 'text-gray-400 dark:text-gray-400'"></i>
           </button>
           <button v-if="activeTab && activeTab.content != null && !activeTab.binary" type="button"
                   class="fm-icon-btn" :title="t('files.copy') || 'Copy'" @click="copyActive">
-            <i data-lucide="copy" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500"></i>
+            <i data-lucide="copy" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-400"></i>
           </button>
           <button v-if="canEdit(activeTab)" type="button" class="fm-icon-btn"
                   :title="activeTab.editing ? (t('files.viewMode') || 'View') : (t('files.edit') || 'Edit')"
                   @click="toggleEdit">
             <i :data-lucide="activeTab.editing ? 'eye' : 'pencil'" class="w-3.5 h-3.5"
-               :class="activeTab.editing ? 'text-primary' : 'text-gray-400 dark:text-gray-500'"></i>
+               :class="activeTab.editing ? 'text-primary' : 'text-gray-400 dark:text-gray-400'"></i>
           </button>
           <button v-if="activeTab && activeTab.editing && activeTab.dirty" type="button"
                   class="fm-icon-btn" :title="(t('files.save') || 'Save') + ' (Ctrl+S)'" @click="saveTab(activeTab)">
@@ -642,17 +642,17 @@ const FileViewerPane = {
           </button>
           <button v-if="activeTab && activeTab.editing && activeTab.dirty" type="button"
                   class="fm-icon-btn" :title="t('files.discard') || 'Discard'" @click="discard(activeTab)">
-            <i data-lucide="undo-2" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500"></i>
+            <i data-lucide="undo-2" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-400"></i>
           </button>
           <button type="button" class="fm-icon-btn" :title="t('files.closePane') || 'Collapse panel'" @click="$emit('close')">
-            <i data-lucide="panel-left-close" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500"></i>
+            <i data-lucide="panel-left-close" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-400"></i>
           </button>
         </div>
       </div>
 
       <!-- Unsaved-changes banner (dirty tab close guard) -->
       <div v-if="pendingClose"
-           class="flex items-center gap-2 px-3 py-1.5 text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-b border-amber-200 dark:border-amber-800 flex-shrink-0">
+           class="flex items-center gap-2 px-3 py-1.5 text-xs bg-sun-50 dark:bg-sun-900/30 text-sun-700 dark:text-sun-300 border-b border-sun-200 dark:border-sun-800 flex-shrink-0">
         <i data-lucide="alert-triangle" class="w-3.5 h-3.5 shrink-0"></i>
         <span class="flex-1 truncate">{{ t('files.unsaved') || 'Unsaved changes' }}</span>
         <button type="button" class="px-2 py-0.5 rounded bg-primary text-white hover:bg-primary-dark transition-colors"
@@ -663,7 +663,7 @@ const FileViewerPane = {
                 @click="discardAndClose(pendingClose)">
           {{ t('files.discard') || 'Discard' }}
         </button>
-        <button type="button" class="px-2 py-0.5 rounded hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors"
+        <button type="button" class="px-2 py-0.5 rounded hover:bg-sun-100 dark:hover:bg-sun-900/50 transition-colors"
                 @click="pendingClose = null">
           {{ t('files.keepOpen') || 'Keep open' }}
         </button>
@@ -671,7 +671,7 @@ const FileViewerPane = {
 
       <!-- Disk-changed banner (fs.changed mtime drift or a 409 save) -->
       <div v-if="activeTab && activeTab.stale"
-           class="flex items-center gap-2 px-3 py-1.5 text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-b border-amber-200 dark:border-amber-800 flex-shrink-0">
+           class="flex items-center gap-2 px-3 py-1.5 text-xs bg-sun-50 dark:bg-sun-900/30 text-sun-700 dark:text-sun-300 border-b border-sun-200 dark:border-sun-800 flex-shrink-0">
         <i data-lucide="alert-triangle" class="w-3.5 h-3.5 shrink-0"></i>
         <span class="flex-1 truncate">{{ t('files.diskChanged') || 'File changed on disk' }}</span>
         <button type="button" class="px-2 py-0.5 rounded bg-primary text-white hover:bg-primary-dark transition-colors"
@@ -685,7 +685,7 @@ const FileViewerPane = {
       </div>
 
       <!-- Body -->
-      <div v-if="!activeTab" class="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-500">
+      <div v-if="!activeTab" class="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-400">
         <i data-lucide="file-code-2" class="w-8 h-8 opacity-60"></i>
         <p class="text-xs">{{ t('files.viewerEmptyHint') || 'Click a file in the tree to open it' }}</p>
       </div>
@@ -705,7 +705,7 @@ const FileViewerPane = {
         <img :src="rawSrc" class="max-w-full max-h-full object-contain rounded shadow-sm"
              :alt="activeTab.name" @error="activeTab.error = activeTab.error || 'Image load failed'">
       </div>
-      <div v-else-if="activeTab.binary" class="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-500">
+      <div v-else-if="activeTab.binary" class="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-400">
         <i data-lucide="file-cog" class="w-8 h-8 opacity-60"></i>
         <p class="text-xs">{{ t('files.binary') || 'Binary file' }}</p>
         <p class="text-[11px] opacity-80">{{ t('files.binaryHint') || 'No text preview available' }}</p>
@@ -716,7 +716,7 @@ const FileViewerPane = {
           {{ t('files.tooLarge') || 'File too large — showing the first part only (read-only)' }}
         </div>
         <!-- View mode: single scroll container, sticky gutter -->
-        <div v-if="!activeTab.editing" class="flex-1 min-h-0 overflow-auto fm-scroll">
+        <div v-if="!activeTab.editing" class="flex-1 min-h-0 overflow-auto scroll-thin">
           <div class="flex items-stretch w-max min-w-full">
             <div v-if="!gutterHidden" class="fm-gutter" aria-hidden="true">
               <div v-for="n in lineCount" :key="n" class="fm-ln">{{ n }}</div>
@@ -739,11 +739,11 @@ const FileViewerPane = {
       </template>
 
       <!-- Status bar -->
-      <div class="fm-status flex items-center gap-3 px-3 h-6 flex-shrink-0 border-t border-gray-200 dark:border-gray-700 text-[11px] text-gray-400 dark:text-gray-500">
+      <div class="fm-status flex items-center gap-3 px-3 h-6 flex-shrink-0 border-t border-gray-200 dark:border-gray-700 text-[11px] text-gray-400 dark:text-gray-400">
         <span v-if="activeTab && lineCount">{{ lineCount }} {{ t('files.lines') || 'lines' }}</span>
         <span v-if="activeTab && activeTab.size != null">{{ fmtSize(activeTab.size) }}</span>
         <span v-if="activeTab">{{ activeTab.image ? 'image' : (activeTab.lang || 'text') }}</span>
-        <span v-if="activeTab && activeTab.dirty" class="text-amber-500 dark:text-amber-400">{{ t('files.unsaved') || 'Unsaved changes' }}</span>
+        <span v-if="activeTab && activeTab.dirty" class="text-sun-500 dark:text-sun-400">{{ t('files.unsaved') || 'Unsaved changes' }}</span>
         <span class="flex-1"></span>
         <span v-if="activeTab" class="truncate max-w-[45%]" :title="activeTab.path">{{ activeTab.path }}</span>
       </div>

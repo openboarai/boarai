@@ -175,10 +175,17 @@ def _write_cache(payload: Dict[str, Any]) -> None:
         logger.debug("update check cache write failed: %s", e)
 
 
-async def check(force: bool = False) -> Dict[str, Any]:
-    """The (cached) check result: latest/current/update_available/error."""
+async def check(force: bool = False, ttl_hours: Optional[float] = None) -> Dict[str, Any]:
+    """The (cached) check result: latest/current/update_available/error.
+
+    ``ttl_hours`` overrides the cache TTL (the lazy/UI-triggered checks pass a
+    shorter window than ``check_interval_hours`` so user actions can surface a
+    fresh version without raising the network rate above 1/TTL).
+    """
     cfg = get_update_config()
-    ttl_s = max(60.0, float(getattr(cfg, "check_interval_hours", 24.0)) * 3600.0)
+    interval_h = (float(ttl_hours) if ttl_hours is not None
+                 else float(getattr(cfg, "check_interval_hours", 24.0)))
+    ttl_s = max(60.0, interval_h * 3600.0)
     current = current_version()
 
     cached = read_cache()

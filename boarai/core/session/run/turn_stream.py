@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import time
 
+from datetime import datetime, timezone
 from typing import Any, Optional
 from boarai.core.session.thinking import build_continuation_messages
 from .context_prep import RunContext
@@ -192,81 +193,15 @@ class TurnStreamMixin:
 
                     if chunk.usage:
                         run._actual_usage = chunk.usage
-                        # Per-turn aggregation: the old code kept only
-                        # the LAST turn's usage, so multi-turn runs had
-                        # no visibility into intermediate consumption.
-                        # Idempotent per turn: providers are expected to
-                        # yield usage exactly once (final chunk), but a
-                        # future provider change must not double-count.
-                        if not tf.usage_counted:
-                            tf.usage_counted = True
-                            chunk_cache_read = int(
-                                chunk.usage.get("cached_tokens", 0)
-                                or chunk.usage.get("cache_hit_tokens", 0)
-                                or chunk.usage.get(
-                                    "cache_read_input_tokens", 0
-                                )
-                                or 0
-                            )
-                            agg = getattr(run, "_usage_agg", None) or {
-                                "turns": 0, "input": 0, "completion": 0,
-                                "cache_read": 0, "cache_creation": 0,
-                                "cost_usd": 0.0,
-                            }
-                            run._usage_agg = {
-                                "turns": agg["turns"] + 1,
-                                "input": agg["input"] + int(
-                                    chunk.usage.get("prompt_tokens", 0) or 0
-                                ),
-                                "completion": agg["completion"] + int(
-                                    chunk.usage.get("completion_tokens", 0) or 0
-                                ),
-                                "cache_read": (
-                                    agg.get("cache_read", 0)
-                                    + chunk_cache_read
-                                ),
-                                "cache_creation": (
-                                    agg.get("cache_creation", 0)
-                                    + int(
-                                        chunk.usage.get(
-                                            "cache_creation_input_tokens",
-                                            0,
-                                        )
-                                        or 0
-                                    )
-                                ),
-                                # Reasoning tokens (thinking) so the
-                                # WebUI can split output into
-                                # thinking vs reply content.
-                                "reasoning": (
-                                    agg.get("reasoning", 0)
-                                    + int(
-                                        (
-                                            chunk.usage.get(
-                                                "completion_tokens_details"
-                                            )
-                                            or {}
-                                        ).get("reasoning_tokens", 0)
-                                        or chunk.usage.get(
-                                            "reasoning_tokens", 0
-                                        )
-                                        or 0
-                                    )
-                                ),
-                                # Only providers that report a cost populate this;
-                                # the budget's cost limit stays inert otherwise.
-                                "cost_usd": (
-                                    float(agg.get("cost_usd", 0.0) or 0.0)
-                                    + float(chunk.usage.get("cost_usd", 0.0) or 0.0)
-                                ),
-                            }
-                            # Live sidebar/toolbar counters: push the
-                            # cumulative run usage as this turn completes
-                            # (WS "usage" frame + run.usage event).
-                            await self._broadcaster.broadcast_usage(
-                                run, run._usage_agg
-                            )
+                        # Some relays emit usage on SEVERAL chunks per stream
+                        # (zero-filled blocks first, real totals last). Stash
+                        # the latest; the turn is counted ONCE at stream end.
+                        tf.pending_turn_usage = chunk.usage
 
+                # Stream finished: count this turn from the LAST usage block
+                # and ledger the request immediately (dashboard shows it while
+                # the run is still going).
+                await self._count_turn_usage(st, req, tf)
                 tf.stream_completed = True
                 # Reasoning-only turn (tool calls / silence): close the
                 # window at stream end so the duration stays accurate.
@@ -347,7 +282,96 @@ class TurnStreamMixin:
                         stream_err,
                     )
                     continue
+                # Unrecoverable: the request DID happen — book whatever usage
+                # already arrived instead of losing it with the failure.
+                await self._count_turn_usage(st, req, tf)
                 raise
+
+    async def _count_turn_usage(
+        self, st: RunLoopState, req: TurnRequest, tf: TurnFrame
+    ) -> None:
+        """Count this turn once from the LAST usage block and ledger it live."""
+        run = st.run; session = st.session
+        usage = getattr(tf, "pending_turn_usage", None)
+        if not usage or tf.usage_counted:
+            return
+        tf.usage_counted = True
+        cache_read = int(
+            usage.get("cached_tokens", 0)
+            or usage.get("cache_hit_tokens", 0)
+            or usage.get("cache_read_input_tokens", 0)
+            or 0
+        )
+        prompt = int(usage.get("prompt_tokens", 0) or 0)
+        completion = int(usage.get("completion_tokens", 0) or 0)
+        cache_creation = int(
+            usage.get("cache_creation_input_tokens", 0) or 0
+        )
+        agg = getattr(run, "_usage_agg", None) or {
+            "turns": 0, "input": 0, "completion": 0,
+            "cache_read": 0, "cache_creation": 0, "cost_usd": 0.0,
+        }
+        run._usage_agg = {
+            "turns": agg["turns"] + 1,
+            "input": agg["input"] + prompt,
+            "completion": agg["completion"] + completion,
+            "cache_read": agg.get("cache_read", 0) + cache_read,
+            "cache_creation": agg.get("cache_creation", 0) + cache_creation,
+            # Reasoning tokens (thinking) so the WebUI can split output into
+            # thinking vs reply content.
+            "reasoning": (
+                agg.get("reasoning", 0)
+                + int(
+                    (usage.get("completion_tokens_details") or {}).get(
+                        "reasoning_tokens", 0
+                    )
+                    or usage.get("reasoning_tokens", 0)
+                    or 0
+                )
+            ),
+            # Only providers that report a cost populate this; the budget's
+            # cost limit stays inert otherwise.
+            "cost_usd": (
+                float(agg.get("cost_usd", 0.0) or 0.0)
+                + float(usage.get("cost_usd", 0.0) or 0.0)
+            ),
+        }
+        # Per-turn snapshot for the usage ledger: one entry per LLM API
+        # request, stamped with this turn's own model/tokens/timestamp.
+        turn_usages = getattr(run, "_turn_usages", None)
+        if turn_usages is None:
+            turn_usages = []
+            run._turn_usages = turn_usages
+        turn_usages.append({
+            "ts": time.time(),
+            "model": req.resolved_model or "",
+            "input_tokens": prompt,
+            "completion_tokens": completion,
+            "cache_read_tokens": cache_read,
+            "cache_creation_tokens": cache_creation,
+        })
+        # LIVE ledger write: visible on the dashboard while the run is still
+        # going; run finalize never re-writes per-turn entries.
+        from boarai.core.session.usage_ledger import get_usage_ledger
+
+        await get_usage_ledger().record({
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "run_id": f"{run.run_id}#t{len(turn_usages) - 1}",
+            "session_id": run.session_id,
+            "session_title": getattr(session, "title", "") or "",
+            "agent_name": getattr(session, "agent_name", "") or "default",
+            "model": req.resolved_model or st.model or "unknown",
+            "input_tokens": prompt,
+            "completion_tokens": completion,
+            "cache_read_tokens": cache_read,
+            "cache_creation_tokens": cache_creation,
+            "context_tokens": prompt,
+            "turns": 1,
+            "status": "turn",
+        })
+        # Live sidebar/toolbar counters: push the cumulative run usage as this
+        # turn completes (WS "usage" frame + run.usage event).
+        await self._broadcaster.broadcast_usage(run, run._usage_agg)
 
     async def _close_turn(self, st: RunLoopState, req: TurnRequest, tf: TurnFrame) -> LoopStep:
         """Close this turn's stream: flush the tail, flush thinking, update the fallback ledger, retry on silence, persist."""

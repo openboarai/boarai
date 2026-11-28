@@ -463,6 +463,7 @@ class SubAgentSession:
                 },
                 kind="subagent",
                 model=getattr(self, "_model", "") or "unknown",
+                turns=getattr(self, "_turn_count", 0) or 1,
                 session_id=self.session_id,
                 agent_name=f"subagent:{self.preset_name}",
             )

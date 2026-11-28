@@ -117,6 +117,7 @@ class UsageLedger:
         session_id: str = "",
         session_title: str = "",
         agent_name: str = "default",
+        turns: int = 1,
     ) -> None:
         """Record usage from auxiliary LLM calls (compression, subagent, distillation) that bypass the run executor."""
         if not usage:
@@ -147,6 +148,7 @@ class UsageLedger:
                 usage.get("cache_creation_input_tokens", 0) or 0
             ),
             "context_tokens": 0,
+            "turns": turns,
             "status": kind,
         })
 
@@ -214,6 +216,7 @@ class UsageLedger:
                 "completion_tokens": req.get("completion_tokens", 0),
                 "cache_read_tokens": req.get("cache_read_tokens", 0),
                 "cache_creation_tokens": req.get("cache_creation_tokens", 0),
+                "turns": req.get("run_turns", 0) or 0,
                 "status": "legacy",
             })
             existing.add(legacy_id)

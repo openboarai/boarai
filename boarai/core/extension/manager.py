@@ -26,7 +26,7 @@ from .base import ExtensionBase, ExtensionError
 
 from .manifest import ExtensionManifest
 
-from .loader import ExtensionLoader
+from .loader import ExtensionLoader, _per_extension_trusted
 
 from .discovery import ExtensionDiscovery
 
@@ -657,6 +657,12 @@ class ExtensionManager:
                 "networks this can take minutes — watch the server log for "
                 "the install result."
             )
+        elif code == "extension.name_conflict":
+            hint = (
+                "Two extension directories declare the same manifest name. "
+                "Remove or rename the duplicate copy; only one instance can "
+                "own that extension's routes, tools and channels."
+            )
         elif code == "loader.error":
             hint = (
                 "Run GET /api/extensions/verify?name=<name> for the "
@@ -738,9 +744,13 @@ class ExtensionManager:
 
     def list_failed(self) -> List[Dict[str, Any]]:
         """Snapshot of discovered-but-failed extensions (API/WebUI feed)."""
+        # A loaded instance wins over a stale failure recorded by an older
+        # duplicate attempt. Showing both makes one extension appear twice
+        # and its failure-card actions target the loaded instance by name.
         return [
             {k: v for k, v in entry.items() if k != "deterministic"}
-            for entry in self._failed.values()
+            for name, entry in self._failed.items()
+            if name not in self._extensions
         ]
 
     def get_failed(self, name: str) -> Optional[Dict[str, Any]]:
@@ -816,6 +826,60 @@ class ExtensionManager:
 
         async with self._lock:
 
+            extension_path = Path(extension_path)
+
+            # Loading is idempotent by manifest identity. Repeated discovery,
+            # Trust & load and watcher retries must not execute initialize()
+            # twice: dynamically registered routes would otherwise collide
+            # with the extension's own first instance.
+            try:
+                data = self._loader._read_manifest(
+                    self._loader._resolve_manifest_file(extension_path)
+                )
+                identity = str(data.get("name") or extension_path.name)
+            except Exception:  # noqa: BLE001 — loader reports malformed YAML
+                identity = extension_path.name
+            existing = self._extensions.get(identity)
+            if existing is not None:
+                m = getattr(existing, "_manifest", None) or existing.manifest
+                loaded_path = getattr(m, "path", None)
+                same_path = False
+                if loaded_path is not None:
+                    try:
+                        same_path = (
+                            Path(loaded_path).resolve()
+                            == extension_path.resolve()
+                        )
+                    except OSError:
+                        same_path = Path(loaded_path) == extension_path
+                if same_path:
+                    source = str(getattr(m, "source", "") or "")
+                    # Idempotency must never bypass a trust revocation that
+                    # happened directly in state.json (the loader gate would
+                    # normally re-check this before executing any code).
+                    if (
+                        source != "system"
+                        and os.getenv("BOARAI_ALLOW_INPROCESS_USER_EXTENSIONS", "") != "1"
+                        and not _per_extension_trusted(identity, source)
+                    ):
+                        raise ExtensionError(
+                            f"Extension '{identity}' is no longer trusted; "
+                            f"grant trust again before loading it.",
+                            code="gate.inprocess_untrusted",
+                        )
+                    self._clear_failure(identity)
+                    logger.debug(
+                        f"Extension '{identity}' already loaded from "
+                        f"{extension_path}; reusing the existing instance"
+                    )
+                    return existing
+                raise ExtensionError(
+                    f"Extension name '{identity}' is already loaded from "
+                    f"{loaded_path}; the duplicate copy at {extension_path} "
+                    f"was not executed. Remove or rename one copy.",
+                    code="extension.name_conflict",
+                )
+
             # Load extension
 
             extension = await self._loader.load_extension_from_path(extension_path, config)
@@ -830,14 +894,14 @@ class ExtensionManager:
 
         """Register extension."""
 
-        # A successful load retires any recorded failure for this name.
-        self._clear_failure(extension.name)
-
         if extension.name in self._extensions:
 
             raise ExtensionError(f"Extension {extension.name} is already registered")
 
         self._extensions[extension.name] = extension
+
+        # Only a fully registered instance retires the old failure card.
+        self._clear_failure(extension.name)
 
         logger.debug(f"Registered extension: {extension.name}")
 

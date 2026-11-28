@@ -12,7 +12,9 @@ Features:
 """
 
 import asyncio
+import html
 import logging
+import re
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -26,6 +28,20 @@ logger = logging.getLogger(__name__)
 # Get the directory containing this file
 _CURRENT_DIR = Path(__file__).parent
 _STATIC_DIR = _CURRENT_DIR / "static"
+
+# Browser-tab title override (webui config key "site_title"). Kept as a pure
+# module-level helper so the injection is unit-testable without an HTTP stack.
+_TITLE_RE = re.compile(r"<title>.*?</title>", re.IGNORECASE | re.DOTALL)
+_MAX_TITLE_CHARS = 100
+_DEFAULT_TITLE = "BoarAi WebUI"
+
+
+def _inject_title(content: str, title: Any) -> str:
+    """Replace the <title> tag with a sanitized custom title (no-op when blank)."""
+    cleaned = html.escape(str(title or "").strip()[:_MAX_TITLE_CHARS])
+    if not cleaned or not _TITLE_RE.search(content):
+        return content
+    return _TITLE_RE.sub(f"<title>{cleaned}</title>", content, count=1)
 
 class WebUIChannelAdapter(ExtensionBase):
     """WebUI adapter that uses EventBus for communication."""
@@ -132,6 +148,8 @@ class WebUIChannelAdapter(ExtensionBase):
         try:
             # V8: read off the event loop to avoid blocking high-concurrency requests
             content = await asyncio.to_thread(index_file.read_text, encoding='utf-8')
+            # Config-driven browser-tab title (empty = keep the shipped default).
+            content = _inject_title(content, self._config.get("site_title"))
             return web.Response(
                 text=content,
                 content_type='text/html',

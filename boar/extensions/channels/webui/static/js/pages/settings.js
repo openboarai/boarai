@@ -38,8 +38,8 @@ const SettingsPage = {
               <div class="w-full lg:w-56 xl:w-64 shrink-0">
                 <div v-if="providers.length === 0"
                      class="px-3 py-6 text-center border border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
-                  <p class="text-sm text-gray-500 dark:text-gray-500">{{ t('settings.noProviders') || 'No providers configured yet' }}</p>
-                  <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ t('settings.addProviderHint') || 'Click "Add Provider" to get started' }}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('settings.noProviders') || 'No providers configured yet' }}</p>
+                  <p class="text-xs text-gray-400 dark:text-gray-400 mt-1">{{ t('settings.addProviderHint') || 'Click "Add Provider" to get started' }}</p>
                 </div>
                 <nav v-else class="flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
                   <!-- Placeholder entry while the new-provider form is open -->
@@ -49,7 +49,7 @@ const SettingsPage = {
                       <i data-lucide="plus" class="w-3.5 h-3.5 text-primary shrink-0"></i>
                       <span class="text-sm font-medium text-primary truncate">{{ t('settings.newProvider') || 'New Provider' }}</span>
                     </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-500 truncate mt-0.5">{{ t('settings.newProviderPending') || 'Not saved yet' }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{{ t('settings.newProviderPending') || 'Not saved yet' }}</div>
                   </div>
                   <button v-for="provider in providers" :key="provider.name" type="button"
                           @click="selectProvider(provider)"
@@ -60,12 +60,12 @@ const SettingsPage = {
                     <div class="flex items-center gap-2 min-w-0">
                       <span class="text-sm font-medium truncate"
                             :class="isProviderSelected(provider.name) ? 'text-primary' : 'text-gray-900 dark:text-white'">{{ provider.name }}</span>
-                      <span class="ml-auto shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500">
+                      <span class="ml-auto shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                         {{ provider.provider_type || (provider.api_base?.includes('anthropic') ? 'anthropic' : 'openai') }}
                       </span>
                     </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-500 truncate mt-0.5" :title="provider.api_base">{{ provider.api_base }}</div>
-                    <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    <div class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5" :title="provider.api_base">{{ provider.api_base }}</div>
+                    <div class="text-xs text-gray-400 dark:text-gray-400 mt-0.5">
                       {{ t('settings.providerModelCount', { count: (provider.supported_models || []).length }) || ((provider.supported_models || []).length + ' models') }}
                     </div>
                   </button>
@@ -76,7 +76,7 @@ const SettingsPage = {
               <div v-if="!providerFormMode"
                    class="flex-1 min-w-0 py-10 text-center border-t border-gray-100 dark:border-gray-700 pt-3 lg:border-t-0 lg:border-l lg:pl-4">
                 <i data-lucide="hard-drive" class="w-8 h-8 mx-auto text-gray-300 dark:text-gray-600"></i>
-                <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">{{ t('settings.providerDetailHint') || 'Select a provider on the left to view its settings' }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">{{ t('settings.providerDetailHint') || 'Select a provider on the left to view its settings' }}</p>
               </div>
               <template v-else>
               <!-- Column 2: the draft model list (moved out of the form so the
@@ -85,7 +85,7 @@ const SettingsPage = {
                 <div class="flex items-center justify-between gap-2 mb-2">
                   <span class="text-xs font-medium text-gray-600 dark:text-gray-300 truncate">
                     {{ t('settings.supportedModels') || 'Supported Models' }}
-                    <span class="text-gray-400 dark:text-gray-500">({{ (form.selected_models || []).length }})</span>
+                    <span class="text-gray-400 dark:text-gray-400">({{ (form.selected_models || []).length }})</span>
                   </span>
                   <button @click="fetchModels"
                           :disabled="form.fetching_models || !form.api_base || (!editingProvider && !form.api_key)"
@@ -146,7 +146,7 @@ const SettingsPage = {
                 </div>
                 <div v-else-if="form.fetched_models.length > 0"
                      class="mt-2 max-h-40 overflow-y-auto bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-1.5 space-y-0.5">
-                  <div class="text-[11px] text-gray-500 dark:text-gray-500 px-1 pb-1">
+                  <div class="text-[11px] text-gray-500 dark:text-gray-400 px-1 pb-1">
                     {{ t('settings.fetchedModels') || 'Fetched from API' }}
                     <span class="text-gray-500">({{ form.fetched_models.length }})</span>
                   </div>
@@ -174,7 +174,7 @@ const SettingsPage = {
                           <i data-lucide="box" class="w-4 h-4 text-primary shrink-0"></i>
                           <span class="truncate">{{ modelDetail }}</span>
                         </h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {{ t('settings.modelSettingsHint') || 'Context length and capability toggles for this model' }}
                         </p>
                       </div>
@@ -189,7 +189,7 @@ const SettingsPage = {
                       <label class="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1.5">{{ t('settings.contextLength') || 'Context Length' }}</label>
                       <div class="flex items-center gap-2">
                         <select :value="ctxMode(modelDetail)" @change="onCtxModeChange(modelDetail, $event.target.value)"
-                                class="px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                class="${UiClasses.inputCompact}">
                           <option value="">{{ ctxDefaultLabel(modelDetail) }}</option>
                           <option value="128000">128k</option>
                           <option value="512000">512k</option>
@@ -199,7 +199,7 @@ const SettingsPage = {
                         <input v-if="ctxMode(modelDetail) === 'custom'" type="number" min="1024" step="1024"
                                :value="form.model_context_windows[modelDetail] || ''"
                                @input="onCtxCustomInput(modelDetail, $event.target.value)"
-                               class="w-28 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                               class="w-28 ${UiClasses.inputCompact}"
                                placeholder="tokens">
                       </div>
                     </div>
@@ -228,13 +228,13 @@ const SettingsPage = {
                         <i :data-lucide="providerFormMode === 'edit' ? 'pencil' : 'plus'" class="w-4 h-4 text-primary shrink-0"></i>
                         <span class="truncate">{{ providerFormMode === 'edit' ? (editingProvider?.name || (t('settings.editProvider') || 'Edit Provider')) : (t('settings.newProvider') || 'New Provider') }}</span>
                       </h4>
-                      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {{ providerFormMode === 'edit' ? (t('settings.editProviderHint') || 'Click Save to apply your changes') : (t('settings.newProviderDesc') || 'Fill in the details below, then save to create the provider') }}
                       </p>
                     </div>
                     <div v-if="providerFormMode === 'edit'" class="flex items-center gap-1 shrink-0">
                       <button @click="validateProvider(editingProvider.name)"
-                              class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-green-500 transition-colors"
+                              class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-mint-500 transition-colors"
                               :title="t('settings.validateProvider') || 'Validate'">
                         <i data-lucide="check-circle" class="w-4 h-4"></i>
                       </button>
@@ -249,7 +249,7 @@ const SettingsPage = {
                     <div>
                       <label class="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1.5">{{ t('settings.providerName') || 'Name' }}</label>
                       <input v-model="form.name" type="text" :disabled="providerFormMode === 'edit'"
-                             class="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                             class="w-full ${UiClasses.inputCompact}"
                              :placeholder="'openai'">
                     </div>
                     <div>
@@ -264,13 +264,13 @@ const SettingsPage = {
                   <div>
                     <label class="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1.5">{{ t('settings.apiKey') }}</label>
                     <input v-model="form.api_key" type="password"
-                           class="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                           class="w-full ${UiClasses.inputCompact}"
                            :placeholder="'sk-...'">
                   </div>
                   <div>
                     <label class="text-xs font-medium text-gray-700 dark:text-gray-300 block mb-1.5">{{ t('settings.apiBaseUrl') }}</label>
                     <input v-model="form.api_base" type="text"
-                           class="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                           class="w-full ${UiClasses.inputCompact}"
                            :placeholder="form.provider_type === 'anthropic' ? 'https://api.anthropic.com' : 'https://api.openai.com/v1'">
                   </div>
                   </template>
@@ -296,7 +296,7 @@ const SettingsPage = {
                stay visible at a glance while the card takes a single row of
                space. Each tile drills down provider → model in-place. -->
           <div v-if="providers.length > 0"
-               class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+               class="${UiClasses.card}">
             <div class="px-4 py-2 bg-gray-50 dark:bg-gray-750 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">
               <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-sm min-w-0">
                 <i data-lucide="cpu" class="w-4 h-4 text-primary shrink-0"></i>
@@ -322,7 +322,7 @@ const SettingsPage = {
                     <svg v-if="getCapState(cap.key).saving" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                     <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
                   </button>
-                  <span v-else-if="capSaved(cap.key)" class="shrink-0 inline-flex items-center text-emerald-600 dark:text-emerald-400"
+                  <span v-else-if="capSaved(cap.key)" class="shrink-0 inline-flex items-center text-mint-600 dark:text-mint-400"
                         :title="t('settings.capSaved') || 'Saved'">
                     <i data-lucide="check" class="w-3.5 h-3.5"></i>
                   </span>
@@ -335,7 +335,7 @@ const SettingsPage = {
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                     <span class="text-primary font-medium truncate">{{ getCapState(cap.key).model }}</span>
                   </span>
-                  <span v-else class="text-gray-400 dark:text-gray-500 truncate">{{ t('settings.selectProviderAndModel') || 'Select provider & model...' }}</span>
+                  <span v-else class="text-gray-400 dark:text-gray-400 truncate">{{ t('settings.selectProviderAndModel') || 'Select provider & model...' }}</span>
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-500 shrink-0 transition-transform" :class="{ 'rotate-180': getCapState(cap.key).open }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
                 <!-- Drill-down menu: providers first, then that provider's models.
@@ -382,7 +382,7 @@ const SettingsPage = {
               <div class="flex items-center justify-between">
                 <div>
                   <div class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.theme') }}</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-500">{{ t('settings.chooseTheme') }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.chooseTheme') }}</div>
                 </div>
                 <select v-model="theme" @change="handleThemeChange" 
                         class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">
@@ -391,25 +391,21 @@ const SettingsPage = {
                   <option value="system">{{ t('common.system') }}</option>
                 </select>
               </div>
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between rounded-xl bg-primary/5 border border-primary/100 px-4 py-3">
                 <div>
-                  <div class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.colorTheme') }}</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-500">{{ t('settings.chooseColorTheme') }}</div>
+                  <div class="text-sm font-semibold text-primary">{{ t('settings.brandTheme') || 'Cobalt collaboration' }}</div>
+                  <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ t('settings.brandThemeHint') || 'Cobalt actions, sunny highlights, and mint status colors.' }}</div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <button v-for="ct in colorThemes" :key="ct.code"
-                          @click="setColorTheme(ct.code)"
-                          class="w-8 h-8 rounded-full border-2 transition-all duration-200 hover:scale-110"
-                          :class="colorTheme === ct.code ? 'border-gray-900 dark:border-white scale-110' : 'border-transparent'"
-                          :style="{ backgroundColor: ct.hex }"
-                          :title="ct.name">
-                  </button>
+                <div class="flex items-center gap-2" aria-hidden="true">
+                  <span class="w-5 h-5 rounded-md bg-primary shadow-sm"></span>
+                  <span class="w-5 h-5 rounded-md bg-sun"></span>
+                  <span class="w-5 h-5 rounded-md bg-mint"></span>
                 </div>
               </div>
               <div class="flex items-center justify-between">
                 <div>
                   <div class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.language') }}</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-500">{{ t('settings.selectLanguage') }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.selectLanguage') }}</div>
                 </div>
                 <select v-model="language" @change="applyLanguage"
                         class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">
@@ -421,7 +417,7 @@ const SettingsPage = {
               <div class="flex items-center justify-between">
                 <div>
                   <div class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.homepage') }}</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-500">{{ t('settings.homepageDesc') }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.homepageDesc') }}</div>
                 </div>
                 <select v-model="homepage" @change="handleHomepageChange"
                         class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">
@@ -432,6 +428,21 @@ const SettingsPage = {
                   <option value="data">{{ t('nav.data') }}</option>
                   <option value="settings">{{ t('nav.settings') }}</option>
                 </select>
+              </div>
+              <!-- Page Title Setting (server-side, applies to every device) -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.siteTitle') || 'Page Title' }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.siteTitleDesc') || 'Browser tab title for the WebUI (empty = default)' }}</div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input v-model="siteTitle" type="text" maxlength="100"
+                         :placeholder="'BoarAi WebUI'"
+                         class="w-48 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                  <base-button size="sm" :disabled="siteTitleSaving" @click="saveSiteTitle">
+                    {{ t('common.save') || 'Save' }}
+                  </base-button>
+                </div>
               </div>
             </div>
           </card-section>
@@ -449,7 +460,7 @@ const SettingsPage = {
               <div class="flex items-center justify-between">
                 <div>
                   <div class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.autoReconnect') }}</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-500">{{ t('settings.autoReconnectDesc') }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.autoReconnectDesc') }}</div>
                 </div>
                 <toggle-switch :model-value="true" disabled size="lg"></toggle-switch>
               </div>
@@ -463,7 +474,7 @@ const SettingsPage = {
           <card-section icon="gauge" :title="t('settings.compressionThreshold') || 'Compression Threshold'" body-class="p-4">
             <template #title>
               {{ t('settings.compressionThreshold') || 'Compression Threshold' }}
-              <p class="text-xs text-gray-500 dark:text-gray-500 mt-1 ml-6 font-normal">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6 font-normal">
                 {{ t('settings.compressionThresholdDesc') || 'Auto-compress when context usage exceeds this ratio' }}
               </p>
             </template>
@@ -487,13 +498,13 @@ const SettingsPage = {
           <card-section icon="folder-tree" :title="t('settings.defaultWorkspace') || 'Default Workspace Directory'" body-class="p-4 space-y-3">
             <template #title>
               {{ t('settings.defaultWorkspace') || 'Default Workspace Directory' }}
-              <p class="text-xs text-gray-500 dark:text-gray-500 mt-1 ml-6 font-normal">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6 font-normal">
                 {{ t('settings.defaultWorkspaceDesc') || 'Default working directory for new sessions' }}
               </p>
             </template>
             <template #header-actions>
               <span v-if="workspaceSettingSaving"
-                    class="text-xs text-gray-500 dark:text-gray-500 whitespace-nowrap">
+                    class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                 {{ t('common.loading') || 'Saving...' }}
               </span>
             </template>
@@ -504,7 +515,7 @@ const SettingsPage = {
 
               <div v-if="defaultWorkspaceMode === 'custom'"
                    class="rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50/80 dark:bg-gray-750/40 p-3 space-y-2">
-                <label class="text-xs font-medium text-gray-500 dark:text-gray-500">
+                <label class="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {{ t('settings.workspaceCustom') || 'Custom Path' }}
                 </label>
                 <div class="flex items-center gap-2">
@@ -525,13 +536,13 @@ const SettingsPage = {
           <card-section icon="shield" :title="t('settings.defaultApprovalMode') || 'New Session Approval Mode'" body-class="p-4 space-y-3">
             <template #title>
               {{ t('settings.defaultApprovalMode') || 'New Session Approval Mode' }}
-              <p class="text-xs text-gray-500 dark:text-gray-500 mt-1 ml-6 font-normal">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6 font-normal">
                 {{ t('settings.defaultApprovalModeDesc') || 'Deny/Allow are frozen into new sessions (winning over auto-approve; forks included); Ask follows the global default approval mode. Existing sessions are unaffected; the toolbar pill still overrides per session.' }}
               </p>
             </template>
             <template #header-actions>
               <span v-if="approvalModeSaving"
-                    class="text-xs text-gray-500 dark:text-gray-500 whitespace-nowrap">
+                    class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                 {{ t('common.loading') || 'Saving...' }}
               </span>
             </template>
@@ -545,7 +556,7 @@ const SettingsPage = {
         <div v-if="activeTab === 'advanced'" class="space-y-4">
           <card-section icon="pen-tool" :title="t('settings.advanced') || 'Advanced'">
             <div class="space-y-4">
-              <div class="text-center py-8 text-gray-500 dark:text-gray-500">
+              <div class="text-center py-8 text-gray-500 dark:text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-3 opacity-50"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                 <p class="text-sm">{{ t('settings.advancedDesc') || 'Advanced settings will be available soon' }}</p>
               </div>
@@ -570,7 +581,7 @@ const SettingsPage = {
               </button>
             </div>
             <div class="p-4 space-y-4">
-              <p class="text-xs text-gray-500 dark:text-gray-500">
+              <p class="text-xs text-gray-500 dark:text-gray-400">
                 {{ t('settings.accessDesc') || 'A new device must enter the access key. The server stores only its hash, so it can never be shown again.' }}
               </p>
 
@@ -578,7 +589,7 @@ const SettingsPage = {
               <div class="flex items-center justify-between gap-3">
                 <div class="min-w-0">
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.sessionTtl') || 'Session lifetime' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.sessionTtlDesc') || 'How long a device stays signed in after the key is entered' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.sessionTtlDesc') || 'How long a device stays signed in after the key is entered' }}</p>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
                   <select v-model="accessConfig.ttl"
@@ -596,7 +607,7 @@ const SettingsPage = {
               <div class="flex items-center justify-between">
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.slidingTtl') || 'Sliding expiry' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.slidingTtlDesc') || 'Push the expiry forward on activity (off = absolute deadline)' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.slidingTtlDesc') || 'Push the expiry forward on activity (off = absolute deadline)' }}</p>
                 </div>
                 <toggle-switch v-model="accessConfig.sliding" @update:model-value="saveAccessSliding"></toggle-switch>
               </div>
@@ -610,7 +621,7 @@ const SettingsPage = {
                     {{ t('settings.logoutDevice') || 'Sign out this device' }}
                   </button>
                 </div>
-                <div v-if="accessDevices.length === 0" class="text-xs text-gray-500 dark:text-gray-500 py-2">
+                <div v-if="accessDevices.length === 0" class="text-xs text-gray-500 dark:text-gray-400 py-2">
                   {{ t('settings.noDevices') || 'No active device sessions' }}
                 </div>
                 <div v-else class="space-y-1 max-h-56 overflow-y-auto pr-0.5">
@@ -624,7 +635,7 @@ const SettingsPage = {
                           {{ t('settings.thisDevice') || 'This device' }}
                         </span>
                       </div>
-                      <div class="text-gray-400 dark:text-gray-500 truncate">
+                      <div class="text-gray-400 dark:text-gray-400 truncate">
                         {{ device.ip || '—' }} · {{ t('settings.expiresAt') || 'expires' }} {{ formatStamp(device.expires_at) }}
                       </div>
                     </div>
@@ -642,7 +653,7 @@ const SettingsPage = {
                 <div class="flex items-center justify-between gap-3">
                   <div>
                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.rotateKey') || 'Rotate access key' }}</label>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.rotateKeyDesc') || 'Shows a new key first; nothing changes until you apply it' }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.rotateKeyDesc') || 'Shows a new key first; nothing changes until you apply it' }}</p>
                   </div>
                   <button @click="rotateAccessKey" :disabled="accessRotating"
                           class="shrink-0 px-3 py-1.5 text-sm font-medium bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50">
@@ -652,17 +663,17 @@ const SettingsPage = {
                 <!-- Prepared key: NOT applied yet. The current key still works,
                      so refreshing or leaving this page cannot lock anyone out. -->
                 <div v-if="accessNewKey"
-                     class="rounded-lg border-2 border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-3 space-y-2">
-                  <p class="text-xs font-medium text-amber-900 dark:text-amber-100">
+                     class="rounded-lg border-2 border-sun-300 dark:border-sun-800 bg-sun-50 dark:bg-sun-950/40 p-3 space-y-2">
+                  <p class="text-xs font-medium text-sun-900 dark:text-sun-100">
                     {{ t('settings.newKeyPendingTitle') || 'New key ready — not applied yet' }}
                   </p>
-                  <p class="text-xs text-amber-800 dark:text-amber-200">
+                  <p class="text-xs text-sun-800 dark:text-sun-200">
                     {{ t('settings.newKeyPendingDesc') || 'Save it in a password manager first. Your current key keeps working until you apply this one. Leaving this page discards it.' }}
                   </p>
                   <div class="flex items-start gap-2">
-                    <code class="flex-1 block text-xs font-mono break-all text-amber-900 dark:text-amber-100 select-all bg-white/60 dark:bg-black/20 rounded p-2">{{ accessNewKey }}</code>
+                    <code class="flex-1 block text-xs font-mono break-all text-sun-900 dark:text-sun-100 select-all bg-white/60 dark:bg-black/20 rounded p-2">{{ accessNewKey }}</code>
                     <button @click="copyNewKey"
-                            class="shrink-0 px-2 py-1.5 text-xs font-medium rounded-lg border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors flex items-center gap-1">
+                            class="shrink-0 px-2 py-1.5 text-xs font-medium rounded-lg border border-sun-300 dark:border-sun-700 text-sun-900 dark:text-sun-100 hover:bg-sun-100 dark:hover:bg-sun-900/40 transition-colors flex items-center gap-1">
                       <i :data-lucide="accessKeyCopied ? 'check' : 'copy'" class="w-3 h-3"></i>
                       {{ accessKeyCopied ? (t('settings.keyCopied') || 'Copied') : (t('settings.copyKey') || 'Copy') }}
                     </button>
@@ -690,7 +701,7 @@ const SettingsPage = {
               <div class="flex items-center justify-between">
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.approvalMode') || 'Approval Mode' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.approvalModeDesc') || 'How tool calls require user approval' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.approvalModeDesc') || 'How tool calls require user approval' }}</p>
                 </div>
                 <select v-model="securityConfig.approval_mode"
                         class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">
@@ -701,42 +712,42 @@ const SettingsPage = {
               <div class="flex items-center justify-between">
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.autoApprove') || 'Auto Approve' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.autoApproveDesc') || 'Skip tool confirmation' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.autoApproveDesc') || 'Skip tool confirmation' }}</p>
                 </div>
                 <toggle-switch v-model="securityConfig.auto_approve"></toggle-switch>
               </div>
               <div class="flex items-center justify-between">
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.allowExternalWrite') || 'Allow External Write' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.allowExternalWriteDesc') || 'Allow writes outside project workspace' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.allowExternalWriteDesc') || 'Allow writes outside project workspace' }}</p>
                 </div>
                 <toggle-switch v-model="securityConfig.allow_external_write"></toggle-switch>
               </div>
               <div class="flex items-center justify-between">
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.allowExternalRead') || 'Allow External Read' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.allowExternalReadDesc') || 'Allow reading files outside the workspace (credential dirs stay forbidden)' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.allowExternalReadDesc') || 'Allow reading files outside the workspace (credential dirs stay forbidden)' }}</p>
                 </div>
                 <toggle-switch v-model="securityConfig.allow_external_read"></toggle-switch>
               </div>
               <div class="flex items-center justify-between">
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.networkApproval') || 'Network Command Approval' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.networkApprovalDesc') || 'Shell commands reaching external hosts require approval (loopback always free)' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.networkApprovalDesc') || 'Shell commands reaching external hosts require approval (loopback always free)' }}</p>
                 </div>
                 <toggle-switch v-model="securityConfig.network_approval"></toggle-switch>
               </div>
               <div class="flex items-center justify-between">
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.blockExternalPaths') || 'Block External Absolute Paths' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.blockExternalPathsDesc') || 'Hard-deny shell commands referencing paths outside the project (off = approval prompt)' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.blockExternalPathsDesc') || 'Hard-deny shell commands referencing paths outside the project (off = approval prompt)' }}</p>
                 </div>
                 <toggle-switch v-model="securityConfig.block_external_absolute_paths"></toggle-switch>
               </div>
               <div class="flex items-center justify-between">
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.unattendedPolicy') || 'Unattended Policy' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.unattendedPolicyDesc') || 'What happens when nobody can answer an approval prompt (headless runs)' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.unattendedPolicyDesc') || 'What happens when nobody can answer an approval prompt (headless runs)' }}</p>
                 </div>
                 <select v-model="securityConfig.unattended_policy"
                         class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">
@@ -748,7 +759,7 @@ const SettingsPage = {
               <div class="flex items-center justify-between">
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.pendingTimeout') || 'Approval Wait Timeout' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.pendingTimeoutDesc') || 'How long a run may wait for an approval decision (seconds)' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.pendingTimeoutDesc') || 'How long a run may wait for an approval decision (seconds)' }}</p>
                 </div>
                 <input type="number" v-model.number="securityConfig.pending_timeout" min="1" max="86400"
                        class="w-24 px-2 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 text-center">
@@ -756,7 +767,7 @@ const SettingsPage = {
               <div class="flex items-center justify-between">
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.maxToolCalls') || 'Max Tool Calls' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.maxToolCallsDesc') || 'Maximum tool calls per run' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.maxToolCallsDesc') || 'Maximum tool calls per run' }}</p>
                 </div>
                 <input type="number" v-model.number="securityConfig.max_tool_calls" min="0" max="100000"
                        class="w-20 px-2 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 text-center">
@@ -767,14 +778,14 @@ const SettingsPage = {
                 <div class="flex items-center justify-between">
                   <div class="min-w-0">
                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.trustLoopback') || 'Trust loopback' }}</label>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.trustLoopbackDesc') || 'Requests from 127.0.0.1 need no key. Turn OFF behind a reverse proxy (it forwards from loopback, which would bypass the gate)' }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.trustLoopbackDesc') || 'Requests from 127.0.0.1 need no key. Turn OFF behind a reverse proxy (it forwards from loopback, which would bypass the gate)' }}</p>
                   </div>
                   <toggle-switch v-model="securityConfig.trust_loopback"></toggle-switch>
                 </div>
                 <div class="flex items-center justify-between gap-3">
                   <div class="min-w-0">
                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.sessionTtlMax') || 'Max session lifetime' }}</label>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.sessionTtlMaxDesc') || 'Upper bound (seconds) a device login may request' }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.sessionTtlMaxDesc') || 'Upper bound (seconds) a device login may request' }}</p>
                   </div>
                   <input type="number" v-model.number="securityConfig.session_ttl_max_seconds" min="60" max="2592000"
                          class="w-28 px-2 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 text-center">
@@ -782,26 +793,26 @@ const SettingsPage = {
                 <div class="flex items-center justify-between">
                   <div class="min-w-0">
                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.auditEnabled') || 'Security audit log' }}</label>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.auditEnabledDesc') || 'Record approvals, denials and path blocks to disk' }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.auditEnabledDesc') || 'Record approvals, denials and path blocks to disk' }}</p>
                   </div>
                   <toggle-switch v-model="securityConfig.audit_enabled"></toggle-switch>
                 </div>
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.auditEvents') || 'Audited event types' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.auditEventsDesc') || 'One per line. Allowed: tool_execute, tool_deny, path_block, approval, pip_install' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.auditEventsDesc') || 'One per line. Allowed: tool_execute, tool_deny, path_block, approval, pip_install' }}</p>
                   <textarea v-model="securityLists.audit_events" rows="3"
                             class="mt-1 w-full px-2 py-1.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300"></textarea>
                 </div>
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.auditLogPath') || 'Audit log file' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.auditLogPathDesc') || 'Relative paths resolve under the data directory' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.auditLogPathDesc') || 'Relative paths resolve under the data directory' }}</p>
                   <input type="text" v-model="securityConfig.audit_log_path"
                          class="mt-1 w-full px-2 py-1.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">
                 </div>
                 <div class="flex items-center justify-between gap-3">
                   <div class="min-w-0">
                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.errorStreakPolicy') || 'Repeated tool failures' }}</label>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.errorStreakPolicyDesc') || 'warn = keep going with a hint; block = deny after 5 consecutive failures' }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.errorStreakPolicyDesc') || 'warn = keep going with a hint; block = deny after 5 consecutive failures' }}</p>
                   </div>
                   <select v-model="securityConfig.error_streak_policy"
                           class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">
@@ -812,7 +823,7 @@ const SettingsPage = {
                 <div class="flex items-center justify-between gap-3">
                   <div class="min-w-0">
                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.shellBackend') || 'Shell backend' }}</label>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.shellBackendDesc') || 'local = the host (text checks only); docker = contained, commands run in a container' }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.shellBackendDesc') || 'local = the host (text checks only); docker = contained, commands run in a container' }}</p>
                   </div>
                   <select v-model="securityConfig.shell_backend"
                           class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">
@@ -821,7 +832,7 @@ const SettingsPage = {
                   </select>
                 </div>
                 <template v-if="securityConfig.shell_backend === 'docker'">
-                  <p class="text-xs text-amber-600 dark:text-amber-400">
+                  <p class="text-xs text-sun-600 dark:text-sun-400">
                     {{ t('settings.dockerMountsWarn') || 'The container does not mount the workspace by default — configure security.shell_safety.docker_mounts in config.yaml, or commands inside it see none of the session files' }}
                   </p>
                   <div>
@@ -832,26 +843,26 @@ const SettingsPage = {
                   <div class="flex items-center justify-between">
                     <div class="min-w-0">
                       <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.dockerNetwork') || 'Container network' }}</label>
-                      <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.dockerNetworkDesc') || 'Off = --network none (a networked container can exfiltrate what it reads)' }}</p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.dockerNetworkDesc') || 'Off = --network none (a networked container can exfiltrate what it reads)' }}</p>
                     </div>
                     <toggle-switch v-model="securityConfig.docker_network"></toggle-switch>
                   </div>
                 </template>
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.absoluteWriteFloor') || 'Absolute write floor' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.absoluteWriteFloorDesc') || 'One glob per line. Denied for writes in EVERY mode. Must keep .boarai/config/' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.absoluteWriteFloorDesc') || 'One glob per line. Denied for writes in EVERY mode. Must keep .boarai/config/' }}</p>
                   <textarea v-model="securityLists.absolute_write_paths" rows="5"
                             class="mt-1 w-full px-2 py-1.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300"></textarea>
                 </div>
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.forbiddenReadPaths') || 'Confirm-tier read paths' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.forbiddenReadPathsDesc') || 'Credential locations that prompt before being read. One glob per line' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.forbiddenReadPathsDesc') || 'Credential locations that prompt before being read. One glob per line' }}</p>
                   <textarea v-model="securityLists.forbidden_read_paths" rows="5"
                             class="mt-1 w-full px-2 py-1.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300"></textarea>
                 </div>
                 <div>
                   <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('settings.forbiddenWritePaths') || 'Confirm-tier write paths' }}</label>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{{ t('settings.forbiddenWritePathsDesc') || 'Sensitive write targets that prompt first. One glob per line' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t('settings.forbiddenWritePathsDesc') || 'Sensitive write targets that prompt first. One glob per line' }}</p>
                   <textarea v-model="securityLists.forbidden_write_paths" rows="4"
                             class="mt-1 w-full px-2 py-1.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300"></textarea>
                 </div>
@@ -883,8 +894,8 @@ const SettingsPage = {
                      class="flex items-start gap-2 p-1.5 text-xs font-mono rounded hover:bg-gray-50 dark:hover:bg-gray-700/50"
                      :class="{
                        'text-red-600 dark:text-red-400': rec.event === 'tool_deny' || rec.event === 'path_block',
-                       'text-green-600 dark:text-green-400': rec.event === 'approval',
-                       'text-gray-600 dark:text-gray-500': rec.event === 'tool_execute',
+                       'text-mint-600 dark:text-mint-400': rec.event === 'approval',
+                       'text-gray-600 dark:text-gray-400': rec.event === 'tool_execute',
                      }">
                   <span class="text-gray-500 shrink-0 w-20">{{ formatTime(rec.ts) }}</span>
                   <span class="shrink-0 w-16 font-semibold">{{ rec.event }}</span>
@@ -912,8 +923,8 @@ const SettingsPage = {
                   <ellipse cx="64" cy="43" rx="4" ry="2" fill="white" transform="rotate(25 64 43)"/>
                 </svg>
                 <div class="text-xl font-bold text-gray-900 dark:text-white mb-1">BoarAi WebUI</div>
-                <div class="text-sm text-gray-500 dark:text-gray-500 mb-4">{{ t('settings.version', { version: (updateStatus && updateStatus.current_version) || '—' }) }}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-500 max-w-md mx-auto">
+                <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('settings.version', { version: (updateStatus && updateStatus.current_version) || '—' }) }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto">
                   {{ t('settings.aboutDesc') || 'BoarAi is an AI Agent Framework that enables you to build intelligent agents with ease.' }}
                 </div>
                 <!-- Project links: GitHub source repository + PyPI package page -->
@@ -939,13 +950,13 @@ const SettingsPage = {
 
           <!-- Online Update (pip / git / source channels; refusal contract rendered when a channel is blocked) -->
           <card-section icon="refresh-cw" :title="t('settings.updateTitle') || 'Online Update'" body-class="p-4">
-            <div v-if="updateLoading && !updateStatus" class="text-sm text-gray-500 dark:text-gray-500 py-2">
+            <div v-if="updateLoading && !updateStatus" class="text-sm text-gray-500 dark:text-gray-400 py-2">
               <i data-lucide="loader-2" class="w-4 h-4 inline animate-spin"></i>
             </div>
             <div v-else-if="updateStatus" class="space-y-3">
               <!-- Version + channel row -->
               <div class="flex flex-wrap items-center gap-2 text-sm">
-                <span class="text-gray-500 dark:text-gray-500">{{ t('settings.updateCurrent') || 'Current' }}</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ t('settings.updateCurrent') || 'Current' }}</span>
                 <span class="font-mono font-medium text-gray-900 dark:text-white">v{{ updateStatus.current_version }}</span>
                 <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                       :title="t('settings.updateChannelHint') || 'pip, git and source installs all self-update through their own channel'">
@@ -953,18 +964,18 @@ const SettingsPage = {
                 </span>
                 <template v-if="updateStatus.check && updateStatus.check.latest">
                   <span class="text-gray-300 dark:text-gray-600">|</span>
-                  <span class="text-gray-500 dark:text-gray-500">{{ t('settings.updateLatest') || 'Latest' }}</span>
+                  <span class="text-gray-500 dark:text-gray-400">{{ t('settings.updateLatest') || 'Latest' }}</span>
                   <span class="font-mono font-medium" :class="updateStatus.check.update_available ? 'text-primary' : 'text-gray-900 dark:text-white'">
                     v{{ updateStatus.check.latest }}
                   </span>
-                  <span v-if="!updateStatus.check.update_available" class="text-xs text-green-600 dark:text-green-400">
+                  <span v-if="!updateStatus.check.update_available" class="text-xs text-mint-600 dark:text-mint-400">
                     {{ t('settings.updateUpToDate') || 'Up to date' }}
                   </span>
                 </template>
               </div>
 
               <!-- Check error (network etc.) -->
-              <div v-if="updateStatus.check && updateStatus.check.error" class="text-xs text-amber-600 dark:text-amber-400 break-all">
+              <div v-if="updateStatus.check && updateStatus.check.error" class="text-xs text-sun-600 dark:text-sun-400 break-all">
                 {{ updateStatus.check.error }}
               </div>
 
@@ -979,7 +990,7 @@ const SettingsPage = {
                 <div class="flex items-center gap-2">
                   <i data-lucide="loader-2" class="w-4 h-4 text-primary animate-spin"></i>
                   <span class="text-primary">{{ t('settings.updatePhase_' + updateStatus.worker.phase) || updateStatus.worker.phase }}</span>
-                  <span class="font-mono text-xs text-gray-500 dark:text-gray-500">
+                  <span class="font-mono text-xs text-gray-500 dark:text-gray-400">
                     {{ updateStatus.worker.from_version }} → {{ updateStatus.worker.target_version }}
                   </span>
                 </div>
@@ -1037,9 +1048,12 @@ const SettingsPage = {
     return {
       activeTab: localStorage.getItem('boarai-tab-settings') || 'appearance',
       theme: localStorage.getItem('boarai-theme') || 'light',
-      colorTheme: localStorage.getItem('boarai-color') || 'cyan',
       language: window.i18n.getCurrentLanguage(),
       homepage: localStorage.getItem('boarai-homepage') || 'dashboard',
+      // Browser-tab title (server-side webui config, not localStorage: every
+      // device visiting this instance should see the same title).
+      siteTitle: '',
+      siteTitleSaving: false,
       // Security config state
       compressionThreshold: 70,
       defaultWorkspaceMode: 'session_dir',
@@ -1104,10 +1118,6 @@ const SettingsPage = {
       updateStatus: null,
       updateLoading: false,
       updateBusy: '',
-      colorThemes: [
-        { code: 'cyan', name: 'Indigo', hex: '#6366f1' },
-        { code: 'purple', name: 'Violet', hex: '#8b5cf6' }
-      ],
       tabs: [
         { id: 'providers', label: 'Providers' },
         { id: 'appearance', label: 'Appearance' },
@@ -1165,6 +1175,13 @@ const SettingsPage = {
   
   mounted() {
     document.addEventListener('click', this._onCapDocClick);
+    // Deep link (?tab=about, used by the navbar update badge): land directly
+    // on the requested tab instead of the remembered one.
+    const qTab = this.$route && this.$route.query && this.$route.query.tab;
+    if (qTab && this.tabs.some(x => x.id === qTab)) {
+      this.activeTab = qTab;
+      localStorage.setItem('boarai-tab-settings', qTab);
+    }
     // Initialize tab labels based on current language
     this.updateTabLabels();
     this._initCapStates();
@@ -1177,6 +1194,8 @@ const SettingsPage = {
     this.loadAccess();
     // Load session settings (compression threshold)
     this.loadCompressionThreshold();
+    // Load the configured browser-tab title (webui extension config)
+    this.loadSiteTitle();
     // Online update: status once + live worker events (bus → WS mirror)
     this.loadUpdateStatus();
     if (window.BoarAiStore) {
@@ -1185,7 +1204,6 @@ const SettingsPage = {
   },
   
   // Icons hydrate automatically via app.js MutationObserver.
-  updated() {},
 
   watch: {
     'form.provider_type'() {
@@ -1346,11 +1364,9 @@ const SettingsPage = {
       localStorage.setItem('boarai-tab-settings', tabId);
     },
 
-    // Override global I18nMixin.handleLanguageChange (called via the mixin's
-    // language-changed listener): keep the reactive currentLanguage + the
-    // dropdown `language` field + refresh tab labels.
-    handleLanguageChange() {
-      this.currentLanguage = window.i18n ? window.i18n.getCurrentLanguage() : 'en';
+    // I18nMixin updates currentLanguage; the dropdown field and tab labels
+    // are the only settings-specific derived state.
+    onLanguageChanged() {
       this.language = this.currentLanguage;
       this.updateTabLabels();
     },
@@ -1386,16 +1402,7 @@ const SettingsPage = {
       } catch (_) {}
     },
     
-    setColorTheme(colorCode) {
-      this.colorTheme = colorCode;
-      if (window.BoarTheme) {
-        window.BoarTheme.setColor(colorCode);
-      } else {
-        localStorage.setItem('boarai-color', colorCode);
-        document.documentElement.setAttribute('data-color', colorCode);
-        window.dispatchEvent(new CustomEvent('color-changed', { detail: { color: colorCode } }));
-      }
-    },
+    // Brand colors are fixed; only light/dark preference remains configurable.
 
     // ── Session Settings ──
 
@@ -1561,7 +1568,15 @@ const SettingsPage = {
       this.updateLoading = true;
       try {
         const res = await fetch('/api/update/status');
-        if (res.ok) this.updateStatus = await res.json();
+        if (res.ok) {
+          this.updateStatus = await res.json();
+          // Keep the navbar badge in sync with what the server knows.
+          const check = this.updateStatus.check || {};
+          if (window.BoarAiStore) {
+            window.BoarAiStore.state.updateAvailable =
+              (check.update_available && check.latest) ? check.latest : null;
+          }
+        }
       } catch (e) {
         console.warn('Failed to load update status:', e);
       } finally {
@@ -1995,9 +2010,49 @@ const SettingsPage = {
     handleHomepageChange() {
       localStorage.setItem('boarai-homepage', this.homepage);
       window.BoarAiStore.actions.success(
-        (this.t('settings.homepage') || 'Start Page') + ': ' + 
+        (this.t('settings.homepage') || 'Start Page') + ': ' +
         (this.t('nav.' + this.homepage) || this.homepage)
       );
+    },
+
+    // ==================== Page title (webui extension config) ====================
+
+    async loadSiteTitle() {
+      try {
+        const res = await fetch('/api/extensions/webui');
+        const json = await res.json().catch(() => null);
+        if (json && json.success && json.data && json.data.settings) {
+          const v = (json.data.settings.values || {}).site_title;
+          this.siteTitle = typeof v === 'string' ? v : '';
+        }
+      } catch (e) {
+        console.warn('Failed to load site title:', e);
+      }
+    },
+
+    async saveSiteTitle() {
+      this.siteTitleSaving = true;
+      try {
+        const value = (this.siteTitle || '').trim();
+        const res = await fetch('/api/extensions/webui/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ values: { site_title: value } }),
+        });
+        const json = await res.json().catch(() => null);
+        if (!res.ok || !json || !json.success) {
+          throw new Error((json && json.error && json.error.message) || `HTTP ${res.status}`);
+        }
+        // Live feedback on this tab; other devices pick it up on next load
+        // (the server injects the title into the served HTML).
+        document.title = value || 'BoarAi WebUI';
+        window.BoarAiStore?.actions?.success(this.t('settings.siteTitleSaved') || 'Page title updated');
+      } catch (e) {
+        console.warn('Failed to save site title:', e);
+        window.BoarAiStore?.actions?.error(this.t('settings.siteTitleSaveFailed') || 'Failed to save page title');
+      } finally {
+        this.siteTitleSaving = false;
+      }
     },
     
     // ==================== Provider Management ====================

@@ -11,7 +11,7 @@ const StatusbarComponent = {
   name: 'Statusbar',
   
   template: `
-    <footer class="fixed bottom-0 left-0 right-0 h-statusbar bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex items-center px-3 md:px-4 text-xs text-gray-500 dark:text-gray-500 z-[1030]">
+    <footer class="fixed bottom-0 left-0 right-0 h-statusbar bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex items-center px-3 md:px-4 text-xs text-gray-500 dark:text-gray-400 z-[1030]">
       <!-- Connection status. On phones the bar is only 28px tall and keeps a
            single readout (latency) plus this colour dot, so the "WS /
            CONNECTED" wording is desktop-only. -->
@@ -19,23 +19,23 @@ const StatusbarComponent = {
         <span class="relative flex h-2 w-2 shrink-0">
           <span class="absolute inline-flex h-full w-full rounded-full opacity-75"
                 :class="{
-                  'bg-success animate-ping': connectionStatus === 'connected',
+                  'bg-mint animate-ping': connectionStatus === 'connected',
                   'bg-error': connectionStatus === 'disconnected',
-                  'bg-warning animate-pulse': connectionStatus === 'connecting'
+                  'bg-sun animate-pulse': connectionStatus === 'connecting'
                 }"></span>
           <span class="relative inline-flex rounded-full h-2 w-2"
                 :class="{
-                  'bg-success': connectionStatus === 'connected',
+                  'bg-mint': connectionStatus === 'connected',
                   'bg-error': connectionStatus === 'disconnected',
-                  'bg-warning': connectionStatus === 'connecting'
+                  'bg-sun': connectionStatus === 'connecting'
                 }"></span>
         </span>
-        <span class="text-gray-500 dark:text-gray-500 hidden sm:inline">{{ t('statusbar.ws') }}</span>
+        <span class="text-gray-500 dark:text-gray-400 hidden sm:inline">{{ t('statusbar.ws') }}</span>
         <span class="font-medium whitespace-nowrap hidden sm:inline"
               :class="{
-                'text-success': connectionStatus === 'connected',
+                'text-mint-700 dark:text-mint-300': connectionStatus === 'connected',
                 'text-error': connectionStatus === 'disconnected',
-                'text-warning': connectionStatus === 'connecting'
+                'text-sun-700 dark:text-sun-300': connectionStatus === 'connecting'
               }">
           {{ connectionStatusText }}
         </span>
@@ -47,7 +47,7 @@ const StatusbarComponent = {
       <!-- System Environment (hidden on phones: too wide for one line) -->
       <div class="hidden md:flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 cursor-default transition-colors duration-150">
         <i data-lucide="monitor" class="w-3.5 h-3.5"></i>
-        <span class="text-gray-500 dark:text-gray-500 hidden md:inline">{{ t('statusbar.kernel') }}</span>
+        <span class="text-gray-500 dark:text-gray-400 hidden md:inline">{{ t('statusbar.kernel') }}</span>
         <span class="font-medium text-gray-700 dark:text-gray-300">{{ systemEnv }}</span>
       </div>
       
@@ -57,9 +57,9 @@ const StatusbarComponent = {
       <!-- Latency: HTTP / WS -->
       <div class="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 cursor-default transition-colors duration-150">
         <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-        <span class="text-gray-500 dark:text-gray-500 hidden lg:inline">{{ t('statusbar.latency') }}</span>
+        <span class="text-gray-500 dark:text-gray-400 hidden lg:inline">{{ t('statusbar.latency') }}</span>
         <span class="font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-          <span :class="{ 'text-success': httpLatency < 50, 'text-warning': httpLatency >= 50 && httpLatency < 200, 'text-error': httpLatency >= 200 }">{{ httpLatency > 0 ? httpLatency + 'ms' : '--' }}</span>
+          <span :class="{ 'text-mint-700 dark:text-mint-300': httpLatency < 50, 'text-sun-700 dark:text-sun-300': httpLatency >= 50 && httpLatency < 200, 'text-red-600 dark:text-red-400': httpLatency >= 200 }">{{ httpLatency > 0 ? httpLatency + 'ms' : '--' }}</span>
           <span class="text-gray-500"> / </span>
           <span>{{ wsLatency > 0 ? wsLatency + 'ms' : '--' }}</span>
         </span>
@@ -72,7 +72,7 @@ const StatusbarComponent = {
         <!-- Server Uptime -->
         <div class="hidden md:flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 cursor-default transition-colors duration-150">
           <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-          <span class="text-gray-500 dark:text-gray-500 hidden lg:inline">{{ t('statusbar.uptime') }}</span>
+          <span class="text-gray-500 dark:text-gray-400 hidden lg:inline">{{ t('statusbar.uptime') }}</span>
           <span class="font-mono font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{{ serverUptime }}</span>
         </div>
         
@@ -82,7 +82,7 @@ const StatusbarComponent = {
         <!-- Memory Usage (hidden on phones: keeps the bar single-line) -->
         <div class="hidden md:flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 cursor-default transition-colors duration-150">
           <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i>
-          <span class="text-gray-500 dark:text-gray-500 hidden xl:inline">{{ t('statusbar.memory') }}</span>
+          <span class="text-gray-500 dark:text-gray-400 hidden xl:inline">{{ t('statusbar.memory') }}</span>
           <span class="font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{{ serverMemory }}</span>
         </div>
         
@@ -92,7 +92,7 @@ const StatusbarComponent = {
         <!-- WS Connections -->
         <div class="hidden md:flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 cursor-default transition-colors duration-150">
           <i data-lucide="users" class="w-3.5 h-3.5"></i>
-          <span class="text-gray-500 dark:text-gray-500 hidden xl:inline">{{ t('statusbar.connections') }}</span>
+          <span class="text-gray-500 dark:text-gray-400 hidden xl:inline">{{ t('statusbar.connections') }}</span>
           <span class="font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{{ wsConnections }}</span>
         </div>
       </div>
@@ -141,7 +141,6 @@ const StatusbarComponent = {
   
   // Icons hydrate automatically via app.js MutationObserver. This component
   // re-renders every second (uptime tick) — no full-page icon scans needed.
-  updated() {},
 
   beforeUnmount() {
     this.stopUptimeTimer();

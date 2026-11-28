@@ -9,7 +9,7 @@ const SetupPage = {
   name: 'SetupPage',
 
   template: `
-    <div class="min-h-screen flex items-center justify-center px-4 py-10 bg-gray-50 dark:bg-gray-950">
+    <div class="min-h-screen flex items-center justify-center px-4 py-10 bg-white dark:bg-gray-950">
       <div class="w-full max-w-md">
         <!-- No navbar on this route, so the language switch has to live here. -->
         <div class="flex justify-end mb-3">
@@ -30,7 +30,7 @@ const SetupPage = {
         </div>
 
         <form @submit.prevent="submit"
-              class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 space-y-4">
+              class="${UiClasses.card} shadow-sm p-5 space-y-4">
           <!-- Key generation -->
           <form-field :label="t('setup.keyLabel') || 'Access key'"
                       :hint="t('setup.keyHint') || 'Generated keys are strong. You may also type your own.'"
@@ -90,7 +90,7 @@ const SetupPage = {
                    class="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/50" />
             <span>
               {{ t('unlock.remember') || 'Remember this device' }}
-              <span class="block text-xs text-gray-400 dark:text-gray-500">
+              <span class="block text-xs text-gray-400 dark:text-gray-400">
                 {{ t('unlock.rememberHint') || 'Off = signed out when the browser closes.' }}
               </span>
             </span>
@@ -101,15 +101,15 @@ const SetupPage = {
             {{ busy ? t('setup.submitting') || 'Claiming...' : t('setup.submit') || 'Claim and continue' }}
           </base-button>
 
-          <p v-if="retryAfter > 0" class="text-xs text-amber-600 dark:text-amber-400 text-center">
+          <p v-if="retryAfter > 0" class="text-xs text-sun-600 dark:text-sun-400 text-center">
             {{ (t('unlock.throttled') || 'Too many attempts — retry in {seconds}s.').replace('{seconds}', retryAfter) }}
           </p>
         </form>
 
         <!-- Remote first-run: point at the console-printed one-shot code -->
         <div v-if="setupCodeRequired"
-             class="mt-4 rounded-lg border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/40 p-3">
-          <p class="text-xs text-amber-800 dark:text-amber-200">
+             class="mt-4 rounded-lg border border-sun-200 dark:border-sun-900/60 bg-sun-50 dark:bg-sun-950/40 p-3">
+          <p class="text-xs text-sun-800 dark:text-sun-200">
             {{ t('setup.remoteNote') || 'You are setting up from another machine. Enter the one-time setup code printed in the server startup log; on the server itself no code is needed.' }}
           </p>
         </div>
@@ -135,12 +135,12 @@ const SetupPage = {
               <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
             </button>
           </div>
-          <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+          <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-400">
             {{ t('setup.localCodeHint') || 'Visible only on the server itself; re-minted on restart.' }}
           </p>
         </div>
 
-        <p class="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
+        <p class="mt-4 text-center text-xs text-gray-400 dark:text-gray-400">
           {{ t('unlock.footer') || 'The key is only stored as a hash on the server and never leaves it.' }}
         </p>
       </div>
@@ -281,7 +281,7 @@ const SetupPage = {
         return;
       }
       this.strengthMessage = this.t('setup.strong') || 'Strong';
-      this.strengthColor = 'text-green-600 dark:text-green-400';
+      this.strengthColor = 'text-mint-600 dark:text-mint-400';
     },
 
     async loadLocalCode() {

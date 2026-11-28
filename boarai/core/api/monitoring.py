@@ -148,7 +148,16 @@ async def _compute_stats(range_key: str = "all") -> Dict[str, Any]:
         entries = await ledger.read_all()
         _LEDGER_ENTRIES_CACHE["fp"] = fp
         _LEDGER_ENTRIES_CACHE["entries"] = list(entries)
-    ledger_ids = {e.get("run_id") for e in entries if e.get("run_id")}
+    # Per-turn ledger ids look like "<run_id>#t<n>"; the bare run id counts as
+    # represented so the run-level session entry is not merged on top of them.
+    ledger_ids = set()
+    for e in entries:
+        rid = e.get("run_id")
+        if not rid:
+            continue
+        ledger_ids.add(rid)
+        if "#" in rid:
+            ledger_ids.add(rid.split("#", 1)[0])
     # Merge session entries not yet represented in the ledger. Two cases:
     # - legacy entries (no run_id) that migration has not copied yet
     # - entries whose ledger append FAILED (record() never raises) — the
@@ -177,6 +186,7 @@ async def _compute_stats(range_key: str = "all") -> Dict[str, Any]:
                 "completion_tokens": req.get("completion_tokens", 0),
                 "cache_read_tokens": req.get("cache_read_tokens", 0),
                 "cache_creation_tokens": req.get("cache_creation_tokens", 0),
+                "turns": req.get("run_turns", 0) or 0,
             })
 
     for req in entries:
@@ -269,6 +279,9 @@ async def _compute_stats(range_key: str = "all") -> Dict[str, Any]:
             "model": model,
             "provider": provider,
             "agent": req.get("agent_name") or "default",
+            "session_id": sid,
+            "session_title": req.get("session_title", "") or "",
+            "turns": int(req.get("turns", 0) or 0),
             "input_tokens": inp,
             "completion_tokens": req.get("completion_tokens", 0),
             "cache_read_tokens": cr,

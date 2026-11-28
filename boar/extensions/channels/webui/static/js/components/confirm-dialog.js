@@ -44,7 +44,7 @@ const ConfirmDialogComponent = {
             </button>
             <button @click="confirm"
                     :class="confirmButtonClasses"
-                    class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors">
+                    class="px-4 py-2 text-sm font-medium rounded-lg transition-colors">
               {{ confirmText }}
             </button>
           </div>
@@ -103,20 +103,20 @@ const ConfirmDialogComponent = {
     
     iconContainerClasses() {
       const classes = {
-        warning: 'w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-600 dark:text-yellow-400',
-        danger: 'w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400',
-        info: 'w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400',
-        question: 'w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400'
+        warning: 'w-12 h-12 rounded-xl bg-sun-100 dark:bg-sun-900/30 flex items-center justify-center text-sun-700 dark:text-sun-300',
+        danger: 'w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-300',
+        info: 'w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary dark:text-primary-300',
+        question: 'w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300'
       };
       return classes[this.type] || classes.warning;
     },
     
     confirmButtonClasses() {
       const classes = {
-        warning: 'bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-800',
-        danger: 'bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800',
-        info: 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800',
-        question: 'bg-primary hover:bg-primary-dark'
+        warning: 'bg-sun-100 hover:bg-sun-200 text-sun-900 dark:bg-sun-900 dark:hover:bg-sun-800 dark:text-sun-100',
+        danger: 'bg-red-600 hover:bg-red-700 text-white dark:bg-red-700 dark:hover:bg-red-800',
+        info: 'bg-primary hover:bg-primary-dark text-white',
+        question: 'bg-primary hover:bg-primary-dark text-white'
       };
       return classes[this.type] || classes.warning;
     }

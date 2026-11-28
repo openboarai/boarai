@@ -1,11 +1,11 @@
-/* Refined visual system for the existing WebUI components. */
+/* Bright collaborative SaaS visual system. */
 :root {
-  --ui-canvas: #f5f6fa;
+  --ui-canvas: #ffffff;
   --ui-surface: #ffffff;
-  --ui-surface-muted: #fafbfe;
-  --ui-border: #e7e9f1;
-  --ui-shadow: 0 8px 24px rgb(22 28 45 / 0.045), 0 1px 2px rgb(22 28 45 / 0.035);
-  --ui-shadow-raised: 0 16px 36px rgb(22 28 45 / 0.09), 0 2px 8px rgb(22 28 45 / 0.045);
+  --ui-surface-muted: #f7f8fa;
+  --ui-border: #e4e7ec;
+  --ui-shadow: 0 1px 2px rgb(16 24 40 / 0.04);
+  --ui-shadow-raised: 0 12px 32px rgb(16 24 40 / 0.12), 0 2px 6px rgb(16 24 40 / 0.05);
 
   /* Conversation column width. Fluid, so it follows the pane instead of
      pinning the messages to a fixed strip: 94% of the message pane, floored
@@ -17,15 +17,13 @@
   --session-column: clamp(680px, 94%, 1560px);
 }
 
-html.dark,
-[data-theme="dark"],
-[data-theme-resolved="dark"] {
-  --ui-canvas: #11131a;
-  --ui-surface: #181b24;
-  --ui-surface-muted: #1d202a;
-  --ui-border: #2b2f3a;
-  --ui-shadow: 0 8px 24px rgb(0 0 0 / 0.2), 0 1px 2px rgb(0 0 0 / 0.16);
-  --ui-shadow-raised: 0 18px 42px rgb(0 0 0 / 0.32), 0 2px 8px rgb(0 0 0 / 0.2);
+html.dark {
+  --ui-canvas: #0c111d;
+  --ui-surface: #101828;
+  --ui-surface-muted: #1d2939;
+  --ui-border: #344054;
+  --ui-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+  --ui-shadow-raised: 0 16px 40px rgb(0 0 0 / 0.36), 0 2px 8px rgb(0 0 0 / 0.2);
 }
 
 body {
@@ -35,28 +33,18 @@ body {
 }
 
 #app > div.min-h-screen {
-  background:
-    radial-gradient(ellipse at 15% 0%, rgb(var(--primary-rgb) / 0.055), transparent 34rem),
-    linear-gradient(145deg, #f8f9fc 0%, var(--ui-canvas) 62%, #f8f9fc 100%);
-}
-
-html.dark #app > div.min-h-screen,
-[data-theme="dark"] #app > div.min-h-screen,
-[data-theme-resolved="dark"] #app > div.min-h-screen {
-  background:
-    radial-gradient(ellipse at 15% 0%, rgb(var(--primary-rgb) / 0.12), transparent 34rem),
-    linear-gradient(145deg, #141720 0%, var(--ui-canvas) 62%, #12151c 100%);
+  background: var(--ui-canvas);
 }
 
 #app nav.fixed.top-0 {
-  background: color-mix(in srgb, var(--ui-surface) 90%, transparent);
+  background: var(--ui-surface);
   border-color: var(--ui-border);
-  box-shadow: 0 1px 0 rgb(15 23 42 / 0.025), 0 8px 24px rgb(15 23 42 / 0.035);
+  box-shadow: 0 1px 2px rgb(16 24 40 / 0.035);
 }
 
 #app nav.fixed.top-0 a[aria-current="page"] {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark));
-  box-shadow: 0 5px 14px rgb(var(--primary-rgb) / 0.22);
+  background: var(--primary-color);
+  box-shadow: 0 2px 5px rgb(var(--primary-rgb) / 0.18);
 }
 
 #app main {
@@ -72,14 +60,14 @@ html.dark #app > div.min-h-screen,
 }
 
 #app main button.bg-primary.text-white {
-  background-image: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark));
-  box-shadow: 0 5px 14px rgb(var(--primary-rgb) / 0.19);
-  transition: box-shadow 160ms ease, transform 160ms ease;
+  background-image: none;
+  box-shadow: 0 1px 2px rgb(var(--primary-rgb) / 0.16);
+  transition: background-color 140ms ease, box-shadow 140ms ease;
 }
 
 #app main button.bg-primary.text-white:hover:not(:disabled) {
-  box-shadow: 0 8px 18px rgb(var(--primary-rgb) / 0.25);
-  transform: translateY(-1px);
+  background-color: var(--primary-color-dark);
+  box-shadow: 0 2px 5px rgb(var(--primary-rgb) / 0.2);
 }
 
 #app main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
@@ -91,30 +79,28 @@ html.dark #app > div.min-h-screen,
 #app main input:focus,
 #app main textarea:focus,
 #app main select:focus {
-  box-shadow: 0 0 0 4px rgb(var(--primary-rgb) / 0.11);
+  box-shadow: 0 0 0 3px rgb(var(--primary-rgb) / 0.12);
 }
 
 #app footer.fixed.bottom-0 {
-  background: color-mix(in srgb, var(--ui-surface) 93%, transparent);
+  background: var(--ui-surface);
   border-color: var(--ui-border);
-  backdrop-filter: blur(14px);
 }
 
 /* Session workspace */
 .sessions-viewport {
-  background: transparent;
+  background: var(--ui-canvas);
 }
 
 .session-sidebar {
-  background: color-mix(in srgb, var(--ui-surface) 92%, var(--ui-canvas));
+  background: var(--ui-surface);
   border-color: var(--ui-border);
 }
 
 .session-sidebar > div:first-child,
 .session-chat-header {
-  background: color-mix(in srgb, var(--ui-surface) 88%, transparent);
+  background: var(--ui-surface);
   border-color: var(--ui-border);
-  backdrop-filter: blur(12px);
 }
 
 /* Sidebar header and chat header share one height so their bottom borders
@@ -134,9 +120,7 @@ html.dark #app > div.min-h-screen,
 .session-messages {
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(ellipse at 50% 0%, rgb(var(--primary-rgb) / 0.035), transparent 36rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--ui-surface) 40%, var(--ui-canvas)), var(--ui-canvas));
+  background: var(--ui-canvas);
   scroll-padding-block: 24px;
 }
 
@@ -166,15 +150,9 @@ html.dark #app > div.min-h-screen,
 }
 
 .session-user-bubble {
-  border-radius: 18px 18px 5px 18px !important;
-  /* 20% lighter than the raw primary/primary-dark pair so the bubble reads
-     softer against the canvas while keeping the same gradient direction. */
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--primary-color) 80%, #fff),
-    color-mix(in srgb, var(--primary-color-dark) 80%, #fff)
-  ) !important;
-  box-shadow: 0 6px 16px rgb(var(--primary-rgb) / 0.12);
+  border-radius: 14px 14px 4px 14px !important;
+  background: var(--primary-color) !important;
+  box-shadow: 0 1px 2px rgb(var(--primary-rgb) / 0.16);
   padding: 12px 16px !important;
   line-height: 1.65;
 }
@@ -235,35 +213,15 @@ html.dark #app > div.min-h-screen,
   height: 36px;
   flex: 0 0 36px;
   place-items: center;
-  border-radius: 12px;
-  color: #fff;
-  background: linear-gradient(
-    145deg,
-    rgb(var(--primary-rgb) / 0.92),
-    color-mix(in srgb, var(--primary-color) 72%, #1e1b4b)
-  );
-  box-shadow:
-    0 2px 6px rgb(var(--primary-rgb) / 0.3),
-    inset 0 0 0 1px rgb(255 255 255 / 0.22);
+  border-radius: 10px;
+  color: #ffffff;
+  background: var(--primary-color);
+  box-shadow: 0 1px 3px rgb(var(--primary-rgb) / 0.2);
 }
 
 .session-assistant-avatar i {
   width: 21px;
   height: 21px;
-}
-
-html.dark .session-assistant-avatar,
-[data-theme="dark"] .session-assistant-avatar,
-[data-theme-resolved="dark"] .session-assistant-avatar {
-  color: #fff;
-  background: linear-gradient(
-    145deg,
-    rgb(var(--primary-rgb) / 0.85),
-    color-mix(in srgb, var(--primary-color) 58%, #0b0d14)
-  );
-  box-shadow:
-    0 2px 8px rgb(var(--primary-rgb) / 0.35),
-    inset 0 0 0 1px rgb(255 255 255 / 0.14);
 }
 
 .session-assistant-name {
@@ -273,9 +231,7 @@ html.dark .session-assistant-avatar,
   color: color-mix(in srgb, var(--text-primary) 76%, transparent);
 }
 
-html.dark .session-assistant-name,
-[data-theme="dark"] .session-assistant-name,
-[data-theme-resolved="dark"] .session-assistant-name {
+html.dark .session-assistant-name {
   color: color-mix(in srgb, var(--text-primary) 82%, transparent);
 }
 
@@ -606,20 +562,21 @@ html.dark .session-assistant-name,
 
 .session-empty-icon {
   display: grid;
-  width: 52px;
-  height: 52px;
-  margin-bottom: 5px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 8px;
   place-items: center;
   color: var(--primary-color);
-  border: 1px solid rgb(var(--primary-rgb) / 0.12);
-  border-radius: 17px;
-  background: rgb(var(--primary-rgb) / 0.07);
+  border: 1px solid rgb(var(--primary-rgb) / 0.1);
+  border-radius: 14px;
+  background: var(--primary-soft);
 }
 
 .session-empty-title {
   color: var(--text-primary);
-  font-size: 16px;
-  font-weight: 650;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .session-empty-hint {
@@ -631,54 +588,79 @@ html.dark .session-assistant-name,
 
 .session-composer {
   border-color: var(--ui-border);
-  background: color-mix(in srgb, var(--ui-surface) 94%, transparent);
-  box-shadow: 0 -8px 24px rgb(15 23 42 / 0.035);
-  backdrop-filter: blur(14px);
+  background: var(--ui-surface);
+  box-shadow: 0 -1px 2px rgb(16 24 40 / 0.025);
 }
 
 .session-composer textarea,
 .session-welcome-composer textarea {
   border-color: var(--ui-border) !important;
-  border-radius: 14px !important;
+  border-radius: 10px !important;
   background: var(--ui-surface-muted) !important;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
 }
 
 .session-composer textarea:focus,
 .session-welcome-composer textarea:focus {
-  border-color: rgb(var(--primary-rgb) / 0.55) !important;
+  border-color: var(--primary-color) !important;
   background: var(--ui-surface) !important;
-  box-shadow: 0 0 0 4px rgb(var(--primary-rgb) / 0.09) !important;
+  box-shadow: 0 0 0 3px rgb(var(--primary-rgb) / 0.12) !important;
 }
 
 .session-welcome {
+  position: relative;
   width: min(100%, 760px);
   height: auto !important;
-  min-height: 330px;
+  min-height: 340px;
   max-height: calc(100% - 48px);
   align-self: center;
   margin: auto;
-  padding: 36px 28px;
+  padding: 40px 32px;
+  overflow: hidden;
   border: 1px solid var(--ui-border);
-  border-radius: 26px;
-  background: color-mix(in srgb, var(--ui-surface) 88%, transparent);
+  border-radius: 16px;
+  background: var(--ui-surface);
   box-shadow: var(--ui-shadow-raised);
 }
 
+.session-welcome::before,
+.session-welcome::after {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  content: "";
+  pointer-events: none;
+}
+
+.session-welcome::before {
+  top: 28px;
+  right: 32px;
+  border-radius: 4px;
+  background: var(--accent-yellow);
+  transform: rotate(12deg);
+}
+
+.session-welcome::after {
+  bottom: 32px;
+  left: 36px;
+  border-radius: 50%;
+  background: var(--accent-mint);
+}
+
 .session-welcome-icon {
-  width: 58px;
-  height: 58px;
-  border: 1px solid rgb(var(--primary-rgb) / 0.12);
-  border-radius: 19px;
-  background: linear-gradient(145deg, rgb(var(--primary-rgb) / 0.12), rgb(var(--primary-rgb) / 0.055));
+  width: 60px;
+  height: 60px;
+  border: 1px solid rgb(var(--primary-rgb) / 0.1);
+  border-radius: 14px;
+  background: var(--primary-soft);
 }
 
 .session-welcome-composer {
   padding: 7px;
   border: 1px solid var(--ui-border);
-  border-radius: 18px;
+  border-radius: 14px;
   background: var(--ui-surface);
-  box-shadow: 0 8px 24px rgb(15 23 42 / 0.055);
+  box-shadow: 0 4px 14px rgb(16 24 40 / 0.07);
 }
 
 .session-welcome-composer textarea {
@@ -1036,68 +1018,42 @@ html.dark .session-assistant-name,
   display: none;
 }
 
-/* Visible scrollbar for the conversation column only. main.css hides every
-   scrollbar globally (width:0 + scrollbar-width:none); a long transcript has
-   no other position cue, so re-enable a thin themed thumb here. Class
-   selectors outrank the global `*` / bare pseudo-element rules. */
-.session-messages {
+/* Shared thin scrollbar. main.css hides every scrollbar globally (width:0 +
+   scrollbar-width:none); scrollable panes opt back in with .scroll-thin so a
+   long transcript or file list keeps a position cue. The thumb follows the
+   theme via --scroll-thumb; .on-dark pins a light thumb for surfaces that
+   stay dark in both themes (diff viewers). Class selectors outrank the
+   global `*` / bare pseudo-element rules. */
+.scroll-thin {
   scrollbar-width: thin;
-  scrollbar-color: rgb(100 100 100 / 0.35) transparent;
+  scrollbar-color: var(--scroll-thumb) transparent;
 }
-.dark .session-messages {
-  scrollbar-color: rgb(255 255 255 / 0.25) transparent;
-}
-.session-messages::-webkit-scrollbar {
+.scroll-thin::-webkit-scrollbar {
   width: 10px;
   height: 10px;
   background: transparent;
 }
-.session-messages::-webkit-scrollbar-track {
+.scroll-thin::-webkit-scrollbar-track {
   background: transparent;
 }
-.session-messages::-webkit-scrollbar-thumb {
-  background: rgb(100 100 100 / 0.35);
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
   border-radius: 8px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
-.session-messages::-webkit-scrollbar-thumb:hover {
-  background: rgb(100 100 100 / 0.55);
+.scroll-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
   background-clip: content-box;
 }
-.dark .session-messages::-webkit-scrollbar-thumb {
-  background: rgb(255 255 255 / 0.25);
-  background-clip: content-box;
-}
-.dark .session-messages::-webkit-scrollbar-thumb:hover {
-  background: rgb(255 255 255 / 0.4);
-  background-clip: content-box;
-}
-
-/* Diff viewer scrollbars (file-change cards). The block is always dark and
-   global scrollbars are hidden, so long lines looked clipped with no affordance
-   to scroll. Fixed light-on-dark palette, same thin geometry as above. */
-.diff-scroll {
-  scrollbar-width: thin;
+.scroll-thin.on-dark {
   scrollbar-color: rgb(255 255 255 / 0.28) transparent;
 }
-.diff-scroll::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-  background: transparent;
-}
-.diff-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-.diff-scroll::-webkit-scrollbar-thumb {
+.scroll-thin.on-dark::-webkit-scrollbar-thumb {
   background: rgb(255 255 255 / 0.28);
-  border-radius: 8px;
-  border: 3px solid transparent;
-  background-clip: content-box;
 }
-.diff-scroll::-webkit-scrollbar-thumb:hover {
+.scroll-thin.on-dark::-webkit-scrollbar-thumb:hover {
   background: rgb(255 255 255 / 0.45);
-  background-clip: content-box;
 }
 
 /* ── File manager panes (tree under session list + viewer left of chat) ────
@@ -1129,7 +1085,7 @@ html.dark .session-assistant-name,
 .fm-split-v::after { height: 1px; width: 100%; }
 .fm-split-h::after { width: 1px; height: 100%; }
 .fm-split:hover::after,
-.fm-split:active::after { background: rgb(59 130 246 / 0.6); }
+.fm-split:active::after { background: rgb(var(--primary-rgb) / 0.65); }
 body.fm-resizing-v { cursor: row-resize; user-select: none; }
 body.fm-resizing-h { cursor: col-resize; user-select: none; }
 body.fm-resizing-v *, body.fm-resizing-h * { cursor: inherit !important; }
@@ -1172,26 +1128,12 @@ body.fm-resizing-v *, body.fm-resizing-h * { cursor: inherit !important; }
   letter-spacing: 0.02em;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
-.fm-tree-body {
-  scrollbar-width: thin;
-  scrollbar-color: rgb(100 100 100 / 0.35) transparent;
-}
-.dark .fm-tree-body { scrollbar-color: rgb(255 255 255 / 0.25) transparent; }
-.fm-tree-body::-webkit-scrollbar { width: 8px; background: transparent; }
-.fm-tree-body::-webkit-scrollbar-thumb {
-  background: rgb(100 100 100 / 0.35);
-  border-radius: 8px;
-  border: 2px solid transparent;
-  background-clip: content-box;
-}
-
 /* Viewer pane */
 .fm-viewer {
   min-width: 320px;
   max-width: 75%;
-  border-right: 1px solid rgb(229 231 235);
+  border-right: 1px solid var(--ui-border);
 }
-.dark .fm-viewer { border-right-color: rgb(55 65 81); }
 .fm-tabs { scrollbar-width: none; }
 .fm-tabs::-webkit-scrollbar { display: none; }
 .fm-tab-close {
@@ -1225,16 +1167,11 @@ body.fm-resizing-v *, body.fm-resizing-h * { cursor: inherit !important; }
   padding: 8px 0;
   min-width: 44px;
   text-align: right;
-  color: rgb(156 163 175);
-  background: rgb(249 250 251);
-  border-right: 1px solid rgb(229 231 235);
+  color: var(--text-hint);
+  background: var(--ui-surface-muted);
+  border-right: 1px solid var(--ui-border);
   user-select: none;
   flex-shrink: 0;
-}
-.dark .fm-gutter {
-  color: rgb(107 114 128);
-  background: rgb(17 24 39);
-  border-right-color: rgb(55 65 81);
 }
 .fm-gutter-edit {
   overflow: hidden;
@@ -1247,7 +1184,7 @@ body.fm-resizing-v *, body.fm-resizing-h * { cursor: inherit !important; }
 .fm-code {
   margin: 0;
   padding: 8px 12px;
-  color: rgb(31 41 55);
+  color: var(--text-primary);
   white-space: pre;
   min-width: 0;
 }
@@ -1259,7 +1196,7 @@ body.fm-resizing-v *, body.fm-resizing-h * { cursor: inherit !important; }
 }
 .fm-editor {
   padding: 8px 12px;
-  color: rgb(31 41 55);
+  color: var(--text-primary);
   background: transparent;
   border: 0;
   outline: none;
@@ -1268,23 +1205,6 @@ body.fm-resizing-v *, body.fm-resizing-h * { cursor: inherit !important; }
   white-space: pre;
 }
 .dark .fm-editor { color: rgb(229 231 235); }
-.fm-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgb(100 100 100 / 0.35) transparent;
-}
-.dark .fm-scroll { scrollbar-color: rgb(255 255 255 / 0.25) transparent; }
-.fm-scroll::-webkit-scrollbar { width: 10px; height: 10px; background: transparent; }
-.fm-scroll::-webkit-scrollbar-thumb {
-  background: rgb(100 100 100 / 0.35);
-  border-radius: 8px;
-  border: 3px solid transparent;
-  background-clip: content-box;
-}
-.dark .fm-scroll::-webkit-scrollbar-thumb {
-  background: rgb(255 255 255 / 0.25);
-  background-clip: content-box;
-}
-
 /* Token colors for the reused mdHighlight tokenizer (palette kept in sync
    with the markdown code blocks in main.css .tok-*). */
 .fm-code .tok-kw { color: rgb(167 69 181); }

@@ -15,6 +15,7 @@ pip_dependencies:
 config_defaults:
   theme: "light"
   language: "en"
+  site_title: ""
 provides:
   - "web"
   - "http"

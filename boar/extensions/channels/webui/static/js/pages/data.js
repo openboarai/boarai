@@ -37,7 +37,7 @@ const DataPage = {
         <div v-if="activeTab === 'ownerSettings'" class="space-y-4">
           <card-section icon="user-cog" :title="t('data.ownerSettings')" body-class="p-4">
             <template #header-actions>
-              <span v-if="ownerSaved" class="text-xs text-green-500 flex items-center gap-1">
+              <span v-if="ownerSaved" class="text-xs text-mint-500 flex items-center gap-1">
                 <i data-lucide="check" class="w-3 h-3"></i>
                 {{ t('common.saved') || 'Saved' }}
               </span>
@@ -64,7 +64,7 @@ const DataPage = {
         </div>
 
         <!-- Role Management Tab (Agent Management) -->
-        <div v-if="activeTab === 'roleManagement'" class="flex flex-col lg:flex-row flex-1 min-h-0 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" :style="{ minHeight: 'calc(100vh - 200px)' }">
+        <div v-if="activeTab === 'roleManagement'" class="flex flex-col lg:flex-row flex-1 min-h-0 ${UiClasses.card} overflow-hidden" :style="{ minHeight: 'calc(100vh - 200px)' }">
           <!-- Left: Agent List -->
           <div class="lg:w-72 shrink-0">
             <div class="flex flex-col h-full border-r border-gray-200 dark:border-gray-700">
@@ -107,7 +107,7 @@ const DataPage = {
             <div v-if="!selectedAgent" class="flex-1 flex items-center justify-center p-8 text-center">
               <div>
                 <i data-lucide="bot" class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3"></i>
-                <p class="text-sm text-gray-500 dark:text-gray-500">{{ t('agents.selectHint') || 'Select an agent on the left to start editing' }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('agents.selectHint') || 'Select an agent on the left to start editing' }}</p>
               </div>
             </div>
             <div v-else class="flex flex-col h-full overflow-hidden">
@@ -117,7 +117,7 @@ const DataPage = {
                   <i :data-lucide="agentForm.avatar || 'bot'" class="w-4 h-4 text-primary"></i>
                   {{ isNewAgent ? (t('agents.createNewAgent') || 'New Agent') : (t('agents.editAgent') || 'Edit') + ': ' + selectedAgent.name }}
                   <span v-if="selectedAgent?.is_default" class="text-[11px] px-1.5 py-0.5 bg-primary/10 text-primary rounded-full">{{ t('common.default') || 'Default' }}</span>
-                  <span v-if="agentDirty" class="text-[11px] font-normal text-amber-500">{{ t('common.unsaved') || 'Unsaved' }}</span>
+                  <span v-if="agentDirty" class="text-[11px] font-normal text-sun-500">{{ t('common.unsaved') || 'Unsaved' }}</span>
                 </h3>
                 <div class="flex items-center gap-2">
                   <!-- Any agent may be deleted (the backend reassigns the
@@ -133,7 +133,7 @@ const DataPage = {
                           :disabled="agentSaving"
                           :title="t('agents.setDefault')"
                           :aria-label="t('agents.setDefault')"
-                          class="px-2.5 py-1.5 text-xs font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                          class="px-2.5 py-1.5 text-xs font-medium bg-sun-50 dark:bg-sun-900/20 text-sun-700 dark:text-sun-300 rounded-lg hover:bg-sun-100 dark:hover:bg-sun-900/40 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
                     <i data-lucide="star" class="w-3 h-3"></i>
                   </button>
                   <button @click="saveAgent"
@@ -152,14 +152,14 @@ const DataPage = {
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('agents.name') }} <span class="text-error">*</span></label>
                     <input v-model="agentForm.name" :disabled="!isNewAgent" type="text" maxlength="48"
                            :placeholder="t('agents.namePlaceholder')" :aria-invalid="!!agentNameError"
-                           class="w-full px-2.5 py-1.5 text-xs bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-primary/50 focus:border-primary disabled:opacity-50"
+                           class="w-full ${UiClasses.inputSm} disabled:opacity-50"
                            :class="agentNameError ? 'border-red-400 focus:border-red-400 focus:ring-red-400/40' : ''">
                     <p v-if="agentNameError" class="mt-1 text-[11px] text-red-500">{{ agentNameError }}</p>
                   </div>
                   <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('agents.avatar') }}</label>
                     <select v-model="agentForm.avatar"
-                            class="w-full px-2.5 py-1.5 text-xs bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-primary/50 focus:border-primary">
+                            class="w-full ${UiClasses.inputSm}">
                       <option v-for="icon in agentIconOptions" :key="icon" :value="icon">{{ icon }}</option>
                     </select>
                   </div>
@@ -178,7 +178,7 @@ const DataPage = {
                     <div class="flex items-center justify-between mb-1">
                       <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">{{ t('agents.allowedTools') || 'Allowed Tools' }}</label>
                       <span class="text-[11px]"
-                            :class="!isAllTools && selectedToolCount === 0 ? 'text-amber-500' : 'text-gray-500 dark:text-gray-500'">
+                            :class="!isAllTools && selectedToolCount === 0 ? 'text-sun-500' : 'text-gray-500 dark:text-gray-400'">
                         {{ isAllTools
                           ? (t('agents.allTools') || 'All tools')
                           : (selectedToolCount === 0
@@ -206,7 +206,7 @@ const DataPage = {
                       <div v-if="toolLoading" class="px-1 py-2 text-xs text-gray-500">{{ t('common.loading') }}</div>
                       <template v-else>
                         <div v-for="group in groupedTools" :key="group.key">
-                          <div class="mb-1 text-[10px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">{{ group.label }}</div>
+                          <div class="mb-1 text-[10px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-400">{{ group.label }}</div>
                           <div class="flex flex-wrap gap-1">
                             <button v-for="tool in group.tools" :key="tool.name" type="button"
                                     :title="tool.description"
@@ -244,9 +244,9 @@ const DataPage = {
                the labels into 3-4 lines, so polish.css drops .data-stat-grid
                to one column there. -->
           <div class="data-stat-grid grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div v-for="tc in memTypeCards" :key="tc.key" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div v-for="tc in memTypeCards" :key="tc.key" class="${UiClasses.card} p-4">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-sm text-gray-500 dark:text-gray-500">{{ memTypeLabel(tc.key) }}</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400">{{ memTypeLabel(tc.key) }}</span>
                 <span class="w-3 h-3 rounded-full" :class="tc.dot"></span>
               </div>
               <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ memStats.by_type?.[tc.key] || 0 }}</div>
@@ -277,7 +277,7 @@ const DataPage = {
                   </p>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button @click="confirmStagingItem(item)" class="px-3 py-1.5 text-xs font-medium bg-green-500 text-white rounded hover:bg-green-600">{{ t('memory.stagingConfirm') }}</button>
+                  <button @click="confirmStagingItem(item)" class="px-3 py-1.5 text-xs font-medium bg-mint-700 text-white rounded hover:bg-mint-800">{{ t('memory.stagingConfirm') }}</button>
                   <button @click="rejectStagingItem(item)" class="px-3 py-1.5 text-xs font-medium bg-red-500 text-white rounded hover:bg-red-600">{{ t('memory.stagingReject') }}</button>
                 </div>
               </div>
@@ -314,20 +314,20 @@ const DataPage = {
                           class="px-2 py-0.5 text-[11px] rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                       {{ memTagLabel(tag) }}
                     </span>
-                    <span v-if="entry.metadata?.channel" class="text-[11px] text-gray-400 dark:text-gray-500">
+                    <span v-if="entry.metadata?.channel" class="text-[11px] text-gray-400 dark:text-gray-400">
                       {{ memChannelLabel(entry.metadata.channel) }}
                     </span>
-                    <span v-if="entry.importance" class="text-[11px] text-amber-500">★ {{ entry.importance.toFixed(1) }}</span>
+                    <span v-if="entry.importance" class="text-[11px] text-sun-500">★ {{ entry.importance.toFixed(1) }}</span>
                   </div>
                   <p class="text-sm text-gray-800 dark:text-gray-200 mt-1.5 leading-relaxed break-words">{{ entry.content ? entry.content.substring(0, 200) : '' }}</p>
                   <div class="flex items-center justify-between gap-2 mt-1">
-                    <div class="flex items-center gap-2 min-w-0 text-[11px] text-gray-400 dark:text-gray-500">
+                    <div class="flex items-center gap-2 min-w-0 text-[11px] text-gray-400 dark:text-gray-400">
                       <span class="truncate">{{ memPodPath(entry.pod_uri) }}</span>
                       <a href="#" @click.prevent="copyPodUri(entry)"
                          class="shrink-0 text-primary hover:underline font-mono truncate max-w-[130px]"
                          :title="entry.pod_uri">{{ entry.pod_uri }}</a>
                     </div>
-                    <span class="shrink-0 text-[11px] text-gray-400 dark:text-gray-500">{{ formatDateTime(entry.created_at) }}</span>
+                    <span class="shrink-0 text-[11px] text-gray-400 dark:text-gray-400">{{ formatDateTime(entry.created_at) }}</span>
                   </div>
                   <div class="flex items-center justify-end gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button @click="editMemoryEntry(entry)" class="px-2 py-0.5 text-[11px] rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
@@ -347,16 +347,16 @@ const DataPage = {
         <div v-if="activeTab === 'recycleBin'" class="space-y-4">
           <!-- Stats -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
-              <div class="text-2xl font-bold text-blue-500">{{ trashStats?.by_type?.session || 0 }}</div>
+            <div class="${UiClasses.card} p-4 text-center">
+              <div class="text-2xl font-bold text-primary-500">{{ trashStats?.by_type?.session || 0 }}</div>
               <div class="text-xs text-gray-500 mt-1">{{ t('recycleBin.typeSession') }}</div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
-              <div class="text-2xl font-bold text-purple-500">{{ trashStats?.by_type?.agent || 0 }}</div>
+            <div class="${UiClasses.card} p-4 text-center">
+              <div class="text-2xl font-bold text-mint-700 dark:text-mint-300">{{ trashStats?.by_type?.agent || 0 }}</div>
               <div class="text-xs text-gray-500 mt-1">{{ t('recycleBin.typeAgent') }}</div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
-              <div class="text-2xl font-bold text-amber-500">{{ trashStats?.by_type?.file || 0 }}</div>
+            <div class="${UiClasses.card} p-4 text-center">
+              <div class="text-2xl font-bold text-sun-700 dark:text-sun-300">{{ trashStats?.by_type?.file || 0 }}</div>
               <div class="text-xs text-gray-500 mt-1">{{ t('recycleBin.typeFile') }}</div>
             </div>
           </div>
@@ -380,7 +380,7 @@ const DataPage = {
           </div>
 
           <!-- Trash List -->
-          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div class="${UiClasses.card} overflow-hidden">
             <div v-if="trashList.length === 0 && !trashLoading" class="px-4 py-8 text-center text-gray-500 text-sm">
               <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 opacity-30"></i>
               <p>{{ t('recycleBin.empty') || 'Recycle Bin is empty' }}</p>
@@ -394,21 +394,21 @@ const DataPage = {
                             :class="typeBadgeClass(item.type)">
                         {{ typeLabel(item.type) }}
                       </span>
-                      <span v-if="item.distill_mode === 'pending'" class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                      <span v-if="item.distill_mode === 'pending'" class="text-xs px-2 py-0.5 rounded-full bg-sun-100 text-sun-700 dark:bg-sun-900/30 dark:text-sun-300">
                         {{ t('recycleBin.distillPending') }}
                       </span>
-                      <span v-if="item.distill_mode === 'distilled'" class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                      <span v-if="item.distill_mode === 'distilled'" class="text-xs px-2 py-0.5 rounded-full bg-mint-100 text-mint-700 dark:bg-mint-900/30 dark:text-mint-300">
                         {{ t('recycleBin.distilled') }}
                       </span>
                     </div>
                     <p class="text-sm font-medium text-gray-900 dark:text-white mt-1 truncate">{{ trashItemTitle(item) }}</p>
-                    <p class="mt-0.5 flex items-center gap-1.5 text-[11px] leading-4 text-gray-400 dark:text-gray-500 min-w-0">
+                    <p class="mt-0.5 flex items-center gap-1.5 text-[11px] leading-4 text-gray-400 dark:text-gray-400 min-w-0">
                       <span v-if="item.type === 'session' && trashItemId(item)" class="font-mono truncate">{{ trashItemId(item) }}</span>
                       <span v-if="item.deleted_at" class="shrink-0">{{ formatTrashTime(item.deleted_at) }}</span>
                     </p>
                   </div>
                   <div class="flex items-center gap-1.5">
-                    <button @click="restoreTrashItem(item)" class="px-2.5 py-1.5 text-xs font-medium bg-green-500 text-white rounded hover:bg-green-600">
+                    <button @click="restoreTrashItem(item)" class="px-2.5 py-1.5 text-xs font-medium bg-mint-700 text-white rounded hover:bg-mint-800">
                       {{ t('recycleBin.restore') }}
                     </button>
                     <button v-if="item.distill_mode !== 'distilled' && (item.type === 'session' || item.type === 'agent')"
@@ -449,14 +449,14 @@ const DataPage = {
           <!-- KPI cards: Today / Input / Output / Cache hit rate -->
           <div class="data-stat-grid grid grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Total consumption (follows selected range) -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 relative overflow-hidden">
+            <div class="${UiClasses.card} p-4 relative overflow-hidden">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('data.totalTokenUsage') }}</div>
                   <div class="mt-1.5 text-2xl font-bold text-gray-900 dark:text-white leading-none">{{ formatNumber((stats.range?.input || 0) + (stats.range?.completion || 0)) }}</div>
                 </div>
-                <div class="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                  <i data-lucide="coins" class="w-5 h-5 text-amber-500"></i>
+                <div class="w-9 h-9 rounded-lg bg-sun-500/10 flex items-center justify-center shrink-0">
+                  <i data-lucide="coins" class="w-5 h-5 text-sun-500"></i>
                 </div>
               </div>
               <div class="mt-3 flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
@@ -465,7 +465,7 @@ const DataPage = {
               </div>
             </div>
             <!-- Input tokens (range) -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 relative overflow-hidden">
+            <div class="${UiClasses.card} p-4 relative overflow-hidden">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('data.inputTokens') }}</div>
@@ -481,14 +481,14 @@ const DataPage = {
               </div>
             </div>
             <!-- Output tokens (range) -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 relative overflow-hidden">
+            <div class="${UiClasses.card} p-4 relative overflow-hidden">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('data.completionTokens') }}</div>
                   <div class="mt-1.5 text-2xl font-bold text-gray-900 dark:text-white leading-none">{{ formatNumber(stats.range?.completion ?? stats.tokens?.completion_total ?? 0) }}</div>
                 </div>
-                <div class="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                  <i data-lucide="arrow-up-from-line" class="w-5 h-5 text-blue-500"></i>
+                <div class="w-9 h-9 rounded-lg bg-primary-500/10 flex items-center justify-center shrink-0">
+                  <i data-lucide="arrow-up-from-line" class="w-5 h-5 text-primary-500"></i>
                 </div>
               </div>
               <div class="mt-3 flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
@@ -496,19 +496,19 @@ const DataPage = {
               </div>
             </div>
             <!-- Cache hit rate (range) -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 relative overflow-hidden">
+            <div class="${UiClasses.card} p-4 relative overflow-hidden">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <div class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('data.cacheHitRate') }}</div>
                   <div class="mt-1.5 text-2xl font-bold text-gray-900 dark:text-white leading-none">{{ (stats.range?.hit_rate ?? stats.cache?.hit_rate ?? 0).toFixed(1) }}<span class="text-sm font-medium text-gray-400">%</span></div>
                 </div>
-                <div class="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
-                  <i data-lucide="zap" class="w-5 h-5 text-purple-500"></i>
+                <div class="w-9 h-9 rounded-lg bg-primary-500/10 flex items-center justify-center shrink-0">
+                  <i data-lucide="zap" class="w-5 h-5 text-primary-500"></i>
                 </div>
               </div>
               <div class="mt-3 flex items-center justify-between gap-2">
                 <span class="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ t('data.cacheWrite') }} {{ formatNumber(stats.range?.cache_created ?? stats.cache?.total_created ?? 0) }}</span>
-                <sparkline :data="stats.cache?.trend || [0,0,0,0,0,0,0]" color="#a855f7" class="w-20 shrink-0"></sparkline>
+                <sparkline :data="stats.cache?.trend || [0,0,0,0,0,0,0]" color="#2563eb" class="w-20 shrink-0"></sparkline>
               </div>
             </div>
           </div>
@@ -516,24 +516,24 @@ const DataPage = {
           <!-- Charts -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <!-- Token Usage Chart (range switchable: 7d / 30d / monthly) -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div class="${UiClasses.card} p-4">
               <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">{{ t('data.tokenUsageTrend') }}</h3>
               <line-chart :data="tokenChartData" :height="200" :color="chartColor" :show-area="true"></line-chart>
             </div>
             
             <!-- Cache Hit Rate Over Time -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div class="${UiClasses.card} p-4">
               <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">{{ t('data.cacheHitRateTrend') }}</h3>
-              <line-chart :data="cacheRateChartData" :height="200" color="#a855f7" :show-area="true" unit="%"></line-chart>
+              <line-chart :data="cacheRateChartData" :height="200" color="#2563eb" :show-area="true" unit="%"></line-chart>
             </div>
           </div>
 
           <!-- Breakdowns: per-model & per-provider -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div class="${UiClasses.card} p-4">
               <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">{{ t('data.byModel') }}</h3>
               <div v-if="(stats.per_model || []).length === 0"
-                   class="text-xs text-gray-400 dark:text-gray-500 py-8 text-center">{{ t('data.noData') }}</div>
+                   class="text-xs text-gray-400 dark:text-gray-400 py-8 text-center">{{ t('data.noData') }}</div>
               <div v-else class="space-y-3">
                 <div v-for="m in stats.per_model.slice(0, 6)" :key="m.model">
                   <div class="flex items-center justify-between gap-2 mb-1">
@@ -544,22 +544,22 @@ const DataPage = {
                     <div class="h-full rounded-full transition-all duration-300"
                          :style="{ width: modelBarWidth(m) + '%', background: chartColor }"></div>
                   </div>
-                  <div class="mt-0.5 text-[10px] text-gray-400 dark:text-gray-500 truncate">{{ m.provider }}</div>
+                  <div class="mt-0.5 text-[10px] text-gray-400 dark:text-gray-400 truncate">{{ m.provider }}</div>
                 </div>
               </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div class="${UiClasses.card} p-4">
               <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">{{ t('data.byProvider') }}</h3>
               <div v-if="providerDonutData.length === 0"
-                   class="text-xs text-gray-400 dark:text-gray-500 py-8 text-center">{{ t('data.noData') }}</div>
+                   class="text-xs text-gray-400 dark:text-gray-400 py-8 text-center">{{ t('data.noData') }}</div>
               <donut-chart v-else :data="providerDonutData" :size="150" :thickness="24"></donut-chart>
             </div>
 
             <!-- Per-session usage breakdown -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div class="${UiClasses.card} p-4">
               <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">{{ t('data.sessionUsage') }}</h3>
               <div v-if="perSessionSorted.length === 0"
-                   class="text-xs text-gray-400 dark:text-gray-500 py-8 text-center">{{ t('data.noData') }}</div>
+                   class="text-xs text-gray-400 dark:text-gray-400 py-8 text-center">{{ t('data.noData') }}</div>
               <div v-else class="space-y-3">
                 <div v-for="s in perSessionSorted" :key="s.session_id">
                   <div class="flex items-center justify-between gap-2 mb-1">
@@ -578,10 +578,10 @@ const DataPage = {
             </div>
 
             <!-- Daily activity heatmap (GitHub-style compact calendar) -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 relative" ref="activityCard">
+            <div class="${UiClasses.card} p-4 relative" ref="activityCard">
               <div class="flex items-center justify-between gap-2 mb-3">
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('data.dailyActivity') }}</h3>
-                <div class="flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500">
+                <div class="flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-400">
                   <span>{{ t('data.less') }}</span>
                   <span v-for="lv in [0,1,2,3,4]" :key="'lg-'+lv"
                         class="w-2.5 h-2.5 rounded-full"
@@ -593,11 +593,11 @@ const DataPage = {
               <div v-if="!activityHasData"
                    class="flex flex-col items-center justify-center py-10 text-center">
                 <i data-lucide="calendar-x-2" class="w-8 h-8 text-gray-300 dark:text-gray-600 mb-3"></i>
-                <span class="text-xs text-gray-400 dark:text-gray-500">{{ t('data.noData') }}</span>
+                <span class="text-xs text-gray-400 dark:text-gray-400">{{ t('data.noData') }}</span>
               </div>
               <div v-else class="inline-block">
                 <!-- Calendar grid: rows = weeks, columns = weekday (Sun..Sat) -->
-                <div class="grid gap-1 mb-1.5 text-[10px] text-gray-400 dark:text-gray-500 text-center"
+                <div class="grid gap-1 mb-1.5 text-[10px] text-gray-400 dark:text-gray-400 text-center"
                      style="grid-template-columns: repeat(7, 1.75rem)">
                   <span v-for="(d, i) in weekdayLabels" :key="'wd-'+i">{{ d }}</span>
                 </div>
@@ -729,10 +729,10 @@ const DataPage = {
       // Memory management state
       memStats: { total_tags: 0, total_entries_indexed: 0, by_type: {} },
       memTypeCards: [
-        { key: 'fact', dot: 'bg-blue-500', labelKey: 'memory.typeFact' },
-        { key: 'decision', dot: 'bg-orange-500', labelKey: 'memory.typeDecision' },
-        { key: 'preference', dot: 'bg-green-500', labelKey: 'memory.typePreference' },
-        { key: 'insight', dot: 'bg-purple-500', labelKey: 'memory.typeInsight' },
+        { key: 'fact', dot: 'bg-primary-500', labelKey: 'memory.typeFact' },
+        { key: 'decision', dot: 'bg-sun-500', labelKey: 'memory.typeDecision' },
+        { key: 'preference', dot: 'bg-mint-500', labelKey: 'memory.typePreference' },
+        { key: 'insight', dot: 'bg-primary-500', labelKey: 'memory.typeInsight' },
         { key: 'lesson', dot: 'bg-red-500', labelKey: 'memory.typeLesson' },
       ],
       memEntries: [],
@@ -776,7 +776,6 @@ const DataPage = {
   },
 
   // Icons hydrate automatically via app.js MutationObserver (childList + attr).
-  updated() {},
 
   watch: {
     // Unified range selector refetches range-filtered breakdowns
@@ -792,7 +791,7 @@ const DataPage = {
 
   computed: {
     chartColor() {
-      return window.UiKit ? window.UiKit.primaryHex() : '#6366f1';
+      return window.UiKit ? window.UiKit.primaryHex() : '#2563eb';
     },
     statRanges() {
       return [
@@ -863,7 +862,7 @@ const DataPage = {
       return weeks;
     },
     providerDonutData() {
-      const palette = ['#6366f1','#a855f7','#10b981','#f59e0b','#ef4444','#3b82f6','#14b8a6','#f472b6'];
+      const palette = ['#2563eb','#2dd4a8','#ffd43b','#0b8f68','#e5484d','#60a5fa','#a87b00','#475467'];
       return (this.stats.per_provider || []).slice(0, 8).map((p, i) => ({
         label: p.provider,
         value: p.input,
@@ -943,9 +942,8 @@ const DataPage = {
   },
   
   methods: {
-    // handleLanguageChange overrides global I18nMixin: also refresh tab labels.
-    handleLanguageChange() {
-      this.currentLanguage = window.i18n ? window.i18n.getCurrentLanguage() : 'en';
+    // I18nMixin updates currentLanguage; only the tab labels differ here.
+    onLanguageChanged() {
       this.updateTabLabels();
     },
     
@@ -1046,12 +1044,7 @@ const DataPage = {
     },
 
     formatNumber(num) {
-      if (num >= 1000000) {
-        return (num / 1000000).toFixed(1) + 'M';
-      } else if (num >= 1000) {
-        return (num / 1000).toFixed(1) + 'K';
-      }
-      return (num || 0).toString();
+      return window.UiKit.formatNumber(num);
     },
 
     // ==================== Agent Management Methods ====================
@@ -1466,13 +1459,13 @@ const DataPage = {
     },
 
     memTypeClass(type) {
-      if (type === 'insight') return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
-      if (type === 'decision') return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
-      if (type === 'preference') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
-      if (type === 'pattern') return 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300';
+      if (type === 'insight') return 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300';
+      if (type === 'decision') return 'bg-sun-100 text-sun-700 dark:bg-sun-900/30 dark:text-sun-300';
+      if (type === 'preference') return 'bg-mint-100 text-mint-700 dark:bg-mint-900/30 dark:text-mint-300';
+      if (type === 'pattern') return 'bg-mint-100 text-mint-700 dark:bg-mint-900/30 dark:text-mint-300';
       if (type === 'lesson') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
-      if (type === 'procedure') return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300';
-      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
+      if (type === 'procedure') return 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300';
+      return 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300';
     },
 
     memTagLabel(tag) {
@@ -1734,10 +1727,10 @@ const DataPage = {
 
     typeBadgeClass(type) {
       const cls = {
-        session: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-        agent: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-        file: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-        memory: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300',
+        session: 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300',
+        agent: 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300',
+        file: 'bg-sun-100 text-sun-700 dark:bg-sun-900/30 dark:text-sun-300',
+        memory: 'bg-mint-100 text-mint-700 dark:bg-mint-900/30 dark:text-mint-300',
       };
       return cls[type] || 'bg-gray-100 text-gray-700';
     },
