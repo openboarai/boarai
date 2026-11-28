@@ -161,6 +161,7 @@ class UnifiedServer:
         self._app.router.add_get("/api/update/status", update_api.handle_get_status)
         self._app.router.add_post("/api/update/check", update_api.handle_check)
         self._app.router.add_post("/api/update/apply", update_api.handle_apply)
+        self._app.router.add_get("/api/update/notes", update_api.handle_notes)
 
         # Log inspection (read-only; core.api.logs). HTTP-only by design: it is
         # a pull surface with no server-initiated state, so there is no WS view

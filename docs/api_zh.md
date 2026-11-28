@@ -23,7 +23,7 @@
 | `logs.py` | 日志只读检视 |
 | `monitoring.py` | token 与缓存统计 |
 | `trash.py` | 回收站列表/恢复/清空 |
-| `update.py` | 在线更新 check/apply/status |
+| `update.py` | 在线更新 check/apply/status/release notes |
 
 （任务领域 handler 在 `core/task/api.py`，随任务子系统存放，经本包 re-export。）
 

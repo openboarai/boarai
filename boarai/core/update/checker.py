@@ -129,6 +129,24 @@ def sdist_from_json(data: Dict[str, Any]) -> Optional[Dict[str, str]]:
     return None
 
 
+_RELEASE_NOTES_HEADING = "# Release notes - "
+
+
+def extract_release_notes(description: str, version: str) -> Optional[str]:
+    """The release-notes block from a registry version description ([] when absent).
+
+    The publish flow snapshots each PyPI version's description as
+    ``<README> + "# Release notes - <ver>" + <notes>``; the heading marker
+    is fixed, so the notes are simply everything after it.
+    """
+    text = str(description or "")
+    marker = _RELEASE_NOTES_HEADING + str(version or "").strip()
+    idx = text.find(marker)
+    if idx < 0:
+        return None
+    return text[idx + len(marker):].strip() or None
+
+
 # files.pythonhosted.org is the actual PyPI package-file host; these mirrors
 # keep the SAME ``/packages/<hash path>`` layout, so a host swap is a valid
 # China-friendly failover for sdist downloads (TUNA first: official mirror).

@@ -11,7 +11,7 @@ Channels (``steward.detect_install_kind``, captured BEFORE any replacement):
            live server holds;
   git    — ``git fetch --tags`` + ``git checkout <tag>`` in the running tree.
            The fetch happens while the server still runs; only the checkout
-           needs the stop. Rollback anchor = the pre-update HEAD commit;
+           needs the stop. Restore anchor = the pre-update HEAD commit;
   source — download the release archive (failover order: configured
            ``archive_mirrors`` → PyPI sdist → TUNA/Aliyun host swaps →
            GitHub tag archive → GitHub via proxy prefixes), sha256-verify
@@ -716,7 +716,6 @@ def run_update(
     from_version: str,
     extra_args: List[str],
     attempt_id: str,
-    kind: str = "apply",
     cfg=None,
     channel: Optional[str] = None,
     tree_root: Optional[Path] = None,
@@ -747,7 +746,7 @@ def run_update(
     if channel != "pip" and tree_root is None:
         # Cannot locate the tree we are supposed to replace — refuse loudly.
         update_state.write_state({
-            "attempt_id": attempt_id, "phase": update_state.PHASE_FAILED, "kind": kind,
+            "attempt_id": attempt_id, "phase": update_state.PHASE_FAILED, "kind": "apply",
             "from_version": from_version, "target_version": target, "worker_pid": os.getpid(),
             "error": "cannot locate the running source tree (boarai.core.__file__ anchor failed)",
         })
@@ -764,7 +763,7 @@ def run_update(
         update_state.write_state({
             "attempt_id": attempt_id,
             "phase": phase,
-            "kind": kind,
+            "kind": "apply",
             "channel": channel,
             "from_version": from_version,
             "target_version": target,
@@ -776,7 +775,7 @@ def run_update(
         set_phase(phase, error)
         update_state.write_receipt({
             "attempt_id": attempt_id,
-            "kind": kind,
+            "kind": "apply",
             "channel": channel,
             "outcome": phase,
             "from_version": from_version,
@@ -809,9 +808,8 @@ def run_update(
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m boarai.core.update.worker")
     parser.add_argument("--target", required=True, help="version to install")
-    parser.add_argument("--from-version", default="", help="version being replaced (rollback anchor)")
+    parser.add_argument("--from-version", default="", help="version being replaced")
     parser.add_argument("--attempt-id", default="", help="attempt id shared with the server/UI")
-    parser.add_argument("--kind", default="apply", choices=("apply", "rollback"))
     parser.add_argument("--pip-arg", action="append", default=[], help="extra pip args (repeatable)")
     args = parser.parse_args(argv)
 
@@ -844,7 +842,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         update_state.write_state({
             "attempt_id": attempt_id,
             "phase": phase,
-            "kind": args.kind,
+            "kind": "apply",
             "channel": channel,
             "from_version": from_version,
             "target_version": args.target,
@@ -853,7 +851,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         if phase == update_state.PHASE_CURRENT:
             return 0
         return run_update(
-            args.target, from_version, extra_args, attempt_id, args.kind,
+            args.target, from_version, extra_args, attempt_id,
             cfg=cfg, channel=channel, tree_root=tree_root, launch_prefix=launch_prefix,
         )
     finally:

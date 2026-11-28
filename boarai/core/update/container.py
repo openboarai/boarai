@@ -35,7 +35,7 @@ from .version import current_version
 logger = logging.getLogger(__name__)
 
 
-async def run_pip_update(target: str, from_version: str, attempt_id: str, kind: str = "apply") -> None:
+async def run_pip_update(target: str, from_version: str, attempt_id: str) -> None:
     """In-place pip update for containers; exits the process on success for the supervisor to restart."""
     from boarai.core.runtime import get_data_dir
     from boarai.core.update import worker as worker_ops
@@ -50,7 +50,7 @@ async def run_pip_update(target: str, from_version: str, attempt_id: str, kind: 
         update_state.write_state({
             "attempt_id": attempt_id,
             "phase": phase,
-            "kind": kind,
+            "kind": "apply",
             "channel": "pip",
             "container": True,
             "from_version": from_version,
@@ -64,7 +64,7 @@ async def run_pip_update(target: str, from_version: str, attempt_id: str, kind: 
         logger.error("container update failed: %s", error)
         set_phase(update_state.PHASE_FAILED, error, **extra)
         update_state.write_receipt({
-            "attempt_id": attempt_id, "kind": kind, "channel": "pip",
+            "attempt_id": attempt_id, "kind": "apply", "channel": "pip",
             "container": True, "outcome": update_state.PHASE_FAILED,
             "from_version": from_version, "target_version": target,
             "error": error, **extra,

@@ -22,6 +22,10 @@ Self-update subsystem for the pip / git / source channels. Principle: **the serv
 - Version checks are read-only and network-flaky by nature: every failure degrades instead of surfacing to the user.
 - Only plain numeric dot versions (e.g. `1.12.0`) participate in update comparison.
 
+## Release notes (`GET /api/update/notes?version=<ver>`)
+
+The publish flow snapshots each PyPI version's description as README + a `# Release notes - <ver>` block; the notes endpoint fetches the per-version registry JSON and returns that block (markdown). Results are cached on disk under `cache/update_notes/` — a published version's description is immutable, so each version is fetched at most once per install. The endpoint is HTTP-only (a read-only query; no WS twin needed).
+
 ## Guards (refusal contract)
 
 - The `update.enabled` config flag.

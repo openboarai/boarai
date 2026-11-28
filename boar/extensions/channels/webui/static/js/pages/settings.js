@@ -1008,14 +1008,31 @@ const SettingsPage = {
                 </base-button>
                 <base-button v-if="updateStatus.can_update && updateStatus.check && updateStatus.check.update_available"
                              size="sm" icon="download" variant="primary" :loading="updateBusy === 'apply'" :disabled="updateBusy !== ''"
-                             @click="applyUpdate(false)">
+                             @click="applyUpdate">
                   {{ t('settings.updateApply', { version: updateStatus.check.latest }) || ('Update to v' + updateStatus.check.latest) }}
                 </base-button>
-                <base-button v-if="updateStatus.can_update && updateStatus.previous_version"
-                             size="sm" icon="undo-2" variant="secondary" :loading="updateBusy === 'rollback'" :disabled="updateBusy !== ''"
-                             @click="applyUpdate(true)">
-                  {{ t('settings.updateRollback', { version: updateStatus.previous_version }) || ('Roll back to v' + updateStatus.previous_version) }}
-                </base-button>
+              </div>
+
+              <!-- Release notes of the pending (or latest) version -->
+              <div v-if="notesVersion" class="mt-2 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <button type="button"
+                        class="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        @click="toggleUpdateNotes">
+                  <i data-lucide="file-text" class="w-4 h-4"></i>
+                  <span>{{ t('settings.updateNotes') || 'Release notes' }} — v{{ notesVersion }}</span>
+                  <i :data-lucide="showUpdateNotes ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 ml-auto"></i>
+                </button>
+                <div v-if="showUpdateNotes" class="px-3 py-2 border-t border-gray-200 dark:border-gray-700">
+                  <div v-if="notesLoading" class="text-xs text-gray-500 dark:text-gray-400 py-2">
+                    {{ t('common.loading') || 'Loading...' }}
+                  </div>
+                  <div v-else-if="updateNotes"
+                       class="text-xs prose prose-sm dark:prose-invert max-w-none break-words"
+                       v-html="renderUpdateNotes(updateNotes)"></div>
+                  <div v-else class="text-xs text-gray-500 dark:text-gray-400 py-2">
+                    {{ t('settings.updateNotesEmpty') || 'No release notes for this version.' }}
+                  </div>
+                </div>
               </div>
             </div>
           </card-section>
@@ -1118,6 +1135,12 @@ const SettingsPage = {
       updateStatus: null,
       updateLoading: false,
       updateBusy: '',
+      // Release notes of the pending version (About tab): markdown text,
+      // fetched once per version on first expand.
+      updateNotes: null,
+      notesLoading: false,
+      showUpdateNotes: false,
+      notesLoadedFor: '',
       tabs: [
         { id: 'providers', label: 'Providers' },
         { id: 'appearance', label: 'Appearance' },
@@ -1245,6 +1268,11 @@ const SettingsPage = {
         { value: 'ask', label: this.t('sessions.approvalAsk') || 'Ask', desc: this.t('settings.approvalAskDesc') || 'Tools with side effects prompt for confirmation first', icon: 'shield-question-mark' },
         { value: 'allow', label: this.t('sessions.approvalAllow') || 'Allow', desc: this.t('settings.approvalAllowDesc') || 'No prompts — tools run directly (the absolute write floor still denies)', icon: 'shield-check' },
       ];
+    },
+    /** Release notes: shown while an update is pending, keyed to its version. */
+    notesVersion() {
+      const check = this.updateStatus && this.updateStatus.check;
+      return (check && check.update_available && check.latest) ? check.latest : '';
     },
   },
 
@@ -1584,6 +1612,37 @@ const SettingsPage = {
       }
     },
 
+    // Release notes: shown while an update is pending, keyed to its version.
+    async toggleUpdateNotes() {
+      this.showUpdateNotes = !this.showUpdateNotes;
+      if (!this.showUpdateNotes || !this.notesVersion) return;
+      // Fetch once per version; a re-expand reuses the cached text.
+      if (this.notesLoadedFor === this.notesVersion && this.updateNotes !== null) return;
+      this.notesLoading = true;
+      try {
+        const res = await fetch('/api/update/notes?version=' + encodeURIComponent(this.notesVersion));
+        const data = await res.json();
+        this.updateNotes = (res.ok && data.notes) ? data.notes : '';
+        this.notesLoadedFor = this.notesVersion;
+      } catch (e) {
+        console.warn('Failed to load release notes:', e);
+        this.updateNotes = '';
+      } finally {
+        this.notesLoading = false;
+      }
+    },
+
+    renderUpdateNotes(text) {
+      try {
+        if (global.marked && typeof global.marked.parse === 'function') {
+          return global.marked.parse(String(text || ''));
+        }
+      } catch (_) { /* fall through to escaped text */ }
+      const div = document.createElement('div');
+      div.textContent = String(text || '');
+      return div.innerHTML;
+    },
+
     async checkForUpdate() {
       this.updateBusy = 'check';
       try {
@@ -1608,13 +1667,13 @@ const SettingsPage = {
       }
     },
 
-    async applyUpdate(rollback) {
-      this.updateBusy = rollback ? 'rollback' : 'apply';
+    async applyUpdate() {
+      this.updateBusy = 'apply';
       try {
         const res = await fetch('/api/update/apply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(rollback ? { rollback: true } : {}),
+          body: JSON.stringify({}),
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || ('HTTP ' + res.status));

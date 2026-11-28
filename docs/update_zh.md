@@ -22,6 +22,10 @@ pip / git / source 三渠道的自更新子系统。原则：**服务器进程�
 - 版本检查是只读且天然网络易碎的：所有失败都降级，不抛给用户。
 - 只有纯数字点分版本（如 `1.12.0`）参与更新比较。
 
+## 更新日志（`GET /api/update/notes?version=<ver>`）
+
+发布流程把每个 PyPI 版本的描述快照为 README + `# Release notes - <ver>` 块；本端点拉取对应版本的 registry JSON 并返回该块（markdown）。结果落盘缓存在 `cache/update_notes/`——已发布版本的描述不可变，每个版本每台安装最多拉取一次。端点仅 HTTP（只读查询，无需 WS 镜像）。
+
 ## 守卫（拒绝契约）
 
 - `update.enabled` 配置开关。

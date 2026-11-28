@@ -25,6 +25,7 @@ Guards (hermes-style refusals):
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import subprocess
@@ -37,7 +38,7 @@ from boarai.core import EventType
 
 from . import state as update_state
 from .checker import check as check_latest
-from .checker import get_update_config
+from .checker import extract_release_notes, fetch_release_json, get_update_config, version_json_url
 from .steward import (
     detect_install_kind,
     git_precheck,
@@ -46,7 +47,7 @@ from .steward import (
     running_tree_root,
     source_precheck,
 )
-from .version import current_version, is_newer
+from .version import current_version, is_newer, parse_version
 
 logger = logging.getLogger(__name__)
 
@@ -95,14 +96,6 @@ def worker_in_progress() -> bool:
                 and time.time() - float(state.get("at", 0)) < 120)
 
 
-def _previous_version() -> Optional[str]:
-    """Rollback anchor: the ``from_version`` of the newest receipt."""
-    receipt = update_state.last_receipt()
-    if receipt and receipt.get("from_version"):
-        return str(receipt["from_version"])
-    return None
-
-
 async def get_status() -> Dict[str, Any]:
     """Full update picture for the API/WebUI (never raises)."""
     cfg = get_update_config()
@@ -125,7 +118,6 @@ async def get_status() -> Dict[str, Any]:
         "check": cached,
         "worker": update_state.read_state(),
         "worker_active": worker_in_progress(),
-        "previous_version": _previous_version(),
     }
 
 
@@ -140,7 +132,54 @@ async def trigger_check(force: bool = True) -> Dict[str, Any]:
     return result
 
 
-async def trigger_apply(target: Optional[str] = None, rollback: bool = False) -> Dict[str, Any]:
+async def get_release_notes(version: Optional[str] = None) -> Dict[str, Any]:
+    """The release notes of ``version`` (default: the latest known newer one).
+
+    Source: the per-version registry JSON's ``info.description`` (the publish
+    flow snapshots each version's description as README + notes). The result
+    is cached on disk — a published version's description is immutable, so a
+    version is fetched at most once per install.
+    """
+    cfg = get_update_config()
+    if not version:
+        check = await check_latest(force=False, ttl_hours=_LAZY_CHECK_TTL_HOURS)
+        version = check.get("latest")
+    if not version:
+        return {"version": None, "notes": None, "error": "no version to show notes for"}
+    # The version lands in a cache FILENAME; anything that is not a plain
+    # numeric dot version is refused before the filesystem is touched
+    # (same rule as update comparison).
+    if parse_version(str(version)) is None:
+        return {"version": version, "notes": None, "error": "invalid version"}
+
+    from boarai.core.runtime import get_data_dir
+
+    cache = get_data_dir() / "cache" / "update_notes" / f"{version}.json"
+    try:
+        cached = json.loads(cache.read_text(encoding="utf-8"))
+        if isinstance(cached, dict) and "notes" in cached:
+            cached.setdefault("version", version)
+            return cached
+    except (OSError, ValueError):
+        pass
+
+    url = version_json_url(getattr(cfg, "pypi_url", None), str(version))
+    try:
+        data = await asyncio.to_thread(fetch_release_json, url)
+    except Exception as e:  # noqa: BLE001 - network flakiness is expected
+        return {"version": version, "notes": None, "error": str(e)}
+    notes = extract_release_notes(str((data.get("info") or {}).get("description") or ""), str(version))
+    result = {"version": version, "notes": notes,
+              "error": None if notes else "no release notes in the version description"}
+    try:
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
+    except OSError as e:
+        logger.debug("release notes cache write failed: %s", e)
+    return result
+
+
+async def trigger_apply(target: Optional[str] = None) -> Dict[str, Any]:
     """Spawn the detached worker. Returns the attempt descriptor; raises UpdateError."""
     cfg = get_update_config()
     if not getattr(cfg, "enabled", True):
@@ -164,20 +203,13 @@ async def trigger_apply(target: Optional[str] = None, rollback: bool = False) ->
         raise UpdateError("worker_running", "An update worker is already running; follow its progress", 409)
 
     current = current_version()
-    if rollback:
-        target = target or _previous_version()
-        if not target:
-            raise UpdateError("no_rollback_target", "No previous version recorded to roll back to", 400)
-        kind_label = "rollback"
-    else:
-        if not target:
-            check = await check_latest(force=False, ttl_hours=_LAZY_CHECK_TTL_HOURS)
-            target = check.get("latest")
-        if not target:
-            raise UpdateError("no_target", "No target version available (check failed or up to date)", 400)
-        if not is_newer(target, current):
-            raise UpdateError("not_newer", f"Target {target} is not newer than current {current}", 400)
-        kind_label = "apply"
+    if not target:
+        check = await check_latest(force=False, ttl_hours=_LAZY_CHECK_TTL_HOURS)
+        target = check.get("latest")
+    if not target:
+        raise UpdateError("no_target", "No target version available (check failed or up to date)", 400)
+    if not is_newer(target, current):
+        raise UpdateError("not_newer", f"Target {target} is not newer than current {current}", 400)
 
     live = _live_run_count()
     if live:
@@ -196,32 +228,31 @@ async def trigger_apply(target: Optional[str] = None, rollback: bool = False) ->
         from . import container as container_update
 
         asyncio.get_running_loop().create_task(
-            container_update.run_pip_update(target, current, attempt_id, kind_label))
+            container_update.run_pip_update(target, current, attempt_id))
     else:
-        _spawn_worker(target, current, attempt_id, kind_label)
+        _spawn_worker(target, current, attempt_id)
         asyncio.get_running_loop().create_task(_watch_worker(attempt_id))
     return {
         "attempt_id": attempt_id,
-        "kind": kind_label,
+        "kind": "apply",
         "from_version": current,
         "target_version": target,
         "worker_log": str(update_state.worker_log_path()),
     }
 
 
-def _spawn_worker(target: str, from_version: str, attempt_id: str, kind: str) -> None:
+def _spawn_worker(target: str, from_version: str, attempt_id: str) -> None:
     """Detached worker spawn (house rules: CREATE_NO_WINDOW on Windows, start_new_session on POSIX, stdout appended to the worker log)."""
     cmd = [
         sys.executable, "-m", "boarai.core.update.worker",
         "--target", target,
         "--from-version", from_version,
         "--attempt-id", attempt_id,
-        "--kind", kind,
     ]
     log_path = update_state.worker_log_path()
     log_path.parent.mkdir(parents=True, exist_ok=True)
     log = open(log_path, "ab")  # noqa: SIM115 - handed to the detached child
-    log.write(f"\n===== attempt {attempt_id} ({kind} -> {target}) =====\n".encode("utf-8"))
+    log.write(f"\n===== attempt {attempt_id} (apply -> {target}) =====\n".encode("utf-8"))
     log.flush()
     # Neutral cwd (data dir): `python -m` puts cwd first on sys.path — the
     # server's cwd may be a source checkout whose `core/` would shadow the

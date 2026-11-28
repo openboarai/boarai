@@ -136,7 +136,7 @@ def run_git(args: List[str], root: Path, timeout: float = 300.0) -> Tuple[int, s
 
 
 def git_head_commit(root: Path) -> Optional[str]:
-    """Current HEAD commit hash (the rollback anchor); None when unreadable."""
+    """Current HEAD commit hash (the restore anchor); None when unreadable."""
     rc, out = run_git(["rev-parse", "HEAD"], root)
     return out.strip() if rc == 0 and out.strip() else None
 

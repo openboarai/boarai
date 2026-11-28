@@ -23,7 +23,7 @@ System-level API handlers: one file per domain, reusable by any channel extensio
 | `logs.py` | Read-only log inspection |
 | `monitoring.py` | Token & cache statistics |
 | `trash.py` | Recycle bin list/restore/empty |
-| `update.py` | Online update check/apply/status |
+| `update.py` | Online update check/apply/status/release notes |
 
 (The task-domain handler lives in `core/task/api.py` with its subsystem and is re-exported through this package.)
 
